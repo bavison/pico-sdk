@@ -346,7 +346,11 @@ extern "C" {
 #define MIN(a, b) ((b)>(a)?(a):(b))
 #endif
 
+#ifdef __GNUC__
 #define unified_asm(...) __asm volatile (".syntax unified\n" __VA_ARGS__)
+#else
+#define unified_asm(...) __asm volatile (__VA_ARGS__)
+#endif
 
 /*! \brief Execute a breakpoint instruction
  *  \ingroup pico_platform
