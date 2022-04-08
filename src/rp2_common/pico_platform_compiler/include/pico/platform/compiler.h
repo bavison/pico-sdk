@@ -166,16 +166,19 @@ extern "C" {
 #define MIN(a, b) ((b)>(a)?(a):(b))
 #endif
 
-#ifdef __ARM_ARCH_ISA_THUMB
-#define pico_default_asm(...) __asm (".syntax unified\n" __VA_ARGS__)
-#define pico_default_asm_volatile(...) __asm volatile (".syntax unified\n" __VA_ARGS__)
-#define pico_default_asm_goto(...) __asm goto (".syntax unified\n" __VA_ARGS__)
-#define pico_default_asm_volatile_goto(...) __asm volatile goto (".syntax unified\n" __VA_ARGS__)
+#if defined(__GNUC__) && defined(__ARM_ARCH)
+#define PICO_ASM_SYNTAX ".syntax unified\n"
 #else
-#define pico_default_asm(...) __asm (__VA_ARGS__)
-#define pico_default_asm_volatile(...) __asm volatile (__VA_ARGS__)
-#define pico_default_asm_goto(...) __asm goto (__VA_ARGS__)
-#define pico_default_asm_volatile_goto(...) __asm volatile goto (__VA_ARGS__)
+#define PICO_ASM_SYNTAX ""
+#endif
+#define pico_default_asm(...) __asm (PICO_ASM_SYNTAX __VA_ARGS__)
+#define pico_default_asm_volatile(...) __asm volatile (PICO_ASM_SYNTAX __VA_ARGS__)
+#if PICO_C_COMPILER_IS_IAR
+#define pico_default_asm_goto(...) pico_default_asm_goto_not_supported_on_this_compiler
+#define pico_default_asm_volatile_goto(...) pico_default_asm_volatile_goto_not_supported_on_this_compiler
+#else
+#define pico_default_asm_goto(...) __asm goto (PICO_ASM_SYNTAX __VA_ARGS__)
+#define pico_default_asm_volatile_goto(...) __asm volatile goto (PICO_ASM_SYNTAX __VA_ARGS__)
 #endif
 
 /*! \brief Ensure that the compiler does not move memory access across this method call
