@@ -49,7 +49,7 @@ void __aeabi_double_init(void) {
     if (rom_version >= 2) {
         void *rom_table_double = rom_data_lookup(rom_table_code('S', 'D'));
         void *rom_table_float = rom_data_lookup(rom_table_code('S', 'F'));
-        assert(*((uint8_t *)(((void *)rom_table_float)-2)) * 4 >= SF_TABLE_V2_SIZE);
+        assert(*((uint8_t *)rom_table_float-2) * 4 >= SF_TABLE_V2_SIZE);
         (void)rom_table_float;
         memcpy(&sd_table, rom_table_double, SF_TABLE_V2_SIZE);
         if (rom_version == 2) {
