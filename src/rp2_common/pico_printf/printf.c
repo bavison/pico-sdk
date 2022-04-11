@@ -33,6 +33,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <math.h>
 
 #include "pico.h"
 #include "pico/printf.h"
@@ -316,7 +317,11 @@ static size_t _etoa(out_fct_type out, char *buffer, size_t idx, size_t maxlen, d
                     unsigned int width, unsigned int flags);
 #endif
 
+#if PICO_C_COMPILER_IS_IAR
+#define is_nan __iar_isnan
+#else
 #define is_nan __builtin_isnan
+#endif
 
 // internal ftoa for fixed decimal floating point
 static size_t _ftoa(out_fct_type out, char *buffer, size_t idx, size_t maxlen, double value, unsigned int prec,
