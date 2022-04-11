@@ -107,6 +107,7 @@
 
 #endif
 
+#if LIB_PICO_PRINTF_PICO && !PICO_PRINTF_ALWAYS_INCLUDED
 /**
  * Output a character to a custom device like UART, used by the printf() function
  * This function is declared here only. You have to write your custom implementation somewhere
@@ -115,6 +116,7 @@
 static void _putchar(char character) {
     putchar(character);
 }
+#endif
 
 // output function type
 typedef void (*out_fct_type)(char character, void *buffer, size_t idx, size_t maxlen);
@@ -148,6 +150,7 @@ static inline void _out_null(char character, void *buffer, size_t idx, size_t ma
     (void) maxlen;
 }
 
+#if LIB_PICO_PRINTF_PICO && !PICO_PRINTF_ALWAYS_INCLUDED
 // internal _putchar wrapper
 static inline void _out_char(char character, void *buffer, size_t idx, size_t maxlen) {
     (void) buffer;
@@ -157,6 +160,7 @@ static inline void _out_char(char character, void *buffer, size_t idx, size_t ma
         _putchar(character);
     }
 }
+#endif
 
 
 // internal output function wrapper
