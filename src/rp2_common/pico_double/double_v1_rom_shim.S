@@ -21,10 +21,6 @@
  .extern push_r8_r11
  .extern sd_table
 
-.syntax unified
-.cpu cortex-m0plus
-.thumb
-
 .macro double_section name
 // todo separate flag for shims?
 #if PICO_DOUBLE_IN_RAM

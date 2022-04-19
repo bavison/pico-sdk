@@ -53,11 +53,6 @@
 // Start of 2nd Stage Boot Code
 // ----------------------------------------------------------------------------
 
-.cpu cortex-m0
-.thumb
-
-.section .text
-
 #ifdef __IASMARM__
  // Ensure there's a reference to __checksum to keep IAR ELF Tool happy
  extern  __checksum

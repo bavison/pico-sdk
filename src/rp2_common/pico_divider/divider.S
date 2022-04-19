@@ -10,10 +10,6 @@
  .extern __aeabi_idiv0
  .extern __aeabi_ldiv0
 
-.syntax unified
-.cpu cortex-m0plus
-.thumb
-
 // PICO_CONFIG: PICO_DIVIDER_DISABLE_INTERRUPTS, Disable interrupts around division such that divider state need not be saved/restored in exception handlers, default=0, group=pico_divider
 
 #include "pico/asm_helper.S"
