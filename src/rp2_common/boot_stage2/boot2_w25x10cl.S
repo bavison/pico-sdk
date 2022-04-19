@@ -184,5 +184,3 @@
 .global literals
 literals:
 .ltorg
-
-.end

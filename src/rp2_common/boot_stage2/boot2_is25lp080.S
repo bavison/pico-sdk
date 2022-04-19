@@ -250,5 +250,3 @@ configure_ssi:
 .global literals
 literals:
 .ltorg
-
-.end

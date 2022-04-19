@@ -9,6 +9,7 @@
 #define _align      .align
 #define _asciz      .asciz
 #define _byte       .byte
+#define _end        .end
 #define _equ        .equ
 #define _hword      .hword
 #define _word       .word

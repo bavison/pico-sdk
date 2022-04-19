@@ -76,3 +76,5 @@
 
 str:
     _asciz "double support is disabled"
+
+ _end

@@ -17,3 +17,5 @@
     // boot stage 2 is selected by board config header, and PICO_BOOT_STAGE2_ASM is set in boot_stage2/config.h
     #include PICO_BOOT_STAGE2_ASM
 #endif
+
+ _end

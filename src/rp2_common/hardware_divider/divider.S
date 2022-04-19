@@ -70,3 +70,5 @@
     str r3, [r5, #SIO_DIV_REMAINDER_OFFSET]
     str r4, [r5, #SIO_DIV_QUOTIENT_OFFSET]
     pop {r4, r5, pc}
+
+ _end
