@@ -75,4 +75,4 @@
     bl panic
 
 str:
-    .asciz "double support is disabled"
+    _asciz "double support is disabled"

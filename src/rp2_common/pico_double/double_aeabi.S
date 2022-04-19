@@ -97,8 +97,8 @@
     str r3, [sp, #4]
     pop {r3, pc}
 #if PICO_DOUBLE_SUPPORT_ROM_V1 && PICO_RP2040_B0_SUPPORTED
-.byte \SF_TABLE_OFFSET, 0xdf
-.word \shim
+    dc8 \SF_TABLE_OFFSET, 0xdf
+    dc32 \shim
 #endif
 .endm
 

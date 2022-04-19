@@ -69,54 +69,54 @@
 .global __vectors, __VECTOR_TABLE
 __VECTOR_TABLE:
 __vectors:
-.word __StackTop
-.word _reset_handler
-.word isr_nmi
-.word isr_hardfault
-.word isr_invalid // Reserved, should never fire
-.word isr_invalid // Reserved, should never fire
-.word isr_invalid // Reserved, should never fire
-.word isr_invalid // Reserved, should never fire
-.word isr_invalid // Reserved, should never fire
-.word isr_invalid // Reserved, should never fire
-.word isr_invalid // Reserved, should never fire
-.word isr_svcall
-.word isr_invalid // Reserved, should never fire
-.word isr_invalid // Reserved, should never fire
-.word isr_pendsv
-.word isr_systick
-.word isr_irq0
-.word isr_irq1
-.word isr_irq2
-.word isr_irq3
-.word isr_irq4
-.word isr_irq5
-.word isr_irq6
-.word isr_irq7
-.word isr_irq8
-.word isr_irq9
-.word isr_irq10
-.word isr_irq11
-.word isr_irq12
-.word isr_irq13
-.word isr_irq14
-.word isr_irq15
-.word isr_irq16
-.word isr_irq17
-.word isr_irq18
-.word isr_irq19
-.word isr_irq20
-.word isr_irq21
-.word isr_irq22
-.word isr_irq23
-.word isr_irq24
-.word isr_irq25
-.word isr_irq26
-.word isr_irq27
-.word isr_irq28
-.word isr_irq29
-.word isr_irq30
-.word isr_irq31
+    dc32 __StackTop
+    dc32 _reset_handler
+    dc32 isr_nmi
+    dc32 isr_hardfault
+    dc32 isr_invalid // Reserved, should never fire
+    dc32 isr_invalid // Reserved, should never fire
+    dc32 isr_invalid // Reserved, should never fire
+    dc32 isr_invalid // Reserved, should never fire
+    dc32 isr_invalid // Reserved, should never fire
+    dc32 isr_invalid // Reserved, should never fire
+    dc32 isr_invalid // Reserved, should never fire
+    dc32 isr_svcall
+    dc32 isr_invalid // Reserved, should never fire
+    dc32 isr_invalid // Reserved, should never fire
+    dc32 isr_pendsv
+    dc32 isr_systick
+    dc32 isr_irq0
+    dc32 isr_irq1
+    dc32 isr_irq2
+    dc32 isr_irq3
+    dc32 isr_irq4
+    dc32 isr_irq5
+    dc32 isr_irq6
+    dc32 isr_irq7
+    dc32 isr_irq8
+    dc32 isr_irq9
+    dc32 isr_irq10
+    dc32 isr_irq11
+    dc32 isr_irq12
+    dc32 isr_irq13
+    dc32 isr_irq14
+    dc32 isr_irq15
+    dc32 isr_irq16
+    dc32 isr_irq17
+    dc32 isr_irq18
+    dc32 isr_irq19
+    dc32 isr_irq20
+    dc32 isr_irq21
+    dc32 isr_irq22
+    dc32 isr_irq23
+    dc32 isr_irq24
+    dc32 isr_irq25
+    dc32 isr_irq26
+    dc32 isr_irq27
+    dc32 isr_irq28
+    dc32 isr_irq29
+    dc32 isr_irq30
+    dc32 isr_irq31
 
 // all default exception handlers do nothing, and we can check for them being set to our
 // default values by seeing if they point to somewhere between __defaults_isrs_start and __default_isrs_end
@@ -199,11 +199,11 @@ unhandled_user_irq_num_in_r0:
 
 #if !PICO_NO_BINARY_INFO
 binary_info_header:
-.word BINARY_INFO_MARKER_START
-.word __binary_info_start
-.word __binary_info_end
-.word data_cpy_table // we may need to decode pointers that are in RAM at runtime.
-.word BINARY_INFO_MARKER_END
+    dc32 BINARY_INFO_MARKER_START
+    dc32 __binary_info_start
+    dc32 __binary_info_end
+    dc32 data_cpy_table // we may need to decode pointers that are in RAM at runtime.
+    dc32 BINARY_INFO_MARKER_END
 #endif
 
 // ----------------------------------------------------------------------------
@@ -312,23 +312,23 @@ data_cpy:
 .align 2
 data_cpy_table:
 #if PICO_COPY_TO_RAM
-.word __ram_text_source__
-.word __ram_text_start__
-.word __ram_text_end__
+    dc32 __ram_text_source__
+    dc32 __ram_text_start__
+    dc32 __ram_text_end__
 #endif
-.word __etext
-.word __data_start__
-.word __data_end__
+    dc32 __etext
+    dc32 __data_start__
+    dc32 __data_end__
 
-.word __scratch_x_source__
-.word __scratch_x_start__
-.word __scratch_x_end__
+    dc32 __scratch_x_source__
+    dc32 __scratch_x_start__
+    dc32 __scratch_x_end__
 
-.word __scratch_y_source__
-.word __scratch_y_start__
-.word __scratch_y_end__
+    dc32 __scratch_y_source__
+    dc32 __scratch_y_start__
+    dc32 __scratch_y_end__
 
-.word 0 // null terminator
+    dc32 0 // null terminator
 
 // ----------------------------------------------------------------------------
 // Provide safe defaults for _exit and runtime_init
@@ -355,9 +355,9 @@ hold_non_core0_in_bootrom:
 // align to allow for memory protection (although this alignment is pretty much ignored by linker script)
 .align 5
     .equ StackSize, PICO_STACK_SIZE
-.space StackSize
+ ds StackSize
 
 .section .heap, "a"
 .align 2
     .equ HeapSize, PICO_HEAP_SIZE
-.space HeapSize
+ ds HeapSize

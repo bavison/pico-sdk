@@ -16,4 +16,4 @@
     bl panic
 
 str:
-    .asciz "printf support is disabled"
+    _asciz "printf support is disabled"
