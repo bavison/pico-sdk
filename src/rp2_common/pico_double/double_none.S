@@ -76,4 +76,4 @@
 
 str:
     data_in_code_area
-    .asciz "double support is disabled"
+    _asciz "double support is disabled"

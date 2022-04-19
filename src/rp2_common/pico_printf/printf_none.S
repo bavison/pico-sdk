@@ -17,4 +17,4 @@
 
 str:
     data_in_code_area
-    .asciz "printf support is disabled"
+    _asciz "printf support is disabled"
