@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#include "pico.h"
+#include "pico/asm_helper.S"
 #include "hardware/regs/m0plus.h"
 #include "hardware/regs/addressmap.h"
 #include "hardware/regs/sio.h"
@@ -15,10 +15,6 @@
 #define COLLAPSE_IRQS
 #endif
 #endif
-
-.syntax unified
-.cpu cortex-m0plus
-.thumb
 
 .section .vectors, "ax"
 .align 2
