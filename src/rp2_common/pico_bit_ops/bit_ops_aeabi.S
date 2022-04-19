@@ -19,7 +19,7 @@
 
 .section .data.aeabi_bits_funcs
 .global aeabi_bits_funcs, aeabi_bits_funcs_end
-.equ BITS_FUNC_COUNT, 4
+ _equ BITS_FUNC_COUNT, 4
  _align 4
 aeabi_bits_funcs:
     _word ROM_FUNC_POPCOUNT32
@@ -36,10 +36,10 @@ __aeabi_bits_init:
     ldr r3, =rom_funcs_lookup
     bx r3
 
-.equ POPCOUNT32, 0
-.equ CLZ32, 4
-.equ CTZ32, 8
-.equ REVERSE32, 12
+ _equ POPCOUNT32, 0
+ _equ CLZ32, 4
+ _equ CTZ32, 8
+ _equ REVERSE32, 12
 
  bits_section clzsi
  wrapper_func __clz

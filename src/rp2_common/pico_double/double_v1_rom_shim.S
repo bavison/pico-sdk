@@ -64,17 +64,17 @@
 // library, and shim inter-function calls do not bother to redirect back thru the
 // wrapper functions
 
-.equ use_hw_div,1
-.equ IOPORT       ,0xd0000000
-.equ DIV_UDIVIDEND,0x00000060
-.equ DIV_UDIVISOR ,0x00000064
-.equ DIV_QUOTIENT ,0x00000070
-.equ DIV_CSR      ,0x00000078
+ _equ use_hw_div,1
+ _equ IOPORT       ,0xd0000000
+ _equ DIV_UDIVIDEND,0x00000060
+ _equ DIV_UDIVISOR ,0x00000064
+ _equ DIV_QUOTIENT ,0x00000070
+ _equ DIV_CSR      ,0x00000078
 
 // Notation:
 // rx:ry means the concatenation of rx and ry with rx having the less significant bits
 
-.equ debug,0
+ _equ debug,0
 .macro mdump k
 .if debug
  push {r0-r3}

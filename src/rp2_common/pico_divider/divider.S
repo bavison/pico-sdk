@@ -4,12 +4,11 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
+#include "pico/asm_helper.S"
 #include "hardware/regs/addressmap.h"
 #include "hardware/divider_helper.S"
 
 // PICO_CONFIG: PICO_DIVIDER_DISABLE_INTERRUPTS, Disable interrupts around division such that divider state need not be saved/restored in exception handlers, default=0, group=pico_divider
-
-#include "pico/asm_helper.S"
 
 // PICO_CONFIG: PICO_DIVIDER_CALL_IDIV0, Whether 32 bit division by zero should call __aeabi_idiv0, default=1, group=pico_divider
 #ifndef PICO_DIVIDER_CALL_IDIV0
