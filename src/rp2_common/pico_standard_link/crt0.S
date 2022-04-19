@@ -17,7 +17,7 @@
 #endif
 
 .section .vectors, "ax"
-.align 2
+ _align 2
 
 .global __vectors, __VECTOR_TABLE
 __VECTOR_TABLE:
@@ -270,7 +270,7 @@ data_cpy:
     blo data_cpy_loop
     bx lr
 
-.align 2
+ _align 2
 data_cpy_table:
 #if PICO_COPY_TO_RAM
     _word __ram_text_source__
@@ -324,11 +324,11 @@ __get_current_exception:
 
 .section .stack
 // align to allow for memory protection (although this alignment is pretty much ignored by linker script)
-.align 5
+ _align 5
     .equ StackSize, PICO_STACK_SIZE
 .space StackSize
 
 .section .heap
-.align 2
+ _align 2
     .equ HeapSize, PICO_HEAP_SIZE
 .space HeapSize

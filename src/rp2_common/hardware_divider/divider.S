@@ -13,7 +13,7 @@
 1:
 .endm
 
-.align 2
+ _align 2
 
  regular_func_with_section hw_divider_divmod_s32
     ldr r3, =(SIO_BASE)
@@ -26,7 +26,7 @@
     bx lr
 // end::hw_div_s32[]
 
-.align 2
+ _align 2
 
 // tag::hw_div_u32[]
  regular_func_with_section hw_divider_divmod_u32

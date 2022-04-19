@@ -9,7 +9,7 @@
 
 #if !PICO_DISABLE_SHARED_IRQ_HANDLERS
 .data
-.align 2
+ _align 2
 
 .global irq_handler_chain_slots
 

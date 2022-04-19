@@ -14,7 +14,7 @@
 
 #include "pico/asm_helper.S"
 
-.align 2
+ _align 2
 
 .global call_apsr_f
 .type call_apsr_f,%function
