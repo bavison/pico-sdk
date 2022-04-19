@@ -30,8 +30,8 @@
 #endif
 .endm
 
-double_section double_table_shim_on_use_helper
-regular_func double_table_shim_on_use_helper
+ double_section double_table_shim_on_use_helper
+ regular_func double_table_shim_on_use_helper
     push {r0-r2, lr}
     mov r0, ip
 #ifndef NDEBUG
@@ -165,16 +165,16 @@ l\@_2:
 l\@_3:
 .endm
 
-double_section WRAPPER_FUNC_NAME(__aeabi_dsub)
+ double_section WRAPPER_FUNC_NAME(__aeabi_dsub)
 
 // frsub first because it is the only one that needs alignment
-regular_func drsub_shim
+ regular_func drsub_shim
     push {r0-r3}
     pop {r0-r1}
     pop {r2-r3}
     // fall thru
 
-regular_func dsub_shim
+ regular_func dsub_shim
  push {r4-r7,r14}
  movs r4,#1
  lsls r4,#31
@@ -182,8 +182,8 @@ regular_func dsub_shim
  b da_entry                    // continue in dadd
 
 .align 2
-double_section dadd_shim
-regular_func dadd_shim
+ double_section dadd_shim
+ regular_func dadd_shim
  push {r4-r7,r14}
 da_entry:
  mdunpacks r0,r1,r4,r6,r7
@@ -478,7 +478,7 @@ l\@_1:
  adcs \rzh,\rt2                //                       ZH
 .endm
 
-double_section dmul_shim
+ double_section dmul_shim
  regular_func dmul_shim
  push {r4-r7,r14}
  mdunpack r0,r1,r4,r6,r5
@@ -631,7 +631,7 @@ dm_1:
 // accurate to < 0.25ulp. In the case where x>y the quotient will be shifted up one place for normalisation
 // and so 1ulp is 2^-53 and so the calculation above suffices.
 
-double_section ddiv_shim
+ double_section ddiv_shim
  regular_func ddiv_shim
  push {r4-r7,r14}
 ddiv0:                         // entry point from dtan
@@ -944,7 +944,7 @@ dq_1:
  bx r14
 
 .align 2
-regular_func dsqrt_shim
+ regular_func dsqrt_shim
  lsls r2,r1,#1
  bcs dq_0                      // negative?
  lsrs r2,#21                   // extract exponent
@@ -1132,7 +1132,7 @@ dq_5:
 // in vectoring mode (but perhaps one could work to single precision in
 // a first pass and then double precision in a second pass?).
 
-double_section dcordic_vec_step
+ double_section dcordic_vec_step
  regular_func dcordic_vec_step
  mov r2,r12
  ldmia r2!,{r3,r4}
@@ -1142,7 +1142,7 @@ double_section dcordic_vec_step
  blt 1f
  b 2f
 
-double_section dcordic_rot_step
+ double_section dcordic_rot_step
  regular_func dcordic_rot_step
  mov r2,r12
  ldmia r2!,{r3,r4}
@@ -1221,30 +1221,30 @@ double_section dcordic_rot_step
 // convert packed double in r0:r1 to signed/unsigned 32/64-bit integer/fixed-point value in r0:r1 [with r2 places after point], with rounding towards -Inf
 // fixed-point versions only work with reasonable values in r2 because of the way dunpacks works
 
-double_section double2int_shim
+ double_section double2int_shim
  regular_func double2int_shim
  movs r2,#0                    // and fall through
-regular_func double2fix_shim
+ regular_func double2fix_shim
  push {r14}
  adds r2,#32
  bl double2fix64_shim
  movs r0,r1
  pop {r15}
 
-double_section double2uint_shim
+ double_section double2uint_shim
  regular_func double2uint_shim
  movs r2,#0                    // and fall through
-regular_func double2ufix_shim
+ regular_func double2ufix_shim
  push {r14}
  adds r2,#32
  bl double2ufix64_shim
  movs r0,r1
  pop {r15}
 
-double_section double2int64_shim
+ double_section double2int64_shim
  regular_func double2int64_shim
  movs r2,#0                    // and fall through
-regular_func double2fix64_shim
+ regular_func double2fix64_shim
  push {r14}
  bl d2fix
 
@@ -1259,10 +1259,10 @@ regular_func double2fix64_shim
  eors r1,r1,r0                 // generate extreme fixed-point values
  pop {r15}
 
-double_section double2uint64_shim 
+ double_section double2uint64_shim
  regular_func double2uint64_shim
  movs r2,#0                    // and fall through
-regular_func double2ufix64_shim
+ regular_func double2ufix64_shim
  asrs r3,r1,#20                // negative? return 0
  bmi ret_dzero
 // and fall through
@@ -1290,7 +1290,7 @@ ret_dzero:
  bx r14
  
 .weak d2fix_a // weak because it exists in float code too
-regular_func d2fix_a
+ regular_func d2fix_a
 // here
 // r0:r1 two's complement mantissa
 // r2    unbaised exponent
@@ -1340,7 +1340,7 @@ regular_func d2fix_a
  movs r1,r3
  pop {r4,r15}
 
-double_section double2float_shim
+ double_section double2float_shim
  regular_func double2float_shim
  lsls r2,r1,#1
  lsrs r2,#21                   // exponent
@@ -1395,36 +1395,36 @@ double_section double2float_shim
  lsls r0,#23
  bx r14
 
-double_section x2double_shims
+ double_section x2double_shims
 // convert signed/unsigned 32/64-bit integer/fixed-point value in r0:r1 [with r2 places after point] to packed double in r0:r1, with rounding
 
 .align 2
-regular_func uint2double_shim
+ regular_func uint2double_shim
  movs r1,#0                    // and fall through
-regular_func ufix2double_shim
+ regular_func ufix2double_shim
  movs r2,r1
  movs r1,#0
  b ufix642double_shim
 
 .align 2
-regular_func int2double_shim
+ regular_func int2double_shim
  movs r1,#0                    // and fall through
-regular_func fix2double_shim
+ regular_func fix2double_shim
  movs r2,r1
  asrs r1,r0,#31                // sign extend
  b fix642double_shim
 
 .align 2
-regular_func uint642double_shim
+ regular_func uint642double_shim
  movs r2,#0                    // and fall through
-regular_func ufix642double_shim
+ regular_func ufix642double_shim
  movs r3,#0
  b uf2d
 
 .align 2
-regular_func int642double_shim
+ regular_func int642double_shim
  movs r2,#0                    // and fall through
-regular_func fix642double_shim
+ regular_func fix642double_shim
  asrs r3,r1,#31                // sign bit across all bits
  eors r0,r3
  eors r1,r3
@@ -1503,7 +1503,7 @@ uf2d:
 
 .ltorg
 
-double_section dunpacks
+ double_section dunpacks
  regular_func dunpacks
  mdunpacks r0,r1,r2,r3,r4
  ldr r3,=#0x3ff
@@ -1522,7 +1522,7 @@ double_section dunpacks
 // r2     quotient q (number of reductions)
 // if exponent >=10, returns r0:r1=0, r2=1024*mantissa sign
 // designed to work for 0.5<d<2, in particular d=ln2 (~0.7) and d=π/2 (~1.6)
-double_section dreduce
+ double_section dreduce
  regular_func dreduce
  adds r2,#2                    // e+2
  bmi 1f                        // |x|<0.25, too small to need adjustment
@@ -1597,7 +1597,7 @@ double_section dreduce
  movs r2,#0
  bx r14
 
-double_section dtan_shim
+ double_section dtan_shim
  regular_func dtan_shim
  push {r4-r7,r14}
  bl push_r8_r11
@@ -1611,7 +1611,7 @@ double_section dtan_shim
  bl pop_r8_r11
  b ddiv0                       // compute sin θ/cos θ
 
-double_section dcos_shim
+ double_section dcos_shim
  regular_func dcos_shim
  push {r4-r7,r14}
  bl push_r8_r11
@@ -1619,7 +1619,7 @@ double_section dcos_shim
  bl dcos_finish
  b 1f
 
-double_section dsin_shim
+ double_section dsin_shim
  regular_func dsin_shim
  push {r4-r7,r14}
  bl push_r8_r11
@@ -1629,7 +1629,7 @@ double_section dsin_shim
  bl pop_r8_r11
  pop {r4-r7,r15}
 
-double_section dsincos_shim
+ double_section dsincos_shim
 
  // Note that this function returns in r0-r3
  regular_func dsincos_shim
@@ -1646,7 +1646,7 @@ double_section dsincos_shim
  bl pop_r8_r11
  pop {r4-r7,r15}
 
-double_section dtrig_guts
+ double_section dtrig_guts
 
 // unpack double θ in r0:r1, range reduce and calculate ε, cos α and sin α such that
 // θ=α+ε and |ε|≤2^-32
@@ -1752,7 +1752,7 @@ dreddata0:
 
 
 .align 2
-regular_func datan2_shim
+ regular_func datan2_shim
 // r0:r1 y
 // r2:r3 x
  push {r4-r7,r14}
@@ -1951,8 +1951,8 @@ dtab_cc:
 .word 0x80000000, 0x00000000   // atan 2^-31 Q62
 .word 0x40000000, 0x00000000   // atan 2^-32 Q62
 
-double_section dexp_guts
-regular_func dexp_shim
+ double_section dexp_guts
+ regular_func dexp_shim
  push {r4-r7,r14}
  bl dunpacks
  adr r4,dreddata1
@@ -2023,7 +2023,7 @@ regular_func dexp_shim
 .ltorg
 
 .align 2
-regular_func dln_shim
+ regular_func dln_shim
  push {r4-r7,r14}
  lsls r7,r1,#1
  bcs 5f                        // <0 ...

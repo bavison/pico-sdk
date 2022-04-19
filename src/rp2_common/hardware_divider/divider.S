@@ -19,7 +19,7 @@
 
 .align 2
 
-regular_func_with_section hw_divider_divmod_s32
+ regular_func_with_section hw_divider_divmod_s32
     ldr r3, =(SIO_BASE)
     str r0, [r3, #SIO_DIV_SDIVIDEND_OFFSET]
     str r1, [r3, #SIO_DIV_SDIVISOR_OFFSET]
@@ -33,7 +33,7 @@ regular_func_with_section hw_divider_divmod_s32
 .align 2
 
 // tag::hw_div_u32[]
-regular_func_with_section hw_divider_divmod_u32
+ regular_func_with_section hw_divider_divmod_u32
     ldr r3, =(SIO_BASE)
     str r0, [r3, #SIO_DIV_UDIVIDEND_OFFSET]
     str r1, [r3, #SIO_DIV_UDIVISOR_OFFSET]
@@ -50,7 +50,7 @@ regular_func_with_section hw_divider_divmod_u32
 #error need to change SHIFT above
 #endif
 
-regular_func_with_section hw_divider_save_state
+ regular_func_with_section hw_divider_save_state
     push {r4, r5, lr}
     ldr r5, =SIO_BASE
     ldr r4, [r5, #SIO_DIV_CSR_OFFSET]
@@ -65,7 +65,7 @@ regular_func_with_section hw_divider_save_state
     stmia r0!, {r1-r4}
     pop {r4, r5, pc}
 
-regular_func_with_section hw_divider_restore_state
+ regular_func_with_section hw_divider_restore_state
     push {r4, r5, lr}
     ldr r5, =SIO_BASE
     ldmia r0!, {r1-r4}

@@ -24,8 +24,8 @@
 #endif
 .endm
 
-float_section float_table_shim_on_use_helper
-regular_func float_table_shim_on_use_helper
+ float_section float_table_shim_on_use_helper
+ regular_func float_table_shim_on_use_helper
     push {r0-r2, lr}
     mov r0, ip
 #ifndef NDEBUG
@@ -57,14 +57,14 @@ regular_func float_table_shim_on_use_helper
     str r0, [sp, #12]
     pop {r0-r2, pc}
 
-float_section 642float_shims
+ float_section 642float_shims
 
 // convert uint64 to float, rounding
-regular_func uint642float_shim
+ regular_func uint642float_shim
  movs r2,#0       // fall through
 
 // convert unsigned 64-bit fix to float, rounding; number of r0:r1 bits after point in r2
-regular_func ufix642float_shim
+ regular_func ufix642float_shim
  push {r4,r5,r14}
  cmp r1,#0
  bpl 3f          // positive? we can use signed code
@@ -75,11 +75,11 @@ regular_func ufix642float_shim
  b 4f
 
 // convert int64 to float, rounding
-regular_func int642float_shim
+ regular_func int642float_shim
  movs r2,#0       // fall through
 
 // convert signed 64-bit fix to float, rounding; number of r0:r1 bits after point in r2
-regular_func fix642float_shim
+ regular_func fix642float_shim
  push {r4,r5,r14}
 3:
  movs r5,r0
@@ -109,8 +109,8 @@ regular_func fix642float_shim
 ret_pop45:
  pop {r4,r5,r15}
 
-float_section fatan2_shim
-regular_func fatan2_shim
+ float_section fatan2_shim
+ regular_func fatan2_shim
  push {r4,r5,r14}
 
  ldr r4, =0x29c1 // unpackx
@@ -183,11 +183,11 @@ regular_func fatan2_shim
  ldr r3, =0x2b19
  bx r3
 
-float_section float232_shims
+ float_section float232_shims
 
-regular_func float2int_shim
+ regular_func float2int_shim
      movs r1,#0                    // fall through
-regular_func float2fix_shim
+ regular_func float2fix_shim
      // check for -0 or -denormal upfront
      asrs r2, r0, #23
      adds r2, #128
@@ -200,18 +200,18 @@ regular_func float2fix_shim
      movs r0, #0
      bx lr
 
-float_section float264_shims
+ float_section float264_shims
 
-regular_func float2int64_shim
+ regular_func float2int64_shim
  movs r1,#0                    // and fall through
-regular_func float2fix64_shim
+ regular_func float2fix64_shim
  push {r14}
  bl f2fix
  b d2f64_a
 
-regular_func float2uint64_shim
+ regular_func float2uint64_shim
  movs r1,#0                    // and fall through
-regular_func float2ufix64_shim
+ regular_func float2ufix64_shim
  asrs r3,r0,#23                // negative? return 0
  bmi ret_dzero
 // and fall through
@@ -254,7 +254,7 @@ ret_dzero:
  movs r1,#0
  bx r14
 
-float_section d2fix_a_float
+ float_section d2fix_a_float
 
 .weak d2fix_a // weak because it exists in float shims too
 .thumb_func
@@ -319,8 +319,8 @@ d2f64_a:
  eors r1,r1,r0                 // generate extreme fixed-point values
  pop {r15}
 
-float_section float2double_shim
-regular_func float2double_shim
+ float_section float2double_shim
+ regular_func float2double_shim
  lsrs r3,r0,#31                // sign bit
  lsls r3,#31
  lsls r1,r0,#1
