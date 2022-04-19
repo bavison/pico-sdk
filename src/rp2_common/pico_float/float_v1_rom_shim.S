@@ -11,14 +11,14 @@
 #define PICO_FLOAT_IN_RAM 0
 #endif
 
-.macro float_section name
+_macro_1arg(float_section, name)
 // todo separate flag for shims?
 #if PICO_FLOAT_IN_RAM
 .section RAM_SECTION_NAME(\name), "ax"
 #else
 .section SECTION_NAME(\name), "ax"
 #endif
-.endm
+ _endm(endm)
 
  float_section float_table_shim_on_use_helper
  regular_func float_table_shim_on_use_helper

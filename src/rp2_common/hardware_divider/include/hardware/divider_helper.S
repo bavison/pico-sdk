@@ -20,7 +20,7 @@ need to change SHIFT above
 
 // SIO_BASE ptr in r2; pushes r4-r7, lr to stack
 // requires that division started at least 2 cycles prior to the start of the macro
-.macro save_div_state_and_lr
+_macro(save_div_state_and_lr)
 // originally we did this, however a) it uses r3, and b) the push takes 6 cycles, b)
 // any IRQ which uses the divider will necessarily put the data back, which will
 // immediately make it ready
@@ -38,10 +38,10 @@ need to change SHIFT above
     ldr r5, [r2, #SIO_DIV_UDIVISOR_OFFSET]
     ldr r7, [r2, #SIO_DIV_REMAINDER_OFFSET]
     ldr r6, [r2, #SIO_DIV_QUOTIENT_OFFSET]
-.endm
+ _endm(endm)
 
 // restores divider state from r4-r7, then pops them and pc
-.macro restore_div_state_and_return
+_macro(restore_div_state_and_return)
 // writing sdividend (r4), sdivisor (r5), quotient (r6), remainder (r7) in that order
 //
 // it is worth considering what happens if we are interrupted
@@ -65,4 +65,4 @@ need to change SHIFT above
     str r7, [r2, #SIO_DIV_REMAINDER_OFFSET]
     str r6, [r2, #SIO_DIV_QUOTIENT_OFFSET]
     pop {r4, r5, r6, r7, pc}
-.endm
+ _endm(endm)
