@@ -4,14 +4,14 @@
 
 // tag::hw_div_s32[]
 
-.macro __divider_delay
+_macro(__divider_delay)
     // delay 8 cycles
     b 1f
 1:  b 1f
 1:  b 1f
 1:  b 1f
 1:
-.endm
+ _endm(endm)
 
  _align 2
 

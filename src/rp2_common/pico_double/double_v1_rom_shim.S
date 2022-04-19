@@ -17,14 +17,14 @@
 
 #include "pico/asm_helper.S"
 
-.macro double_section name
+_macro_1arg(double_section, name)
 // todo separate flag for shims?
 #if PICO_DOUBLE_IN_RAM
 .section RAM_SECTION_NAME(\name), "ax"
 #else
 .section SECTION_NAME(\name), "ax"
 #endif
-.endm
+ _endm(endm)
 
  double_section double_table_shim_on_use_helper
  regular_func double_table_shim_on_use_helper
@@ -75,7 +75,7 @@
 // rx:ry means the concatenation of rx and ry with rx having the less significant bits
 
  _equ debug,0
-.macro mdump k
+_macro_1arg(mdump, k)
 .if debug
  push {r0-r3}
  push {r14}
@@ -94,7 +94,7 @@
  mov r14,r0
  pop {r0-r3}
 .endif
-.endm
+ _endm(endm)
 
 
 // IEEE double in ra:rb ->
@@ -102,7 +102,7 @@
 // exponent in re
 // sign in rs
 // trashes rt
-.macro mdunpack ra,rb,re,rs,rt
+_macro_5args(mdunpack, ra, rb, re, rs, rt)
  lsrs \re,\rb,#20              // extract sign and exponent
  subs \rs,\re,#1
  lsls \rs,#20
@@ -121,7 +121,7 @@ l\@_1:
  subs \re,#128
  lsls \re,#12
 l\@_2:
-.endm
+ _endm(endm)
 
 // IEEE double in ra:rb ->
 // signed mantissa in ra:rb 12Q52 (53 significant bits) with implied 1
@@ -131,7 +131,7 @@ l\@_2:
 // -zero, -denormal -> exponent=-0x80000
 // +Inf, +NaN -> exponent=+0x77f000
 // -Inf, -NaN -> exponent=+0x77e000
-.macro mdunpacks ra,rb,re,rt0,rt1
+_macro_5args(mdunpacks, ra, rb, re, rt0, rt1)
  lsrs \re,\rb,#20              // extract sign and exponent
  lsrs \rt1,\rb,#31             // sign only
  subs \rt0,\re,#1
@@ -159,7 +159,7 @@ l\@_2:
  subs \re,#128
  lsls \re,#12
 l\@_3:
-.endm
+ _endm(endm)
 
  double_section WRAPPER_FUNC_NAME(__aeabi_dsub)
 
@@ -360,7 +360,7 @@ da_xmgty:                      // result is just x
 // can have rzl==rx
 // can have rzh==ry
 // can have rzl,rzh==rt3,rt4
-.macro mul32_32_64 rx,ry,rzl,rzh,rt0,rt1,rt2,rt3,rt4
+_macro_9args(mul32_32_64, rx, ry, rzl, rzh, rt0, rt1, rt2, rt3, rt4)
                                //   t0   t1   t2   t3   t4
                                //                  (x)  (y)
  uxth \rt0,\rx                 //   xl
@@ -384,7 +384,7 @@ l\@_1:
  lsrs \rzh,\rt1,#16            //                       MH
  adds \rzl,\rt0                //                  ZL
  adcs \rzh,\rt2                //                       ZH
-.endm
+ _endm(endm)
 
 // SUMULL: x signed, y unsigned
 // in table below ¯ means signed variable
@@ -394,7 +394,7 @@ l\@_1:
 // can have rzl==rx
 // can have rzh==ry
 // can have rzl,rzh==rt3,rt4
-.macro muls32_32_64 rx,ry,rzl,rzh,rt0,rt1,rt2,rt3,rt4
+_macro_9args(muls32_32_64, rx, ry, rzl, rzh, rt0, rt1, rt2, rt3, rt4)
                                //   t0   t1   t2   t3   t4
                                //                 ¯(x)  (y)
  uxth \rt0,\rx                 //   xl
@@ -419,7 +419,7 @@ l\@_1:
  lsrs \rzh,\rt1,#16            //                       M~
  adds \rzl,\rt0                //                  ZL
  adcs \rzh,\rt2                //                      ¯ZH
-.endm
+ _endm(endm)
 
 // SSMULL: x signed, y signed
 // in table below ¯ means signed variable
@@ -429,7 +429,7 @@ l\@_1:
 // can have rzl==rx
 // can have rzh==ry
 // can have rzl,rzh==rt3,rt4
-.macro muls32_s32_64 rx,ry,rzl,rzh,rt0,rt1,rt2,rt3,rt4
+_macro_9args(muls32_s32_64, rx, ry, rzl, rzh, rt0, rt1, rt2, rt3, rt4)
                                //   t0   t1   t2   t3   t4
                                //                 ¯(x)  (y)
  uxth \rt0,\rx                 //   xl
@@ -455,12 +455,12 @@ l\@_1:
  lsrs \rzh,\rt1,#16            //                       M~
  adds \rzl,\rt0                //                  ZL
  adcs \rzh,\rt2                //                      ¯ZH
-.endm
+ _endm(endm)
 
 // can have rt2==rx, in which case rx trashed
 // can have rzl==rx
 // can have rzh==rt1
-.macro square32_64 rx,rzl,rzh,rt0,rt1,rt2
+_macro_6args(square32_64, rx, rzl, rzh, rt0, rt1, rt2)
                                //   t0   t1   t2   zl   zh
  uxth \rt0,\rx                 //   xl
  muls \rt0,\rt0                // xlxl=L
@@ -472,7 +472,7 @@ l\@_1:
  lsrs \rzh,\rt1,#15            //                       MH
  adds \rzl,\rt0                //                  ZL
  adcs \rzh,\rt2                //                       ZH
-.endm
+ _endm(endm)
 
  double_section dmul_shim
  regular_func dmul_shim

@@ -9,13 +9,13 @@
 
  __pre_init __aeabi_mem_init, 00001
 
-.macro mem_section name
+_macro_1arg(mem_section, name)
 #if PICO_MEM_IN_RAM
 .section RAM_SECTION_NAME(\name), "ax"
 #else
 .section SECTION_NAME(\name), "ax"
 #endif
-.endm
+ _endm(endm)
 
  _equ MEMSET, 0
  _equ MEMCPY, 4
