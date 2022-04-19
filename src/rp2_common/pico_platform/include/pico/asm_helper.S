@@ -11,6 +11,7 @@
 #define _byte       .byte
 #define _end        .end
 #define _equ        .equ
+#define _global     .global
 #define _hword      .hword
 #define _word       .word
 

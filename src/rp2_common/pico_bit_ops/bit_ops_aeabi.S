@@ -18,7 +18,7 @@
 .endm
 
 .section .data.aeabi_bits_funcs
-.global aeabi_bits_funcs, aeabi_bits_funcs_end
+ _global aeabi_bits_funcs, aeabi_bits_funcs_end
  _equ BITS_FUNC_COUNT, 4
  _align 4
 aeabi_bits_funcs:

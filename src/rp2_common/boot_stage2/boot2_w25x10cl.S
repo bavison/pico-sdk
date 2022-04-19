@@ -181,6 +181,6 @@
 // Pull in standard exit routine
 #include "boot2_helpers/exit_from_boot2.S"
 
-.global literals
+ _global literals
 literals:
 .ltorg
