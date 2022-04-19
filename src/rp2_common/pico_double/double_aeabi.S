@@ -283,14 +283,14 @@ wrapper_func __aeabi_cdrcmple
 // NOTE these share an implementation as we have no excepting NaNs.
 // void FUNC_NAME(__aeabi_cdcmple)(double, double)         3-way (<, =, ?>) compare [1], result in PSR ZC flags
 // void FUNC_NAME(__aeabi_cdcmpeq)(double, double)         non-excepting equality comparison [1], result in PSR ZC flags
-@ compare r0:r1 against r2:r3, returning -1/0/1 for <, =, >
-@ also set flags accordingly
+// compare r0:r1 against r2:r3, returning -1/0/1 for <, =, >
+// also set flags accordingly
 .align 2
 wrapper_func __aeabi_cdcmple
 wrapper_func __aeabi_cdcmpeq
  push {r0-r7,r14}
 __aeabi_dfcmple_guts:
- ldr r7,=#0x7ff                @ flush NaNs and denormals
+ ldr r7,=#0x7ff                // flush NaNs and denormals
  lsls r4,r1,#1
  lsrs r4,#21
  beq 1f
@@ -317,8 +317,8 @@ __aeabi_dfcmple_guts:
 2:
  movs r6,#1
  eors r3,r1
- bmi 4f                        @ opposite signs? then can proceed on basis of sign of x
- eors r3,r1                    @ restore r3
+ bmi 4f                        // opposite signs? then can proceed on basis of sign of x
+ eors r3,r1                    // restore r3
  bpl 2f
  cmp r3,r1
  bne 7f
@@ -333,12 +333,12 @@ __aeabi_dfcmple_guts:
  cmp r0,r2
  pop {r0-r7,r15}
 4:
- orrs r3,r1                    @ make -0==+0
+ orrs r3,r1                    // make -0==+0
  adds r3,r3
  orrs r3,r0
  orrs r3,r2
  beq 7b
- mvns r1, r1     @ carry inverse of r1 sign
+ mvns r1, r1     // carry inverse of r1 sign
  adds r1, r1
  pop {r0-r7,r15}
 
@@ -627,7 +627,7 @@ regular_func sincostan_remainder
     pop {pc}
 
 double_wrapper_section cos
-#don't use _d1 as we're doing a range check anyway and infinites/nans are bigger than 1024
+// don't use _d1 as we're doing a range check anyway and infinites/nans are bigger than 1024
 wrapper_func cos
     // rom version only works for -1024 < angle < 1024
     lsls r2, r1, #2
@@ -657,7 +657,7 @@ wrapper_func cos
     b 1b
 
 double_wrapper_section sin
-#don't use _d1 as we're doing a range check anyway and infinites/nans are bigger than 1024
+// don't use _d1 as we're doing a range check anyway and infinites/nans are bigger than 1024
 wrapper_func sin
     // rom version only works for -1024 < angle < 1024
     lsls r2, r1, #2
@@ -751,7 +751,7 @@ dsincos_shim_v2:
      push {r4-r7,r14}
      bl push_r8_r11
      bl v2_rom_dsincos_internal
-     mov r12,r0                    @ save ε
+     mov r12,r0                    // save ε
      bl v2_rom_dcos_finish
      push {r0,r1}
      mov r0,r12
@@ -779,7 +779,7 @@ v2_rom_dsin_finish:
     pop {r0, pc}
 
 double_wrapper_section tan
-#don't use _d1 as we're doing a range check anyway and infinites/nans are bigger than 1024
+// don't use _d1 as we're doing a range check anyway and infinites/nans are bigger than 1024
 wrapper_func tan
     // rom version only works for -1024 < angle < 1024
     lsls r2, r1, #2

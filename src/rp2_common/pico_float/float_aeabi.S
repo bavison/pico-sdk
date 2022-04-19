@@ -253,7 +253,7 @@ __aeabi_cfcmple_guts:
     lsls r2, r0, #9
     bhi 3f
 1:
-    lsrs r0,#23     @ clear mantissa if denormal or infinite
+    lsrs r0,#23     // clear mantissa if denormal or infinite
     lsls r0,#23
 2:
     lsls r2,r1,#1
@@ -264,13 +264,13 @@ __aeabi_cfcmple_guts:
     lsls r2, r1, #9
     bhi 3f
 1:
-    lsrs r1,#23     @ clear mantissa if denormal or infinite
+    lsrs r1,#23     // clear mantissa if denormal or infinite
     lsls r1,#23
 2:
-    movs r2,#1      @ initialise result
+    movs r2,#1      // initialise result
     eors r1,r0
-    bmi 2f          @ opposite signs? then can proceed on basis of sign of x
-    eors r1,r0      @ restore y
+    bmi 2f          // opposite signs? then can proceed on basis of sign of x
+    eors r1,r0      // restore y
     bpl 1f
     cmp r1,r0
     pop {r0-r2, pc}
@@ -278,10 +278,10 @@ __aeabi_cfcmple_guts:
     cmp r0,r1
     pop {r0-r2, pc}
 2:
-    orrs r1, r0     @ handle 0/-0
-    adds r1, r1     @ note this always sets C
+    orrs r1, r0     // handle 0/-0
+    adds r1, r1     // note this always sets C
     beq 3f
-    mvns r0, r0     @ carry inverse of r0 sign
+    mvns r0, r0     // carry inverse of r0 sign
     adds r0, r0
 3:
     pop {r0-r2, pc}
@@ -394,25 +394,25 @@ __aeabi_i2f_main:
         subs r0, #158
         rsbs r0, #0
 
-        adds r1,#0x80  @ rounding
-        bcs 5f         @ tripped carry? then have leading 1 in C as required (and result is even so can ignore sticky bits)
+        adds r1,#0x80  // rounding
+        bcs 5f         // tripped carry? then have leading 1 in C as required (and result is even so can ignore sticky bits)
 
-        lsls r3,r1,#24 @ check bottom 8 bits of r1
-        beq 6f         @ in rounding-tie case?
-        lsls r1,#1     @ remove leading 1
+        lsls r3,r1,#24 // check bottom 8 bits of r1
+        beq 6f         // in rounding-tie case?
+        lsls r1,#1     // remove leading 1
 3:
-        lsrs r1,#9     @ align mantissa
-        lsls r0,#23    @ align exponent
-        orrs r0,r2     @ assemble exponent and mantissa
+        lsrs r1,#9     // align mantissa
+        lsls r0,#23    // align exponent
+        orrs r0,r2     // assemble exponent and mantissa
 4:
-        orrs r0,r1     @ apply sign
+        orrs r0,r1     // apply sign
 1:
         bx ip
 5:
-        adds r0,#1     @ correct exponent offset
+        adds r0,#1     // correct exponent offset
         b 3b
 6:
-        lsrs r1,#9     @ ensure even result
+        lsrs r1,#9     // ensure even result
         lsls r1,#10
         b 3b
 7:
