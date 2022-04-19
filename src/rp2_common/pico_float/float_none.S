@@ -74,4 +74,4 @@
     bl panic
 
 str:
-    .asciz "float support is disabled"
+    _asciz "float support is disabled"
