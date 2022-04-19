@@ -8,7 +8,7 @@
 #include "pico/bootrom/sf_table.h"
 #include "hardware/divider_helper.S"
 
-__pre_init __aeabi_double_init, 00020
+ __pre_init __aeabi_double_init, 00020
 
 .syntax unified
 .cpu cortex-m0plus
@@ -23,7 +23,7 @@ __pre_init __aeabi_double_init, 00020
 .endm
 
 .macro _double_wrapper_func x
-    wrapper_func \x
+ wrapper_func \x
 .endm
 
 .macro wrapper_func_d1 x
@@ -111,11 +111,11 @@ __check_nan_d2:
 .endm
 
 .macro double_wrapper_section func
-double_section WRAPPER_FUNC_NAME(\func)
+ double_section WRAPPER_FUNC_NAME(\func)
 .endm
 
-double_section push_r8_r11
-regular_func push_r8_r11
+ double_section push_r8_r11
+ regular_func push_r8_r11
  mov r4,r8
  mov r5,r9
  mov r6,r10
@@ -123,8 +123,8 @@ regular_func push_r8_r11
  push {r4-r7}
  bx r14
 
-double_section pop_r8_r11
-regular_func pop_r8_r11
+ double_section pop_r8_r11
+ regular_func pop_r8_r11
  pop {r4-r7}
  mov r8,r4
  mov r9,r5
@@ -138,19 +138,19 @@ regular_func pop_r8_r11
 // note functions are word aligned except where they are an odd number of linear instructions
 
 // double FUNC_NAME(__aeabi_dadd)(double, double)         double-precision addition
-double_wrapper_section __aeabi_darithmetic
+ double_wrapper_section __aeabi_darithmetic
 // double FUNC_NAME(__aeabi_drsub)(double x, double y)    double-precision reverse subtraction, y - x
 
 // frsub first because it is the only one that needs alignment
 .align 2
-wrapper_func __aeabi_drsub
+ wrapper_func __aeabi_drsub
     eors r0, r1
     eors r1, r0
     eors r0, r1
     // fall thru
 
 // double FUNC_NAME(__aeabi_dsub)(double x, double y)     double-precision subtraction, x - y
-wrapper_func_d2 __aeabi_dsub
+ wrapper_func_d2 __aeabi_dsub
 #if PICO_DOUBLE_PROPAGATE_NANS
     // we want to return nan for inf-inf or -inf - -inf, but without too much upfront cost
     mov ip, r0
@@ -167,11 +167,11 @@ wrapper_func_d2 __aeabi_dsub
 #endif
    shimmable_table_tail_call SF_TABLE_FSUB dsub_shim
 
-wrapper_func_d2 __aeabi_dadd
+ wrapper_func_d2 __aeabi_dadd
    shimmable_table_tail_call SF_TABLE_FADD dadd_shim
 
 // double FUNC_NAME(__aeabi_ddiv)(double n, double d)     double-precision division, n / d
-wrapper_func_d2 __aeabi_ddiv
+ wrapper_func_d2 __aeabi_ddiv
 #if PICO_DOUBLE_PROPAGATE_NANS
     push {r0-r3, lr}
     bl 1f
@@ -238,7 +238,7 @@ ddiv_dsub_nan_helper:
 #endif
 
 // double FUNC_NAME(__aeabi_dmul)(double, double)         double-precision multiplication
-wrapper_func_d2 __aeabi_dmul
+ wrapper_func_d2 __aeabi_dmul
 #if PICO_DOUBLE_PROPAGATE_NANS
     push {r0-r3, lr}
     bl 1f
@@ -268,9 +268,9 @@ wrapper_func_d2 __aeabi_dmul
    shimmable_table_tail_call SF_TABLE_FMUL dmul_shim
 
 // void FUNC_NAME(__aeabi_cdrcmple)(double, double)         reversed 3-way (<, =, ?>) compare [1], result in PSR ZC flags
-double_wrapper_section __aeabi_cdcmple
+ double_wrapper_section __aeabi_cdcmple
 
-wrapper_func __aeabi_cdrcmple
+ wrapper_func __aeabi_cdrcmple
  push {r0-r7,r14}
     eors r0, r2
     eors r2, r0
@@ -286,8 +286,8 @@ wrapper_func __aeabi_cdrcmple
 // compare r0:r1 against r2:r3, returning -1/0/1 for <, =, >
 // also set flags accordingly
 .align 2
-wrapper_func __aeabi_cdcmple
-wrapper_func __aeabi_cdcmpeq
+ wrapper_func __aeabi_cdcmple
+ wrapper_func __aeabi_cdcmpeq
  push {r0-r7,r14}
 __aeabi_dfcmple_guts:
  ldr r7,=0x7ff                // flush NaNs and denormals
@@ -344,9 +344,9 @@ __aeabi_dfcmple_guts:
 
 
 // int FUNC_NAME(__aeabi_dcmpeq)(double, double)         result (1, 0) denotes (=, ?<>) [2], use for C == and !=
-double_wrapper_section __aeabi_dcmpeq
+ double_wrapper_section __aeabi_dcmpeq
 .align 2
-wrapper_func __aeabi_dcmpeq
+ wrapper_func __aeabi_dcmpeq
     push {lr}
     bl __aeabi_cdcmpeq
     beq 1f
@@ -357,18 +357,18 @@ wrapper_func __aeabi_dcmpeq
     pop {pc}
 
 // int FUNC_NAME(__aeabi_dcmplt)(double, double)         result (1, 0) denotes (<, ?>=) [2], use for C <
-double_wrapper_section __aeabi_dcmplt
+ double_wrapper_section __aeabi_dcmplt
 .align 2
-wrapper_func __aeabi_dcmplt
+ wrapper_func __aeabi_dcmplt
     push {lr}
     bl __aeabi_cdcmple
     sbcs r0, r0
     pop {pc}
 
 // int FUNC_NAME(__aeabi_dcmple)(double, double)         result (1, 0) denotes (<=, ?>) [2], use for C <=
-double_wrapper_section __aeabi_dcmple
+ double_wrapper_section __aeabi_dcmple
 .align 2
-wrapper_func __aeabi_dcmple
+ wrapper_func __aeabi_dcmple
     push {lr}
     bl __aeabi_cdcmple
     bls 1f
@@ -379,9 +379,9 @@ wrapper_func __aeabi_dcmple
     pop {pc}
 
 // int FUNC_NAME(__aeabi_dcmpge)(double, double)         result (1, 0) denotes (>=, ?<) [2], use for C >=
-double_wrapper_section __aeabi_dcmpge
+ double_wrapper_section __aeabi_dcmpge
 .align 2
-wrapper_func __aeabi_dcmpge
+ wrapper_func __aeabi_dcmpge
     push {lr}
     // because of NaNs it is better to reverse the args than the result
     bl __aeabi_cdrcmple
@@ -393,8 +393,8 @@ wrapper_func __aeabi_dcmpge
     pop {pc}
 
 // int FUNC_NAME(__aeabi_dcmpgt)(double, double)         result (1, 0) denotes (>, ?<=) [2], use for C >
-double_wrapper_section __aeabi_dcmpgt
-wrapper_func __aeabi_dcmpgt
+ double_wrapper_section __aeabi_dcmpgt
+ wrapper_func __aeabi_dcmpgt
     push {lr}
     // because of NaNs it is better to reverse the args than the result
     bl __aeabi_cdrcmple
@@ -402,8 +402,8 @@ wrapper_func __aeabi_dcmpgt
     pop {pc}
 
 // int FUNC_NAME(__aeabi_dcmpun)(double, double)         result (1, 0) denotes (?, <=>) [2], use for C99 isunordered()
-double_wrapper_section __aeabi_dcmpun
-wrapper_func __aeabi_dcmpun
+ double_wrapper_section __aeabi_dcmpun
+ wrapper_func __aeabi_dcmpun
    movs r0, #1
    lsls r0, #21
    lsls r2, r1, #1
@@ -422,19 +422,19 @@ wrapper_func __aeabi_dcmpun
     bx lr
 
 // double FUNC_NAME(__aeabi_ui2d)(unsigned)             unsigned to double (double precision) conversion
-double_wrapper_section __aeabi_ui2d
+ double_wrapper_section __aeabi_ui2d
     shimmable_table_tail_call SF_TABLE_UINT2FLOAT uint2double_shim
 
-double_wrapper_section __aeabi_i2d
+ double_wrapper_section __aeabi_i2d
 
-wrapper_func __aeabi_ui2d
+ wrapper_func __aeabi_ui2d
     movs r1, #0
     cmp r0, #0
     bne 2f
 1:
     bx lr
 // double FUNC_NAME(__aeabi_i2d)(int)                     integer to double (double precision) conversion
-wrapper_func __aeabi_i2d
+ wrapper_func __aeabi_i2d
     asrs r1, r0, #31
     eors r0, r1
     subs r0, r1
@@ -458,9 +458,9 @@ wrapper_func __aeabi_i2d
     pop {r4, pc}
 
 // int FUNC_NAME(__aeabi_d2iz)(double)                     double (double precision) to integer C-style conversion [3]
-double_wrapper_section __aeabi_d2iz
-wrapper_func __aeabi_d2iz
-regular_func double2int_z
+ double_wrapper_section __aeabi_d2iz
+ wrapper_func __aeabi_d2iz
+ regular_func double2int_z
     push {r4, lr}
     lsls r4, r1, #1
     lsrs r2, r4, #21
@@ -502,46 +502,46 @@ regular_func double2int_z
     subs r0, #1
     pop {r4, pc}
 
-double_section double2int
-regular_func double2int
+ double_section double2int
+ regular_func double2int
     shimmable_table_tail_call SF_TABLE_FLOAT2INT double2int_shim
 
 // unsigned FUNC_NAME(__aeabi_d2uiz)(double)             double (double precision) to unsigned C-style conversion [3]
-double_wrapper_section __aeabi_d2uiz
-wrapper_func __aeabi_d2uiz
-regular_func double2uint
+ double_wrapper_section __aeabi_d2uiz
+ wrapper_func __aeabi_d2uiz
+ regular_func double2uint
     shimmable_table_tail_call SF_TABLE_FLOAT2UINT double2uint_shim
 
-double_section fix2double
-regular_func fix2double
+ double_section fix2double
+ regular_func fix2double
     shimmable_table_tail_call SF_TABLE_FIX2FLOAT fix2double_shim
 
-double_section ufix2double
-regular_func ufix2double
+ double_section ufix2double
+ regular_func ufix2double
     shimmable_table_tail_call SF_TABLE_UFIX2FLOAT ufix2double_shim
 
-double_section fix642double
-regular_func fix642double
+ double_section fix642double
+ regular_func fix642double
     shimmable_table_tail_call SF_TABLE_FIX642FLOAT fix642double_shim
 
-double_section ufix2double
-regular_func ufix642double
+ double_section ufix2double
+ regular_func ufix642double
     shimmable_table_tail_call SF_TABLE_UFIX642FLOAT ufix642double_shim
 
 // double FUNC_NAME(__aeabi_l2d)(long long)             long long to double (double precision) conversion
-double_wrapper_section __aeabi_l2d
-wrapper_func __aeabi_l2d
+ double_wrapper_section __aeabi_l2d
+ wrapper_func __aeabi_l2d
     shimmable_table_tail_call SF_TABLE_INT642FLOAT int642double_shim
 
 // double FUNC_NAME(__aeabi_l2f)(long long)             long long to double (double precision) conversion
-double_wrapper_section __aeabi_ul2d
-wrapper_func __aeabi_ul2d
+ double_wrapper_section __aeabi_ul2d
+ wrapper_func __aeabi_ul2d
     shimmable_table_tail_call SF_TABLE_UINT642FLOAT uint642double_shim
 
 // long long FUNC_NAME(__aeabi_d2lz)(double)             double (double precision) to long long C-style conversion [3]
-double_wrapper_section __aeabi_d2lz
-wrapper_func __aeabi_d2lz
-regular_func double2int64_z
+ double_wrapper_section __aeabi_d2lz
+ wrapper_func __aeabi_d2lz
+ regular_func double2int64_z
     cmn r1, r1
     bcc double2int64
     push {lr}
@@ -562,32 +562,32 @@ regular_func double2int64_z
     movs r0, #0
     pop {pc}
 
-double_section double2int64
-regular_func double2int64
+ double_section double2int64
+ regular_func double2int64
     shimmable_table_tail_call SF_TABLE_FLOAT2INT64 double2int64_shim
 
 // unsigned long long FUNC_NAME(__aeabi_d2ulz)(double)     double to unsigned long long C-style conversion [3]
-double_wrapper_section __aeabi_d2ulz
-wrapper_func __aeabi_d2ulz
+ double_wrapper_section __aeabi_d2ulz
+ wrapper_func __aeabi_d2ulz
     shimmable_table_tail_call SF_TABLE_FLOAT2UINT64 double2uint64_shim
 
-double_section double2fix64
-regular_func double2fix64
+ double_section double2fix64
+ regular_func double2fix64
     shimmable_table_tail_call SF_TABLE_FLOAT2FIX64 double2fix64_shim
 
-double_section double2ufix64
-regular_func double2ufix64
+ double_section double2ufix64
+ regular_func double2ufix64
     shimmable_table_tail_call SF_TABLE_FLOAT2UFIX64 double2ufix64_shim
 
-double_section double2fix
-regular_func double2fix
+ double_section double2fix
+ regular_func double2fix
     shimmable_table_tail_call SF_TABLE_FLOAT2FIX double2fix_shim
 
-double_section double2ufix
-regular_func double2ufix
+ double_section double2ufix
+ regular_func double2ufix
     shimmable_table_tail_call SF_TABLE_FLOAT2UFIX double2ufix_shim
 
-double_wrapper_section __aeabi_d2f
+ double_wrapper_section __aeabi_d2f
 1:
 #if PICO_DOUBLE_PROPAGATE_NANS
     // copy sign bit and 23 NAN id bits into sign bit and significant id bits, also set high id bit
@@ -601,7 +601,7 @@ double_wrapper_section __aeabi_d2f
     orrs r0, r2
     bx lr
 #endif
-wrapper_func __aeabi_d2f
+ wrapper_func __aeabi_d2f
 #if PICO_DOUBLE_PROPAGATE_NANS
     movs r3, #1
     lsls r3, #21
@@ -612,12 +612,12 @@ wrapper_func __aeabi_d2f
     // note double->float in double table at same index as float->double in double table
     shimmable_table_tail_call SF_TABLE_FLOAT2DOUBLE double2float_shim
 
-double_wrapper_section srqt
-wrapper_func_d1 sqrt
+ double_wrapper_section srqt
+ wrapper_func_d1 sqrt
     shimmable_table_tail_call SF_TABLE_FSQRT dsqrt_shim
 
-double_wrapper_section sincostan_remainder
-regular_func sincostan_remainder
+ double_wrapper_section sincostan_remainder
+ regular_func sincostan_remainder
     ldr r2, =0x54442D18 // 2 * M_PI
     ldr r3, =0x401921FB
     push {lr}
@@ -626,9 +626,9 @@ regular_func sincostan_remainder
     bl remainder
     pop {pc}
 
-double_wrapper_section cos
+ double_wrapper_section cos
 // don't use _d1 as we're doing a range check anyway and infinites/nans are bigger than 1024
-wrapper_func cos
+ wrapper_func cos
     // rom version only works for -1024 < angle < 1024
     lsls r2, r1, #2
     bcc 1f
@@ -656,9 +656,9 @@ wrapper_func cos
     mov lr, r2
     b 1b
 
-double_wrapper_section sin
+ double_wrapper_section sin
 // don't use _d1 as we're doing a range check anyway and infinites/nans are bigger than 1024
-wrapper_func sin
+ wrapper_func sin
     // rom version only works for -1024 < angle < 1024
     lsls r2, r1, #2
     bcc 1f
@@ -686,7 +686,7 @@ wrapper_func sin
     mov lr, r2
     b 1b
 
-double_wrapper_section sincos
+ double_wrapper_section sincos
     // out of line remainder code for abs(angle)>=1024
 2:
 #if PICO_DOUBLE_PROPAGATE_NANS
@@ -710,7 +710,7 @@ double_wrapper_section sincos
     mov lr, r2
     b 1f // continue with sincos
 
-wrapper_func sincos
+ wrapper_func sincos
     push {r2-r5, lr}
     // rom version only works for -1024 < angle < 1024
     lsls r2, r1, #2
@@ -778,9 +778,9 @@ v2_rom_dsin_finish:
     str r0, [sp, #4]
     pop {r0, pc}
 
-double_wrapper_section tan
+ double_wrapper_section tan
 // don't use _d1 as we're doing a range check anyway and infinites/nans are bigger than 1024
-wrapper_func tan
+ wrapper_func tan
     // rom version only works for -1024 < angle < 1024
     lsls r2, r1, #2
     bcc dtan_in_range
@@ -835,15 +835,15 @@ dtan_angle_out_of_range:
     mov lr, r2
     b dtan_in_range
 
-double_wrapper_section atan2
-wrapper_func_d2 atan2
+ double_wrapper_section atan2
+ wrapper_func_d2 atan2
     shimmable_table_tail_call SF_TABLE_FATAN2 datan2_shim
 
-double_wrapper_section exp
-wrapper_func_d1 exp
+ double_wrapper_section exp
+ wrapper_func_d1 exp
     shimmable_table_tail_call SF_TABLE_FEXP dexp_shim
 
-double_wrapper_section log
-wrapper_func_d1 log
+ double_wrapper_section log
+ wrapper_func_d1 log
     shimmable_table_tail_call SF_TABLE_FLN dln_shim
 

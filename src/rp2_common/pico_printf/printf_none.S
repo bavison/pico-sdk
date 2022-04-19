@@ -11,10 +11,10 @@
 .cpu cortex-m0plus
 .thumb
 
-wrapper_func sprintf
-wrapper_func snprintf
-wrapper_func vsnprintf
-regular_func printf_none_assert
+ wrapper_func sprintf
+ wrapper_func snprintf
+ wrapper_func vsnprintf
+ regular_func printf_none_assert
     push {lr}       // keep stack trace sane
     ldr r0, =str
     bl panic
