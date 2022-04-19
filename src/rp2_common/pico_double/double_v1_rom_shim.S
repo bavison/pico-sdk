@@ -177,7 +177,7 @@ l\@_3:
  eors r3,r4                    // flip sign on second argument
  b da_entry                    // continue in dadd
 
-.align 2
+ _align 2
  double_section dadd_shim
  regular_func dadd_shim
  push {r4-r7,r14}
@@ -939,7 +939,7 @@ dq_4:
 dq_1:
  bx r14
 
-.align 2
+ _align 2
  regular_func dsqrt_shim
  lsls r2,r1,#1
  bcs dq_0                      // negative?
@@ -1392,7 +1392,7 @@ ret_dzero:
  double_section x2double_shims
 // convert signed/unsigned 32/64-bit integer/fixed-point value in r0:r1 [with r2 places after point] to packed double in r0:r1, with rounding
 
-.align 2
+ _align 2
  regular_func uint2double_shim
  movs r1,#0                    // and fall through
  regular_func ufix2double_shim
@@ -1400,7 +1400,7 @@ ret_dzero:
  movs r1,#0
  b ufix642double_shim
 
-.align 2
+ _align 2
  regular_func int2double_shim
  movs r1,#0                    // and fall through
  regular_func fix2double_shim
@@ -1408,14 +1408,14 @@ ret_dzero:
  asrs r1,r0,#31                // sign extend
  b fix642double_shim
 
-.align 2
+ _align 2
  regular_func uint642double_shim
  movs r2,#0                    // and fall through
  regular_func ufix642double_shim
  movs r3,#0
  b uf2d
 
-.align 2
+ _align 2
  regular_func int642double_shim
  movs r2,#0                    // and fall through
  regular_func fix642double_shim
@@ -1648,7 +1648,7 @@ uf2d:
 // r0:r1   ε (residual ω, where θ=α+ε) Q62, |ε|≤2^-32 (so fits in r0)
 // r8:r9   cos α Q62
 // r10:r11 sin α Q62
-.align 2
+ _align 2
  local_func dsincos_internal
  push {r14}
  bl dunpacks
@@ -1736,7 +1736,7 @@ dsin_finish:
  b fix642double_shim
 
 .ltorg
-.align 2
+ _align 2
 dreddata0:
     _word 0x0000517d               // 2/π Q15
     _word 0x0014611A               // π/2 Q62=6487ED5110B4611A split into 21-bit pieces
@@ -1744,7 +1744,7 @@ dreddata0:
     _word 0x001921FB
 
 
-.align 2
+ _align 2
  regular_func datan2_shim
 // r0:r1 y
 // r2:r3 x
@@ -2015,7 +2015,7 @@ dtab_cc:
 
 .ltorg
 
-.align 2
+ _align 2
  regular_func dln_shim
  push {r4-r7,r14}
  lsls r7,r1,#1
@@ -2132,7 +2132,7 @@ dtab_cc:
 
 .ltorg
 
-.align 2
+ _align 2
 dreddata1:
     _word 0x0000B8AA               // 1/ln2 Q15
     _word 0x0013DE6B               // ln2 Q62 Q62=2C5C85FDF473DE6B split into 21-bit pieces

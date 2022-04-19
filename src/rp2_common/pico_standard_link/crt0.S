@@ -17,7 +17,7 @@
 #endif
 
 .section .vectors, "ax"
-.align 2
+ _align 2
 
 .global __vectors, __VECTOR_TABLE
 __VECTOR_TABLE:
@@ -263,7 +263,7 @@ data_cpy:
 // Note the data copy table is still included for NO_FLASH builds, even though
 // we skip the copy, because it is listed in binary info
 
-.align 2
+ _align 2
 data_cpy_table:
 #if PICO_COPY_TO_RAM
     _word __ram_text_source__
@@ -307,11 +307,11 @@ hold_non_core0_in_bootrom:
 
 .section .stack
 // align to allow for memory protection (although this alignment is pretty much ignored by linker script)
-.align 5
+ _align 5
     .equ StackSize, PICO_STACK_SIZE
 .space StackSize
 
 .section .heap
-.align 2
+ _align 2
     .equ HeapSize, PICO_HEAP_SIZE
 .space HeapSize

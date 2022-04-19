@@ -29,7 +29,7 @@
 .section .data.aeabi_mem_funcs
 .global aeabi_mem_funcs, aeabi_mem_funcs_end
 
-.align 2
+ _align 2
 aeabi_mem_funcs:
     _word ROM_FUNC_MEMSET
     _word ROM_FUNC_MEMCPY

@@ -92,7 +92,7 @@
 
 // since idiv and idivmod only differ by a cycle, we'll make them the same!
  div_section WRAPPER_FUNC_NAME(__aeabi_idiv)
-.align 2
+ _align 2
  wrapper_func __aeabi_idiv
  wrapper_func __aeabi_idivmod
  regular_func div_s32s32
@@ -146,7 +146,7 @@
     // need to restore saved r2 as it hold SIO ptr
     pop {r2, pc}
 #if !PICO_DIVIDER_DISABLE_INTERRUPTS
-.align 2
+ _align 2
  regular_func divmod_s32s32_savestate
     // note that we must be at least 2 cycles into division at this point,
     // which we are because of the firty check before getting here (and of course the function call before that)
@@ -207,7 +207,7 @@
     // need to restore saved r2 as it hold SIO ptr
     pop {r2, pc}
 #if !PICO_DIVIDER_DISABLE_INTERRUPTS
-.align 2
+ _align 2
  regular_func divmod_u32u32_savestate
     save_div_state_and_lr
     bl divmod_u32u32_unsafe
@@ -216,7 +216,7 @@
 
  div_section WRAPPER_FUNC_NAME(__aeabi_ldiv)
 
-.align 2
+ _align 2
  wrapper_func __aeabi_ldivmod
  regular_func div_s64s64
  regular_func divmod_s64s64
@@ -229,7 +229,7 @@
     mov r2, ip
     bcs divmod_s64s64_savestate
     b divmod_s64s64_unsafe
-.align 2
+ _align 2
 divmod_s64s64_savestate:
     save_div_state_and_lr_64
     bl divmod_s64s64_unsafe
@@ -244,7 +244,7 @@ divmod_s64s64_savestate:
     pop {r4, pc}
 #endif /* !PICO_DIVIDER_DISABLE_INTERRUPTS */
 
-.align 2
+ _align 2
  wrapper_func __aeabi_uldivmod
  regular_func div_u64u64
  regular_func divmod_u64u64
@@ -257,7 +257,7 @@ divmod_s64s64_savestate:
     mov r2, ip
     bcs divmod_u64u64_savestate
     b divmod_u64u64_unsafe
-.align 2
+ _align 2
  regular_func divmod_u64u64_savestate
     save_div_state_and_lr_64
     bl divmod_u64u64_unsafe
@@ -280,7 +280,7 @@ divmod_s64s64_savestate:
 l\@_1:
 .endm
 
-.align 2
+ _align 2
  regular_func divmod_s64s64_unsafe
  cmp r3,#0
  blt 1f
