@@ -2,10 +2,6 @@
 #include "hardware/regs/addressmap.h"
 #include "hardware/regs/sio.h"
 
-.syntax unified
-.cpu cortex-m0plus
-.thumb
-
 // tag::hw_div_s32[]
 
 .macro __divider_delay
