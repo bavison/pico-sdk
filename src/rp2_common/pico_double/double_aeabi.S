@@ -10,10 +10,6 @@
 
  __pre_init __aeabi_double_init, 00020
 
-.syntax unified
-.cpu cortex-m0plus
-.thumb
-
 .macro double_section name
 #if PICO_DOUBLE_IN_RAM
 .section RAM_SECTION_NAME(\name), "ax"
@@ -43,8 +39,6 @@
     mov lr, ip
 #endif
 .endm
-
-.section .text
 
 #if PICO_DOUBLE_PROPAGATE_NANS
 .thumb_func

@@ -17,10 +17,6 @@
 
 #include "pico/asm_helper.S"
 
-.syntax unified
-.cpu cortex-m0plus
-.thumb
-
 .macro double_section name
 // todo separate flag for shims?
 #if PICO_DOUBLE_IN_RAM

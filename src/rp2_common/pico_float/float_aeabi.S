@@ -10,10 +10,6 @@
 
  __pre_init __aeabi_float_init, 00020
 
-.syntax unified
-.cpu cortex-m0plus
-.thumb
-
 .macro float_section name
 #if PICO_FLOAT_IN_RAM
 .section RAM_SECTION_NAME(\name), "ax"
@@ -47,8 +43,6 @@
     mov lr, ip
 #endif
 .endm
-
-.section .text
 
 #if PICO_FLOAT_PROPAGATE_NANS
 .thumb_func

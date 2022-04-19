@@ -80,11 +80,6 @@
 // Start of 2nd Stage Boot Code
 // ----------------------------------------------------------------------------
 
-.cpu cortex-m0
-.thumb
-
-.section .text
-
 .global _stage2_boot
 .type _stage2_boot,%function
 .thumb_func

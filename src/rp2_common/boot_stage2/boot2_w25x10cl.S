@@ -69,12 +69,7 @@
 // Start of 2nd Stage Boot Code
 // ----------------------------------------------------------------------------
 
-.cpu cortex-m0
-.thumb
-
 .org 0
-
-.section .text
 
 // This code will get copied to 0x20000000 and then executed
 

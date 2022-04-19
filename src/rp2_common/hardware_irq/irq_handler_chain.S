@@ -4,14 +4,10 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#include "pico.h"
+#include "pico/asm_helper.S"
 #include "hardware/irq.h"
 
 #if !PICO_DISABLE_SHARED_IRQ_HANDLERS
-.syntax unified
-.cpu cortex-m0plus
-.thumb
-
 .data
 .align 2
 

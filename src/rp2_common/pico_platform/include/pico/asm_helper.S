@@ -6,6 +6,11 @@
 
 #include "pico.h"
 
+.syntax unified
+.cpu cortex-m0plus
+.thumb
+.section .text
+
 // do not put align in here as it is used mid function sometimes
 .macro regular_func x
 .global \x

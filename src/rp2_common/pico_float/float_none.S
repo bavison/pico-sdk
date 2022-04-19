@@ -7,10 +7,6 @@
 #include "pico/asm_helper.S"
 #include "pico/bootrom/sf_table.h"
 
-.syntax unified
-.cpu cortex-m0plus
-.thumb
-
  wrapper_func __aeabi_fadd
  wrapper_func __aeabi_fdiv
  wrapper_func __aeabi_fmul
