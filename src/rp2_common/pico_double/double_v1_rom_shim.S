@@ -64,17 +64,17 @@
 // library, and shim inter-function calls do not bother to redirect back thru the
 // wrapper functions
 
-.equ use_hw_div,1
-.equ IOPORT       ,0xd0000000
-.equ DIV_UDIVIDEND,0x00000060
-.equ DIV_UDIVISOR ,0x00000064
-.equ DIV_QUOTIENT ,0x00000070
-.equ DIV_CSR      ,0x00000078
+ _equ use_hw_div,1
+ _equ IOPORT       ,0xd0000000
+ _equ DIV_UDIVIDEND,0x00000060
+ _equ DIV_UDIVISOR ,0x00000064
+ _equ DIV_QUOTIENT ,0x00000070
+ _equ DIV_CSR      ,0x00000078
 
 // Notation:
 // rx:ry means the concatenation of rx and ry with rx having the less significant bits
 
-.equ debug,0
+ _equ debug,0
 .macro mdump k
 .if debug
  push {r0-r3}
@@ -964,7 +964,7 @@ dq_1:
 // here
 // r0:r1  y mantissa Q52 [1,4)
 // r12    result exponent
-.equ drsqrtapp_minus_8, (drsqrtapp-8)
+ _equ drsqrtapp_minus_8, (drsqrtapp-8)
  adr r4,drsqrtapp_minus_8      // first eight table entries are never accessed because of the mantissa's leading 1
  lsrs r2,r1,#17                // y Q3
  ldrb r2,[r4,r2]               // initial approximation to reciprocal square root a0 Q8
@@ -2079,7 +2079,7 @@ dtab_cc:
 // here:
 // r2:r3 ln m/2 = ln m - ln2 Q62
 // r7    unbiased exponent
-.equ dreddata1_plus_4, (dreddata1+4)
+ _equ dreddata1_plus_4, (dreddata1+4)
  adr r4,dreddata1_plus_4
  ldmia r4,{r0,r1,r4}
  adds r7,#1
