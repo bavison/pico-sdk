@@ -332,3 +332,5 @@ __get_current_exception:
  _align 2
  _equ HeapSize, PICO_HEAP_SIZE
 .space HeapSize
+
+ _end

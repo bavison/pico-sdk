@@ -47,4 +47,4 @@ dead:
 literals:
 .ltorg
 
-.end
+ _end

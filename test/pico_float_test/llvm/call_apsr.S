@@ -34,3 +34,5 @@ call_apsr_d:
     blx r4
     mrs r0, apsr
     pop {r4, pc}
+
+ _end

@@ -278,4 +278,4 @@ configure_ssi:
 literals:
 .ltorg
 
-.end
+ _end

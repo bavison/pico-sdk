@@ -763,3 +763,5 @@ ftan_out_of_range:
  float_wrapper_section logf
  wrapper_func_f1 logf
     table_tail_call SF_TABLE_FLN
+
+ _end

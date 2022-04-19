@@ -95,4 +95,4 @@ _stage2_boot:
 literals:
 .ltorg
 
-.end
+ _end

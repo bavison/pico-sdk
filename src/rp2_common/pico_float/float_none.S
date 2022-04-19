@@ -75,3 +75,5 @@
 
 str:
     _asciz "float support is disabled"
+
+ _end
