@@ -22,10 +22,10 @@
 .equ BITS_FUNC_COUNT, 4
 .align 4
 aeabi_bits_funcs:
-    .word ROM_FUNC_POPCOUNT32
-    .word ROM_FUNC_CLZ32
-    .word ROM_FUNC_CTZ32
-    .word ROM_FUNC_REVERSE32
+    _word ROM_FUNC_POPCOUNT32
+    _word ROM_FUNC_CLZ32
+    _word ROM_FUNC_CTZ32
+    _word ROM_FUNC_REVERSE32
 aeabi_bits_funcs_end:
 
 .section .text

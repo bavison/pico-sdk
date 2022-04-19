@@ -6,6 +6,11 @@
 
 #include "pico.h"
 
+#define _asciz      .asciz
+#define _byte       .byte
+#define _hword      .hword
+#define _word       .word
+
 .syntax unified
 .cpu cortex-m0plus
 .thumb
@@ -32,6 +37,6 @@
 .macro __pre_init func, priority_string
 .section .preinit_array.\priority_string
 .align 2
-.word \func
+    _word \func
 .endm
 
