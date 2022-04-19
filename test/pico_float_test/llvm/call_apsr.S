@@ -16,7 +16,7 @@
 
  _align 2
 
-.global call_apsr_f
+ _global call_apsr_f
 .type call_apsr_f,%function
 .thumb_func
 call_apsr_f:
@@ -25,7 +25,7 @@ call_apsr_f:
     mrs r0, apsr
     pop {pc}
 
-.global call_apsr_d
+ _global call_apsr_d
 .type call_apsr_d,%function
 .thumb_func
 call_apsr_d:

@@ -19,7 +19,7 @@
 .section .vectors, "ax"
  _align 2
 
-.global __vectors, __VECTOR_TABLE
+ _global __vectors, __VECTOR_TABLE
 __VECTOR_TABLE:
 __vectors:
     _word __StackTop
@@ -73,7 +73,7 @@ __vectors:
 
 // all default exception handlers do nothing, and we can check for them being set to our
 // default values by seeing if they point to somewhere between __defaults_isrs_start and __default_isrs_end
-.global __default_isrs_start
+ _global __default_isrs_start
 __default_isrs_start:
 
 // Declare a weak symbol for each ISR.
@@ -96,7 +96,7 @@ _macro_1arg(decl_isr_bkpt, name)
  decl_isr_bkpt isr_pendsv
  decl_isr_bkpt isr_systick
 
-.global __default_isrs_end
+ _global __default_isrs_end
 __default_isrs_end:
 
 _macro_1arg(decl_isr, name)
@@ -140,12 +140,12 @@ _macro_1arg(decl_isr, name)
  decl_isr isr_irq31
 
 // All unhandled USER IRQs fall through to here
-.global __unhandled_user_irq
+ _global __unhandled_user_irq
 .thumb_func
 __unhandled_user_irq:
     bl __get_current_exception
     subs r0, #16
-.global unhandled_user_irq_num_in_r0
+ _global unhandled_user_irq_num_in_r0
 unhandled_user_irq_num_in_r0:
     bkpt #0
 
@@ -186,7 +186,7 @@ binary_info_header:
 // ELF entry point:
 .type _entry_point,%function
 .thumb_func
-.global _entry_point
+ _global _entry_point
 _entry_point:
 
 #if PICO_NO_FLASH
@@ -312,7 +312,7 @@ hold_non_core0_in_bootrom:
     bl rom_func_lookup
     bx r0
 
-.global __get_current_exception
+ _global __get_current_exception
 .thumb_func
 __get_current_exception:
     mrs  r0, ipsr

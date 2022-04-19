@@ -80,7 +80,7 @@
 // Start of 2nd Stage Boot Code
 // ----------------------------------------------------------------------------
 
-.global _stage2_boot
+ _global _stage2_boot
 .type _stage2_boot,%function
 .thumb_func
 _stage2_boot:
@@ -250,7 +250,7 @@ configure_ssi:
 #include "boot2_helpers/read_flash_sreg.S"
 #endif
 
-.global literals
+ _global literals
 literals:
 .ltorg
 

@@ -53,7 +53,7 @@
 // Start of 2nd Stage Boot Code
 // ----------------------------------------------------------------------------
 
-.global _stage2_boot
+ _global _stage2_boot
 .type _stage2_boot,%function
 .thumb_func
 _stage2_boot:
@@ -91,7 +91,7 @@ _stage2_boot:
 // Pull in standard exit routine
 #include "boot2_helpers/exit_from_boot2.S"
 
-.global literals
+ _global literals
 literals:
 .ltorg
 

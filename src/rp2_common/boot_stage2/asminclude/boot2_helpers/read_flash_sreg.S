@@ -11,7 +11,7 @@
 
 // Pass status read cmd into r0.
 // Returns status value in r0.
-.global read_flash_sreg
+ _global read_flash_sreg
 .type read_flash_sreg,%function
 .thumb_func
 read_flash_sreg:

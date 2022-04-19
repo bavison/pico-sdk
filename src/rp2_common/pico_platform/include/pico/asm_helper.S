@@ -12,6 +12,7 @@
 #define _end        .end
 #define _endm(x)    .endm
 #define _equ        .equ
+#define _global     .global
 #define _hword      .hword
 #define _macro(x)   .macro x
 #define _macro_1arg(x,a)                   .macro x a

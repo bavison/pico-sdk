@@ -21,7 +21,7 @@
 #define ACTIVITY_LED 0
 #define BOOT_MODE USB_BOOT_MSD_AND_PICOBOOT
 
-.global _stage2_boot
+ _global _stage2_boot
 .type _stage2_boot,%function
 
 .thumb_func
@@ -43,7 +43,7 @@ dead:
     wfi
     b dead
 
-.global literals
+ _global literals
 literals:
 .ltorg
 
