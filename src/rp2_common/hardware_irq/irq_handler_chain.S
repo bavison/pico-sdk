@@ -30,22 +30,22 @@ irq_handler_chain_slots:
 .set next_slot_number, 1
 .rept PICO_MAX_SHARED_IRQ_HANDLERS
     // a slot is executable and is always 3 instructions long.
-    .hword 0    // inst1 (either: ldr r0, [pc, #4]    or for the FIRST slot : add r1, pc, #0                 )
-    .hword 0    // inst2 (        blx r0                                      b irq_handler_chain_first_slot )
+    _hword 0    // inst1 (either: ldr r0, [pc, #4]    or for the FIRST slot : add r1, pc, #0                 )
+    _hword 0    // inst2 (        blx r0                                      b irq_handler_chain_first_slot )
 
-    .hword 0    // inst3 (either: b next_slot         or for the LAST         pop {pc}                       )
+    _hword 0    // inst3 (either: b next_slot         or for the LAST         pop {pc}                       )
 
     // next is a single byte index of next slot in chain (or -1 to end)
 .if next_slot_number == PICO_MAX_SHARED_IRQ_HANDLERS
-    .byte 0xff
+    _byte 0xff
 .else
-    .byte next_slot_number
+    _byte next_slot_number
 .endif
     // next is the 8 bit unsigned priority
-    .byte 0x00
+    _byte 0x00
 1:
     // and finally the handler function pointer
-    .word 0x00000000
+    _word 0x00000000
     .set next_slot_number, next_slot_number + 1
 .endr
 
