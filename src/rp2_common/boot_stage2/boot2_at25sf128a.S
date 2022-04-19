@@ -86,12 +86,6 @@
 // Start of 2nd Stage Boot Code
 // ----------------------------------------------------------------------------
 
-.syntax unified
-.cpu cortex-m0plus
-.thumb
-
-.section .text
-
 // The exit point is passed in lr. If entered from bootrom, this will be the
 // flash address immediately following this second stage (0x10000100).
 // Otherwise it will be a return address -- second stage being called as a

@@ -4,6 +4,8 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
+#include "pico/asm_helper.S"
+
 // Stub second stage which calls into USB bootcode, with parameters.
 // USB boot takes two parameters:
 // - A GPIO mask for activity LED -- if mask is 0, don't touch GPIOs at all
@@ -18,11 +20,6 @@
 // Config
 #define ACTIVITY_LED 0
 #define BOOT_MODE USB_BOOT_MSD_AND_PICOBOOT
-
-.cpu cortex-m0
-.thumb
-
-.section .text
 
 .global _stage2_boot
 .type _stage2_boot,%function
