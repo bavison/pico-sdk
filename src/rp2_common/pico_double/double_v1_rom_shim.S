@@ -351,7 +351,7 @@ da_xmgty:                      // result is just x
  movs r4,#0                    // clear sticky bits
  b da_pack
 
-.ltorg
+ _ltorg
 
 // equivalent of UMULL
 // needs five temporary registers
@@ -567,7 +567,7 @@ dm_1:
  movs r0,#0
  b dm_2
 
-.ltorg
+ _ltorg
 
 // Approach to division y/x is as follows.
 //
@@ -1072,7 +1072,7 @@ dq_1:
  add r1,r12                    // pack exponent
  pop {r4-r7,r15}
 
-.ltorg
+ _ltorg
 
 
 // round(sqrt(2^22./[68:8:252]))
@@ -1495,7 +1495,7 @@ uf2d:
  b 8b
 
 
-.ltorg
+ _ltorg
 
  double_section dunpacks
  regular_func dunpacks
@@ -1735,7 +1735,7 @@ dsin_finish:
  movs r2,#62
  b fix642double_shim
 
-.ltorg
+ _ltorg
  _align 2
 dreddata0:
     _word 0x0000517d               // 2/π Q15
@@ -1908,7 +1908,7 @@ dreddata0:
  bl pop_r8_r11
  pop {r4-r7,r15}
 
-.ltorg
+ _ltorg
 
 dtab_cc:
     _word 0x61bb4f69, 0x1dac6705   // atan 2^-1 Q62
@@ -2013,7 +2013,7 @@ dtab_cc:
  bl fix642double_shim                 // in principle we can pack faster than this because we know the exponent
  pop {r4-r7,r15}
 
-.ltorg
+ _ltorg
 
  _align 2
  regular_func dln_shim
@@ -2130,7 +2130,7 @@ dtab_cc:
  movs r0,#0
  pop {r4-r7,r15}
 
-.ltorg
+ _ltorg
 
  _align 2
 dreddata1:

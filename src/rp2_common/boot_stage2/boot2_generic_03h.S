@@ -90,4 +90,4 @@
 
  _global literals
 literals:
-.ltorg
+ _ltorg
