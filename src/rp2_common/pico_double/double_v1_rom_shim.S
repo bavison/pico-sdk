@@ -20,9 +20,9 @@
 _macro_1arg(double_section, name)
 // todo separate flag for shims?
 #if PICO_DOUBLE_IN_RAM
-.section RAM_SECTION_NAME(\name), "ax"
+.section RAM_SECTION_NAME(MA(name)), "ax"
 #else
-.section SECTION_NAME(\name), "ax"
+.section SECTION_NAME(MA(name)), "ax"
 #endif
  _endm(endm)
 
@@ -81,7 +81,7 @@ _macro_1arg(mdump, k)
  push {r14}
  push {r0-r3}
  bl osp
- movs r0,#\k
+ movs r0,#MA(k)
  bl o1ch
  pop {r0-r3}
  bl dump
@@ -103,23 +103,23 @@ _macro_1arg(mdump, k)
 // sign in rs
 // trashes rt
 _macro_5args(mdunpack, ra, rb, re, rs, rt)
- lsrs \re,\rb,#20              // extract sign and exponent
- subs \rs,\re,#1
- lsls \rs,#20
- subs \rb,\rs                  // clear sign and exponent in mantissa; insert implied 1
- lsrs \rs,\re,#11              // sign
- lsls \re,#21
- lsrs \re,#21                  // exponent
+ lsrs MA(re),MA(rb),#20        // extract sign and exponent
+ subs MA(rs),MA(re),#1
+ lsls MA(rs),#20
+ subs MA(rb),MA(rs)            // clear sign and exponent in mantissa; insert implied 1
+ lsrs MA(rs),MA(re),#11        // sign
+ lsls MA(re),#21
+ lsrs MA(re),#21               // exponent
  beq l\@_1                     // zero exponent?
- adds \rt,\re,#1
- lsrs \rt,#11
+ adds MA(rt),MA(re),#1
+ lsrs MA(rt),#11
  beq l\@_2                     // exponent != 0x7ff? then done
 l\@_1:
- movs \ra,#0
- movs \rb,#1
- lsls \rb,#20
- subs \re,#128
- lsls \re,#12
+ movs MA(ra),#0
+ movs MA(rb),#1
+ lsls MA(rb),#20
+ subs MA(re),#128
+ lsls MA(re),#12
 l\@_2:
  _endm(endm)
 
@@ -132,32 +132,32 @@ l\@_2:
 // +Inf, +NaN -> exponent=+0x77f000
 // -Inf, -NaN -> exponent=+0x77e000
 _macro_5args(mdunpacks, ra, rb, re, rt0, rt1)
- lsrs \re,\rb,#20              // extract sign and exponent
- lsrs \rt1,\rb,#31             // sign only
- subs \rt0,\re,#1
- lsls \rt0,#20
- subs \rb,\rt0                 // clear sign and exponent in mantissa; insert implied 1
- lsls \re,#21
+ lsrs MA(re),MA(rb),#20        // extract sign and exponent
+ lsrs MA(rt1),MA(rb),#31       // sign only
+ subs MA(rt0),MA(re),#1
+ lsls MA(rt0),#20
+ subs MA(rb),MA(rt0)           // clear sign and exponent in mantissa; insert implied 1
+ lsls MA(re),#21
  bcc l\@_1                     // skip on positive
- mvns \rb,\rb                  // negate mantissa
- rsbs \ra,#0
+ mvns MA(rb),MA(rb)            // negate mantissa
+ rsbs MA(ra),#0
  bcc l\@_1
- adds \rb,#1
+ adds MA(rb),#1
 l\@_1:
- lsrs \re,#21
+ lsrs MA(re),#21
  beq l\@_2                     // zero exponent?
- adds \rt0,\re,#1
- lsrs \rt0,#11
+ adds MA(rt0),MA(re),#1
+ lsrs MA(rt0),#11
  beq l\@_3                     // exponent != 0x7ff? then done
- subs \re,\rt1
+ subs MA(re),MA(rt1)
 l\@_2:
- movs \ra,#0
- lsls \rt1,#1                  // +ve: 0  -ve: 2
- adds \rb,\rt1,#1              // +ve: 1  -ve: 3
- lsls \rb,#30                  // create +/-1 mantissa
- asrs \rb,#10
- subs \re,#128
- lsls \re,#12
+ movs MA(ra),#0
+ lsls MA(rt1),#1               // +ve: 0  -ve: 2
+ adds MA(rb),MA(rt1),#1        // +ve: 1  -ve: 3
+ lsls MA(rb),#30               // create +/-1 mantissa
+ asrs MA(rb),#10
+ subs MA(re),#128
+ lsls MA(re),#12
 l\@_3:
  _endm(endm)
 
@@ -363,27 +363,27 @@ da_xmgty:                      // result is just x
 _macro_9args(mul32_32_64, rx, ry, rzl, rzh, rt0, rt1, rt2, rt3, rt4)
                                //   t0   t1   t2   t3   t4
                                //                  (x)  (y)
- uxth \rt0,\rx                 //   xl
- uxth \rt1,\ry                 //        yl
- muls \rt0,\rt1                //  xlyl=L
- lsrs \rt2,\rx,#16             //             xh
- muls \rt1,\rt2                //       xhyl=M0
- lsrs \rt4,\ry,#16             //                       yh
- muls \rt2,\rt4                //           xhyh=H
- uxth \rt3,\rx                 //                   xl
- muls \rt3,\rt4                //                  xlyh=M1
- adds \rt1,\rt3                //      M0+M1=M
+ uxth MA(rt0),MA(rx)           //   xl
+ uxth MA(rt1),MA(ry)           //        yl
+ muls MA(rt0),MA(rt1)          //  xlyl=L
+ lsrs MA(rt2),MA(rx),#16       //             xh
+ muls MA(rt1),MA(rt2)          //       xhyl=M0
+ lsrs MA(rt4),MA(ry),#16       //                       yh
+ muls MA(rt2),MA(rt4)          //           xhyh=H
+ uxth MA(rt3),MA(rx)           //                   xl
+ muls MA(rt3),MA(rt4)          //                  xlyh=M1
+ adds MA(rt1),MA(rt3)          //      M0+M1=M
  bcc l\@_1                     // addition of the two cross terms can overflow, so add carry into H
- movs \rt3,#1                  //                   1
- lsls \rt3,#16                 //                0x10000
- adds \rt2,\rt3                //             H'
+ movs MA(rt3),#1               //                   1
+ lsls MA(rt3),#16              //                0x10000
+ adds MA(rt2),MA(rt3)          //             H'
 l\@_1:
                                //   t0   t1   t2   t3   t4
                                //                 (zl) (zh)
- lsls \rzl,\rt1,#16            //                  ML
- lsrs \rzh,\rt1,#16            //                       MH
- adds \rzl,\rt0                //                  ZL
- adcs \rzh,\rt2                //                       ZH
+ lsls MA(rzl),MA(rt1),#16      //                  ML
+ lsrs MA(rzh),MA(rt1),#16      //                       MH
+ adds MA(rzl),MA(rt0)          //                  ZL
+ adcs MA(rzh),MA(rt2)          //                       ZH
  _endm(endm)
 
 // SUMULL: x signed, y unsigned
@@ -397,28 +397,28 @@ l\@_1:
 _macro_9args(muls32_32_64, rx, ry, rzl, rzh, rt0, rt1, rt2, rt3, rt4)
                                //   t0   t1   t2   t3   t4
                                //                 ¯(x)  (y)
- uxth \rt0,\rx                 //   xl
- uxth \rt1,\ry                 //        yl
- muls \rt0,\rt1                //  xlyl=L
- asrs \rt2,\rx,#16             //            ¯xh
- muls \rt1,\rt2                //      ¯xhyl=M0
- lsrs \rt4,\ry,#16             //                       yh
- muls \rt2,\rt4                //          ¯xhyh=H
- uxth \rt3,\rx                 //                   xl
- muls \rt3,\rt4                //                 xlyh=M1
- asrs \rt4,\rt1,#31            //                      M0sx   (M1 sign extension is zero)
- adds \rt1,\rt3                //      M0+M1=M
- movs \rt3,#0                  //                    0
- adcs \rt4,\rt3                //                      ¯Msx
- lsls \rt4,#16                 //                    ¯Msx<<16
- adds \rt2,\rt4                //             H'
+ uxth MA(rt0),MA(rx)           //   xl
+ uxth MA(rt1),MA(ry)           //        yl
+ muls MA(rt0),MA(rt1)          //  xlyl=L
+ asrs MA(rt2),MA(rx),#16       //            ¯xh
+ muls MA(rt1),MA(rt2)          //      ¯xhyl=M0
+ lsrs MA(rt4),MA(ry),#16       //                       yh
+ muls MA(rt2),MA(rt4)          //          ¯xhyh=H
+ uxth MA(rt3),MA(rx)           //                   xl
+ muls MA(rt3),MA(rt4)          //                 xlyh=M1
+ asrs MA(rt4),MA(rt1),#31      //                      M0sx   (M1 sign extension is zero)
+ adds MA(rt1),MA(rt3)          //      M0+M1=M
+ movs MA(rt3),#0               //                    0
+ adcs MA(rt4),MA(rt3)          //                      ¯Msx
+ lsls MA(rt4),#16              //                    ¯Msx<<16
+ adds MA(rt2),MA(rt4)          //             H'
 
                                //   t0   t1   t2   t3   t4
                                //                 (zl) (zh)
- lsls \rzl,\rt1,#16            //                  M~
- lsrs \rzh,\rt1,#16            //                       M~
- adds \rzl,\rt0                //                  ZL
- adcs \rzh,\rt2                //                      ¯ZH
+ lsls MA(rzl),MA(rt1),#16      //                  M~
+ lsrs MA(rzh),MA(rt1),#16      //                       M~
+ adds MA(rzl),MA(rt0)          //                  ZL
+ adcs MA(rzh),MA(rt2)          //                      ¯ZH
  _endm(endm)
 
 // SSMULL: x signed, y signed
@@ -432,29 +432,29 @@ _macro_9args(muls32_32_64, rx, ry, rzl, rzh, rt0, rt1, rt2, rt3, rt4)
 _macro_9args(muls32_s32_64, rx, ry, rzl, rzh, rt0, rt1, rt2, rt3, rt4)
                                //   t0   t1   t2   t3   t4
                                //                 ¯(x)  (y)
- uxth \rt0,\rx                 //   xl
- uxth \rt1,\ry                 //        yl
- muls \rt0,\rt1                //  xlyl=L
- asrs \rt2,\rx,#16             //            ¯xh
- muls \rt1,\rt2                //      ¯xhyl=M0
- asrs \rt4,\ry,#16             //                      ¯yh
- muls \rt2,\rt4                //          ¯xhyh=H
- uxth \rt3,\rx                 //                   xl
- muls \rt3,\rt4                //                ¯xlyh=M1
- adds \rt1,\rt3                //     ¯M0+M1=M
- asrs \rt3,\rt1,#31            //                  Msx
+ uxth MA(rt0),MA(rx)           //   xl
+ uxth MA(rt1),MA(ry)           //        yl
+ muls MA(rt0),MA(rt1)          //  xlyl=L
+ asrs MA(rt2),MA(rx),#16       //            ¯xh
+ muls MA(rt1),MA(rt2)          //      ¯xhyl=M0
+ asrs MA(rt4),MA(ry),#16       //                      ¯yh
+ muls MA(rt2),MA(rt4)          //          ¯xhyh=H
+ uxth MA(rt3),MA(rx)           //                   xl
+ muls MA(rt3),MA(rt4)          //                ¯xlyh=M1
+ adds MA(rt1),MA(rt3)          //     ¯M0+M1=M
+ asrs MA(rt3),MA(rt1),#31      //                  Msx
  bvc l\@_1                     //
- mvns \rt3,\rt3                //                 ¯Msx        flip sign extension bits if overflow
+ mvns MA(rt3),MA(rt3)          //                 ¯Msx        flip sign extension bits if overflow
 l\@_1:
- lsls \rt3,#16                 //                    ¯Msx<<16
- adds \rt2,\rt3                //             H'
+ lsls MA(rt3),#16              //                    ¯Msx<<16
+ adds MA(rt2),MA(rt3)          //             H'
 
                                //   t0   t1   t2   t3   t4
                                //                 (zl) (zh)
- lsls \rzl,\rt1,#16            //                  M~
- lsrs \rzh,\rt1,#16            //                       M~
- adds \rzl,\rt0                //                  ZL
- adcs \rzh,\rt2                //                      ¯ZH
+ lsls MA(rzl),MA(rt1),#16      //                  M~
+ lsrs MA(rzh),MA(rt1),#16      //                       M~
+ adds MA(rzl),MA(rt0)          //                  ZL
+ adcs MA(rzh),MA(rt2)          //                      ¯ZH
  _endm(endm)
 
 // can have rt2==rx, in which case rx trashed
@@ -462,16 +462,16 @@ l\@_1:
 // can have rzh==rt1
 _macro_6args(square32_64, rx, rzl, rzh, rt0, rt1, rt2)
                                //   t0   t1   t2   zl   zh
- uxth \rt0,\rx                 //   xl
- muls \rt0,\rt0                // xlxl=L
- uxth \rt1,\rx                 //        xl
- lsrs \rt2,\rx,#16             //             xh
- muls \rt1,\rt2                //      xlxh=M
- muls \rt2,\rt2                //           xhxh=H
- lsls \rzl,\rt1,#17            //                  ML
- lsrs \rzh,\rt1,#15            //                       MH
- adds \rzl,\rt0                //                  ZL
- adcs \rzh,\rt2                //                       ZH
+ uxth MA(rt0),MA(rx)           //   xl
+ muls MA(rt0),MA(rt0)          // xlxl=L
+ uxth MA(rt1),MA(rx)           //        xl
+ lsrs MA(rt2),MA(rx),#16       //             xh
+ muls MA(rt1),MA(rt2)          //      xlxh=M
+ muls MA(rt2),MA(rt2)          //           xhxh=H
+ lsls MA(rzl),MA(rt1),#17      //                  ML
+ lsrs MA(rzh),MA(rt1),#15      //                       MH
+ adds MA(rzl),MA(rt0)          //                  ZL
+ adcs MA(rzh),MA(rt2)          //                       ZH
  _endm(endm)
 
  double_section dmul_shim

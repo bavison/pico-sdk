@@ -23,6 +23,9 @@
 #define _macro_9args(x,a,b,c,d,e,f,g,h,i)  .macro x a,b,c,d,e,f,g,h,i
 #define _word       .word
 
+// Expand a macro argument
+#define MA(x) \##x
+
 .syntax unified
 .cpu cortex-m0plus
 .thumb
@@ -52,3 +55,9 @@
     _word \func
 .endm
 
+.macro weak_func x
+.weak \x
+.type \x,%function
+.thumb_func
+\x:
+.endm

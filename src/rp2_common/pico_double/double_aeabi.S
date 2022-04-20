@@ -12,18 +12,18 @@
 
 _macro_1arg(double_section, name)
 #if PICO_DOUBLE_IN_RAM
-.section RAM_SECTION_NAME(\name), "ax"
+.section RAM_SECTION_NAME(MA(name)), "ax"
 #else
-.section SECTION_NAME(\name), "ax"
+.section SECTION_NAME(MA(name)), "ax"
 #endif
  _endm(endm)
 
 _macro_1arg(_double_wrapper_func, x)
- wrapper_func \x
+ wrapper_func MA(x)
  _endm(endm)
 
 _macro_1arg(wrapper_func_d1, x)
-   _double_wrapper_func \x
+   _double_wrapper_func MA(x)
 #if PICO_DOUBLE_PROPAGATE_NANS
     mov r12, lr
     bl __check_nan_d1
@@ -32,7 +32,7 @@ _macro_1arg(wrapper_func_d1, x)
  _endm(endm)
 
 _macro_1arg(wrapper_func_d2, x)
-    _double_wrapper_func \x
+    _double_wrapper_func MA(x)
 #if PICO_DOUBLE_PROPAGATE_NANS
     mov r12, lr
     bl __check_nan_d2
@@ -84,7 +84,7 @@ _macro_1arg(table_tail_call, SF_TABLE_OFFSET)
 #endif
 #endif
     ldr r3, =sd_table
-    ldr r3, [r3, #\SF_TABLE_OFFSET]
+    ldr r3, [r3, #MA(SF_TABLE_OFFSET)]
     str r3, [sp, #4]
     pop {r3, pc}
  _endm(endm)
@@ -92,20 +92,20 @@ _macro_1arg(table_tail_call, SF_TABLE_OFFSET)
 _macro_2args(shimmable_table_tail_call, SF_TABLE_OFFSET, shim)
     push {r3, r4}
     ldr r3, =sd_table
-    ldr r3, [r3, #\SF_TABLE_OFFSET]
+    ldr r3, [r3, #MA(SF_TABLE_OFFSET)]
 #if PICO_DOUBLE_SUPPORT_ROM_V1 && PICO_RP2040_B0_SUPPORTED
     mov r12, pc
 #endif
     str r3, [sp, #4]
     pop {r3, pc}
 #if PICO_DOUBLE_SUPPORT_ROM_V1 && PICO_RP2040_B0_SUPPORTED
-    _byte \SF_TABLE_OFFSET, 0xdf
-    _word \shim
+    _byte MA(SF_TABLE_OFFSET), 0xdf
+    _word MA(shim)
 #endif
  _endm(endm)
 
 _macro_1arg(double_wrapper_section, func)
- double_section WRAPPER_FUNC_NAME(\func)
+ double_section WRAPPER_FUNC_NAME(MA(func))
  _endm(endm)
 
  double_section push_r8_r11

@@ -435,7 +435,11 @@ uint __get_current_exception(void);
 
 #else // __ASSEMBLER__
 
-#define WRAPPER_FUNC_NAME(x) __wrap_##x
+#ifndef __CONCAT1
+#define __CONCAT1(a, b) a ## b
+#endif
+
+#define WRAPPER_FUNC_NAME(x) __CONCAT1(__wrap_,x)
 #define SECTION_NAME(x) .text.##x
 #define RAM_SECTION_NAME(x) .time_critical.##x
 

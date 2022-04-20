@@ -81,10 +81,7 @@ __default_isrs_start:
 // but can be overridden by C functions with correct name.
 
 _macro_1arg(decl_isr_bkpt, name)
-.weak \name
-.type \name,%function
-.thumb_func
-\name:
+ weak_func MA(name)
     bkpt #0
  _endm(endm)
 
@@ -100,10 +97,7 @@ _macro_1arg(decl_isr_bkpt, name)
 __default_isrs_end:
 
 _macro_1arg(decl_isr, name)
-.weak \name
-.type \name,%function
-.thumb_func
-\name:
+ weak_func MA(name)
  _endm(endm)
 
  decl_isr isr_irq0
