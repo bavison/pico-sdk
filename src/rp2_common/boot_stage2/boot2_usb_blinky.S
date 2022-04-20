@@ -45,6 +45,6 @@ dead:
 
  _global literals
 literals:
-.ltorg
+ _ltorg
 
  _end

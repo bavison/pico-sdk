@@ -93,6 +93,6 @@ _stage2_boot:
 
  _global literals
 literals:
-.ltorg
+ _ltorg
 
  _end
