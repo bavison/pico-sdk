@@ -97,8 +97,10 @@ _macro_2args(shimmable_table_tail_call, SF_TABLE_OFFSET, shim)
     str r3, [sp, #4]
     pop {r3, pc}
 #if PICO_DOUBLE_SUPPORT_ROM_V1 && PICO_RP2040_B0_SUPPORTED
+    data_in_code_area
     _byte MA(SF_TABLE_OFFSET), 0xdf
     _word MA(shim)
+    code_in_code_area
 #endif
  _endm(endm)
 
