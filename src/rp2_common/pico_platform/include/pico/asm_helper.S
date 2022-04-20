@@ -23,6 +23,7 @@
 #define _macro_9args(x,a,b,c,d,e,f,g,h,i)  .macro x a,b,c,d,e,f,g,h,i
 #define _section(name, flags, cd, align)   .section name, flags
 #define _root_section(name, flags, cd, align) .section name, flags
+#define _set        .set
 #define _word       .word
 
 // Expand a macro argument

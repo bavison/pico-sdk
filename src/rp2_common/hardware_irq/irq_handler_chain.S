@@ -27,7 +27,7 @@
 //
 
 irq_handler_chain_slots:
-.set next_slot_number, 1
+ _set next_slot_number, 1
 .rept PICO_MAX_SHARED_IRQ_HANDLERS
     // a slot is executable and is always 3 instructions long.
     _hword 0    // inst1 (either: ldr r0, [pc, #4]    or for the FIRST slot : add r1, pc, #0                 )
@@ -46,7 +46,7 @@ irq_handler_chain_slots:
 1:
     // and finally the handler function pointer
     _word 0x00000000
-    .set next_slot_number, next_slot_number + 1
+ _set next_slot_number, next_slot_number + 1
 .endr
 
 irq_handler_chain_first_slot:
