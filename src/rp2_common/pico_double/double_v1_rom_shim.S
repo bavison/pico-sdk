@@ -259,7 +259,7 @@ da_3:
 da_7:
 // here exponent overflow: return signed infinity
  lsls r1,r3,#31
- ldr r3,=#0x7ff00000
+ ldr r3,=0x7ff00000
  orrs r1,r3
  b 1f
 da_6:
@@ -520,7 +520,7 @@ _macro_6args(square32_64, rx, rzl, rzh, rt0, rt1, rt2)
  adcs r1,r1
  subs r3,#1                    // correct exponent
 1:
- ldr r6,=#0x3ff
+ ldr r6,=0x3ff
  subs r3,r6                    // correct for exponent bias
  lsls r6,#1                    // 0x7fe
  cmp r3,r6
@@ -826,9 +826,9 @@ dd_2:
  mov r2,r12
  lsls r7,r2,#31                // result sign
  asrs r2,#2                    // result exponent
- ldr r3,=#0x3fd
+ ldr r3,=0x3fd
  adds r2,r3
- ldr r3,=#0x7fe
+ ldr r3,=0x7fe
  cmp r2,r3
  bhs dd_3                      // over- or underflow?
  lsls r2,#20
@@ -932,7 +932,7 @@ dq_0:
  b dq_4
 
 dq_3:
- ldr r1,=#0x7ff
+ ldr r1,=0x7ff
  lsls r1,#20                   // return +Inf
 dq_4:
  movs r0,#0
@@ -945,7 +945,7 @@ dq_1:
  bcs dq_0                      // negative?
  lsrs r2,#21                   // extract exponent
  subs r2,#1
- ldr r3,=#0x7fe
+ ldr r3,=0x7fe
  cmp r2,r3
  bhs dq_2                      // catches 0 and +Inf
  push {r4-r7,r14}
@@ -1340,7 +1340,7 @@ ret_dzero:
  regular_func double2float_shim
  lsls r2,r1,#1
  lsrs r2,#21                   // exponent
- ldr r3,=#0x3ff-0x7f
+ ldr r3,=0x3ff-0x7f
  subs r2,r3                    // fix exponent bias
  ble 1f                        // underflow or zero
  cmp r2,#0xff
@@ -1428,7 +1428,7 @@ ret_dzero:
  sbcs r1,r3
 uf2d:
  push {r4,r5,r14}
- ldr r4,=#0x432
+ ldr r4,=0x432
  subs r2,r4,r2                 // form biased exponent
 // here
 // r0:r1 unnormalised mantissa
@@ -1451,7 +1451,7 @@ uf2d:
  lsrs r4,r1,#21
  bcc 5b
 4:
- ldr r4,=#0x7fe
+ ldr r4,=0x7fe
  cmp r2,r4
  bhs 6f                        // over/underflow? return signed zero/infinity
 7:
@@ -1502,7 +1502,7 @@ uf2d:
  double_section dunpacks, `.time_critical.dunpacks`, `.text.dunpacks`
  regular_func dunpacks
  mdunpacks r0,r1,r2,r3,r4
- ldr r3,=#0x3ff
+ ldr r3,=0x3ff
  subs r2,r3                    // exponent without offset
  bx r14
 
@@ -1659,8 +1659,8 @@ dsincos_internal:
  bl dreduce
 
  movs r4,#0
- ldr r5,=#0x9df04dbb           // this value compensates for the non-unity scaling of the CORDIC rotations
- ldr r6,=#0x36f656c5
+ ldr r5,=0x9df04dbb            // this value compensates for the non-unity scaling of the CORDIC rotations
+ ldr r6,=0x36f656c5
  lsls r2,#31
  bcc 1f
 // quadrant 2 or 3
@@ -1753,7 +1753,7 @@ dreddata0:
 // r2:r3 x
  push {r4-r7,r14}
  bl push_r8_r11
- ldr r5,=#0x7ff00000
+ ldr r5,=0x7ff00000
  movs r4,r1
  ands r4,r5                    // y==0?
  beq 1f
@@ -1891,8 +1891,8 @@ dreddata0:
 
  cmp r6,#0
  beq 1f
- ldr r4,=#0x885A308D           // π/2 Q61
- ldr r5,=#0x3243F6A8
+ ldr r4,=0x885A308D            // π/2 Q61
+ ldr r5,=0x3243F6A8
  bpl 2f
  mvns r4,r4                    // negative quadrant offset
  mvns r5,r5
@@ -1955,8 +1955,8 @@ dtab_cc:
  bl dreduce
  cmp r1,#0
  bge 1f
- ldr r4,=#0xF473DE6B
- ldr r5,=#0x2C5C85FD           // ln2 Q62
+ ldr r4,=0xF473DE6B
+ ldr r5,=0x2C5C85FD            // ln2 Q62
  adds r0,r4
  adcs r1,r5
  subs r2,#1
@@ -2124,12 +2124,12 @@ dtab_cc:
  pop {r4-r7,r15}
 
 5:
- ldr r1,=#0xfff00000
+ ldr r1,=0xfff00000
  movs r0,#0
  pop {r4-r7,r15}
 
 6:
- ldr r1,=#0x7ff00000
+ ldr r1,=0x7ff00000
  movs r0,#0
  pop {r4-r7,r15}
 

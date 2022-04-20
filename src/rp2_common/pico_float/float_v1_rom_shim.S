@@ -325,7 +325,7 @@ d2f64_a:
  cmp r2,#0xff                  // Inf?
  beq 2f
  lsrs r1,#4                    // exponent and top 20 bits of mantissa
- ldr r2,=#(0x3ff-0x7f)<<20     // difference in exponent offsets
+ ldr r2,=(0x3ff-0x7f)<<20      // difference in exponent offsets
  adds r1,r2
  orrs r1,r3
  lsls r0,#29                   // bottom 3 bits of mantissa
@@ -336,7 +336,7 @@ d2f64_a:
  movs r0,#0
  bx r14
 2:
- ldr r1,=#0x7ff00000           // return signed infinity
+ ldr r1,=0x7ff00000            // return signed infinity
  adds r1,r3
  b 3b
 

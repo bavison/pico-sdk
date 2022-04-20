@@ -347,7 +347,7 @@ l\@_1:
  cmp r2,#0
  beq 2f                    // x==0?
  mov r12,r7
- ldr r7,=#SIO_BASE
+ ldr r7,=SIO_BASE
  str r0,[r7,#SIO_DIV_UDIVIDEND_OFFSET]
  str r2,[r7,#SIO_DIV_UDIVISOR_OFFSET]
  movs r1,#0
@@ -362,7 +362,7 @@ l\@_1:
  cmp r0,#0                 // y==0?
  beq 3f                    // then pass 0 to __aeabi_ldiv0
 udiv0:
- ldr r0,=#0xffffffff
+ ldr r0,=0xffffffff
  movs r1,r0                // pass 2^64-1 to __aeabi_ldiv0
 3:
  push {r14}
@@ -397,7 +397,7 @@ y64:
  cmp r2,#0
  beq udiv0                 // x==0? exit as with y!=0 case above
  push {r7}
- ldr r7,=#SIO_BASE
+ ldr r7,=SIO_BASE
  str r1,[r7,#SIO_DIV_UDIVIDEND_OFFSET]
  str r2,[r7,#SIO_DIV_UDIVISOR_OFFSET]
  wait_div 4
@@ -459,9 +459,9 @@ y64_x32:
  lsrs r4,r2,#15
  adds r4,#1                // x1=(x0>>15)+1; 2^16<x1<=2^17
 
- ldr r7,=#SIO_BASE
+ ldr r7,=SIO_BASE
  str r4,[r7,#SIO_DIV_UDIVISOR_OFFSET]
- ldr r4,=#0xffffffff
+ ldr r4,=0xffffffff
  str r4,[r7,#SIO_DIV_UDIVIDEND_OFFSET]
  lsrs r6,r1,#16
  uxth r3,r2                // x0l
@@ -682,9 +682,9 @@ y64_x48:
  adcs r4,r4
  adds r4,#1                // x1=(ui32)(x0>>31)+1; // 2^16<x1<=2^17
 
- ldr r7,=#SIO_BASE
+ ldr r7,=SIO_BASE
  str r4,[r7,#SIO_DIV_UDIVISOR_OFFSET]
- ldr r4,=#0xffffffff
+ ldr r4,=0xffffffff
  str r4,[r7,#SIO_DIV_UDIVIDEND_OFFSET]
  lsrs r6,r1,#16
  wait_div 1
@@ -816,7 +816,7 @@ y64_x64:
  adds r5,r3,#1
  beq 1f
 
- ldr r7,=#SIO_BASE
+ ldr r7,=SIO_BASE
  str r5,[r7,#SIO_DIV_UDIVISOR_OFFSET]
  str r1,[r7,#SIO_DIV_UDIVIDEND_OFFSET]
  wait_div 0

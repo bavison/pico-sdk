@@ -284,7 +284,7 @@ ddiv_dsub_nan_helper:
  wrapper_func __aeabi_cdcmpeq
  push {r0-r7,r14}
 __aeabi_dfcmple_guts:
- ldr r7,=#0x7ff                // flush NaNs and denormals
+ ldr r7,=0x7ff                 // flush NaNs and denormals
  lsls r4,r1,#1
  lsrs r4,#21
  beq 1f
@@ -444,7 +444,7 @@ __aeabi_dfcmple_guts:
     lsls r2, r4
     lsls r0, r2, #20
     lsrs r2, #12
-    ldr r1,=#1055
+    ldr r1,=1055
     subs r1, r4
     lsls r1, #20
     orrs r1, r3
