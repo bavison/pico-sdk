@@ -11,6 +11,7 @@
 #define _byte       .byte
 #define _end        .end
 #define _endm(x)    .endm
+#define endr        .endr
 #define _equ        .equ
 #define _global     .global
 #define _hword      .hword
@@ -21,6 +22,7 @@
 #define _macro_5args(x,a,b,c,d,e)          .macro x a,b,c,d,e
 #define _macro_6args(x,a,b,c,d,e,f)        .macro x a,b,c,d,e,f
 #define _macro_9args(x,a,b,c,d,e,f,g,h,i)  .macro x a,b,c,d,e,f,g,h,i
+#define rept        .rept
 #define _section(name, flags, cd, align)   .section name, flags
 #define _root_section(name, flags, cd, align) .section name, flags
 #define _set        .set
