@@ -25,7 +25,7 @@ _macro_1arg(float_section, name)
  float_section float_table_shim_on_use_helper
  regular_func float_table_shim_on_use_helper
     push {r0-r2, lr}
-    mov r0, ip
+    mov r0, r12
 #ifndef NDEBUG
     // sanity check to make sure we weren't called by non (shimmable_) table_tail_call macro
     cmp r0, #0
@@ -112,16 +112,16 @@ ret_pop45:
  push {r4,r5,r14}
 
  ldr r4, =0x29c1 // unpackx
- mov ip, r4
+ mov r12, r4
 // unpack arguments and shift one down to have common exponent
- blx ip
+ blx r12
  mov r4,r0
  mov r0,r1
  mov r1,r4
  mov r4,r2
  mov r2,r3
  mov r3,r4
- blx ip
+ blx r12
  lsls r0,r0,#5  // Q28
  lsls r1,r1,#5  // Q28
  adds r4,r2,r3  // this is -760 if both arguments are 0 and at least -380-126=-506 otherwise

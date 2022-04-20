@@ -52,18 +52,18 @@ _macro_1arg(_float_wrapper_func, x)
 _macro_1arg(wrapper_func_f1, x)
    _float_wrapper_func MA2(x)
 #if PICO_FLOAT_PROPAGATE_NANS
-    mov ip, lr
+    mov r12, lr
     bl __check_nan_f1
-    mov lr, ip
+    mov lr, r12
 #endif
  endm
 
 _macro_1arg(wrapper_func_f2, x)
    _float_wrapper_func MA2(x)
 #if PICO_FLOAT_PROPAGATE_NANS
-    mov ip, lr
+    mov r12, lr
     bl __check_nan_f2
-    mov lr, ip
+    mov lr, r12
 #endif
  endm
 
@@ -76,7 +76,7 @@ _macro_1arg(wrapper_func_f2, x)
    bhi 1f
    bx lr
 1:
-   bx ip
+   bx r12
 
  local_func __check_nan_f2
    movs r3, #1
@@ -91,14 +91,14 @@ _macro_1arg(wrapper_func_f2, x)
 2:
    mov r0, r1
 1:
-   bx ip
+   bx r12
 #endif
 
 _macro_1arg(table_tail_call, SF_TABLE_OFFSET)
 #if PICO_FLOAT_SUPPORT_ROM_V1 && PICO_RP2040_B0_SUPPORTED
 #ifndef NDEBUG
     movs r3, #0
-    mov ip, r3
+    mov r12, r3
 #endif
 #endif
     ldr r3, =sf_table
@@ -110,7 +110,7 @@ _macro_2args(shimmable_table_tail_call, SF_TABLE_OFFSET, shim)
     ldr r3, =sf_table
     ldr r3, [r3, #MA(SF_TABLE_OFFSET)]
 #if PICO_FLOAT_SUPPORT_ROM_V1 && PICO_RP2040_B0_SUPPORTED
-    mov ip, pc
+    mov r12, pc
 #endif
     bx r3
 #if PICO_FLOAT_SUPPORT_ROM_V1 && PICO_RP2040_B0_SUPPORTED
@@ -399,7 +399,7 @@ __aeabi_cfcmple_guts:
         beq 7f
 __aeabi_i2f_main:
 
-        mov ip, lr
+        mov r12, lr
         push {r0, r1}
         ldr r3, =sf_clz_func
         ldr r3, [r3]
@@ -422,7 +422,7 @@ __aeabi_i2f_main:
 4:
         orrs r0,r1     // apply sign
 1:
-        bx ip
+        bx r12
 5:
         adds r0,#1     // correct exponent offset
         b 3b
