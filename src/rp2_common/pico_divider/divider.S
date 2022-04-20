@@ -35,9 +35,9 @@ _macro_1arg(wait_div, n)
   b 9f
 9:
  endr
-.if (8-MA(n)) % 2
+ if (8-MA(n)) % 2
  nop
-.endif
+ endif
  _endm(endm)
 
 #if (SIO_DIV_SDIVISOR_OFFSET != SIO_DIV_SDIVIDEND_OFFSET + 4) || (SIO_DIV_QUOTIENT_OFFSET != SIO_DIV_SDIVISOR_OFFSET + 4) || (SIO_DIV_REMAINDER_OFFSET != SIO_DIV_QUOTIENT_OFFSET + 4)
