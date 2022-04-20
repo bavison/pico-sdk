@@ -6,15 +6,15 @@
 
 #include "pico/asm_helper.S"
 
-_macro_1arg(int64_section, name)
+_macro_3args(int64_section, name, ram_name, flash_name)
 #if PICO_INT64_OPS_IN_RAM
-.section RAM_SECTION_NAME(MA(name)), "ax"
+ _section(RAM_SECTION_NAME(\name), ram_name, "ax", CODE, 2)
 #else
-.section SECTION_NAME(MA(name)), "ax"
+ _section(SECTION_NAME(\name), flash_name, "ax", CODE, 2)
 #endif
  _endm(endm)
 
- int64_section __aeabi_lmul
+ int64_section __aeabi_lmul, `.time_critical.__aeabi_lmul`, `.text.__aeabi_lmul`
 
  wrapper_func __aeabi_lmul
     muls   r1, r2

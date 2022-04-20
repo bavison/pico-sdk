@@ -11,16 +11,16 @@
 #define PICO_FLOAT_IN_RAM 0
 #endif
 
-_macro_1arg(float_section, name)
+_macro_3args(float_section, name, ram_name, flash_name)
 // todo separate flag for shims?
 #if PICO_FLOAT_IN_RAM
-.section RAM_SECTION_NAME(MA(name)), "ax"
+ _section(RAM_SECTION_NAME(\name), ram_name, "ax", CODE, 2)
 #else
-.section SECTION_NAME(MA(name)), "ax"
+ _section(SECTION_NAME(\name), flash_name, "ax", CODE, 2)
 #endif
  _endm(endm)
 
- float_section float_table_shim_on_use_helper
+ float_section float_table_shim_on_use_helper, `.time_critical.float_table_shim_on_use_helper`, `.text.float_table_shim_on_use_helper`
  regular_func float_table_shim_on_use_helper
     push {r0-r2, lr}
     mov r0, r12
@@ -53,7 +53,7 @@ _macro_1arg(float_section, name)
     str r0, [sp, #12]
     pop {r0-r2, pc}
 
- float_section 642float_shims
+ float_section 642float_shims, `.time_critical.642float_shims`, `.text.642float_shims`
 
 // convert uint64 to float, rounding
  regular_func uint642float_shim
@@ -105,7 +105,7 @@ _macro_1arg(float_section, name)
 ret_pop45:
  pop {r4,r5,r15}
 
- float_section fatan2_shim
+ float_section fatan2_shim, `.time_critical.fatan2_shim`, `.text.fatan2_shim`
  regular_func fatan2_shim
  push {r4,r5,r14}
 
@@ -179,7 +179,7 @@ ret_pop45:
  ldr r3, =0x2b19
  bx r3
 
- float_section float232_shims
+ float_section float232_shims, `.time_critical.float232_shims`, `.text.float232_shims`
 
  regular_func float2int_shim
      movs r1,#0                    // fall through
@@ -196,7 +196,7 @@ ret_pop45:
      movs r0, #0
      bx lr
 
- float_section float264_shims
+ float_section float264_shims, `.time_critical.float264_shims`, `.text.float264_shims`
 
  regular_func float2int64_shim
  movs r1,#0                    // and fall through
@@ -250,7 +250,7 @@ ret_dzero:
  movs r1,#0
  bx r14
 
- float_section d2fix_a_float
+ float_section d2fix_a_float, `.time_critical.d2fix_a_float`, `.text.d2fix_a_float`
 
 .weak d2fix_a // weak because it exists in float shims too
 .thumb_func
@@ -315,7 +315,7 @@ d2f64_a:
  eors r1,r1,r0                 // generate extreme fixed-point values
  pop {r15}
 
- float_section float2double_shim
+ float_section float2double_shim, `.time_critical.float2double_shim`, `.text.float2double_shim`
  regular_func float2double_shim
  lsrs r3,r0,#31                // sign bit
  lsls r3,#31

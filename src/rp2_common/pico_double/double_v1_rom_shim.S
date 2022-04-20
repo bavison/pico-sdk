@@ -17,16 +17,16 @@
 
 #include "pico/asm_helper.S"
 
-_macro_1arg(double_section, name)
+_macro_3args(double_section, name, ram_name, flash_name)
 // todo separate flag for shims?
 #if PICO_DOUBLE_IN_RAM
-.section RAM_SECTION_NAME(MA(name)), "ax"
+ _section(RAM_SECTION_NAME(\name), ram_name, "ax", CODE, 2)
 #else
-.section SECTION_NAME(MA(name)), "ax"
+ _section(SECTION_NAME(\name), flash_name, "ax", CODE, 2)
 #endif
  _endm(endm)
 
- double_section double_table_shim_on_use_helper
+ double_section double_table_shim_on_use_helper, `.time_critical.double_table_shim_on_use_helper`, `.text.double_table_shim_on_use_helper`
  regular_func double_table_shim_on_use_helper
     push {r0-r2, lr}
     mov r0, r12
@@ -161,7 +161,7 @@ l\@_2:
 l\@_3:
  _endm(endm)
 
- double_section WRAPPER_FUNC_NAME(__aeabi_dsub)
+ double_section WRAPPER_FUNC_NAME(__aeabi_dsub), `.time_critical.__wrap___aeabi_dsub`, `.text.__wrap___aeabi_dsub`
 
 // frsub first because it is the only one that needs alignment
  regular_func drsub_shim
@@ -178,7 +178,7 @@ l\@_3:
  b da_entry                    // continue in dadd
 
  _align 2
- double_section dadd_shim
+ double_section dadd_shim, `.time_critical.dadd_shim`, `.text.dadd_shim`
  regular_func dadd_shim
  push {r4-r7,r14}
 da_entry:
@@ -474,7 +474,7 @@ _macro_6args(square32_64, rx, rzl, rzh, rt0, rt1, rt2)
  adcs MA(rzh),MA(rt2)          //                       ZH
  _endm(endm)
 
- double_section dmul_shim
+ double_section dmul_shim, `.time_critical.dmul_shim`, `.text.dmul_shim`
  regular_func dmul_shim
  push {r4-r7,r14}
  mdunpack r0,r1,r4,r6,r5
@@ -627,7 +627,7 @@ dm_1:
 // accurate to < 0.25ulp. In the case where x>y the quotient will be shifted up one place for normalisation
 // and so 1ulp is 2^-53 and so the calculation above suffices.
 
- double_section ddiv_shim
+ double_section ddiv_shim, `.time_critical.ddiv_shim`, `.text.ddiv_shim`
  regular_func ddiv_shim
  push {r4-r7,r14}
 ddiv0:                         // entry point from dtan
@@ -849,7 +849,7 @@ dd_4:
  lsls r1,r3,#20
  b dd_5
 
-.section SECTION_NAME(dsqrt_shim)
+ _section(SECTION_NAME(dsqrt_shim), `.text.dsqrt_shim`, "ax", CODE, 2)
 /*
 Approach to square root x=sqrt(y) is as follows.
 
@@ -1128,7 +1128,7 @@ dq_5:
 // in vectoring mode (but perhaps one could work to single precision in
 // a first pass and then double precision in a second pass?).
 
- double_section dcordic_vec_step
+ double_section dcordic_vec_step, `.time_criticaldcordic_vec_step.`, `.text.dcordic_vec_step`
  regular_func dcordic_vec_step
  mov r2,r12
  ldmia r2!,{r3,r4}
@@ -1138,7 +1138,7 @@ dq_5:
  blt 1f
  b 2f
 
- double_section dcordic_rot_step
+ double_section dcordic_rot_step, `.time_critical.dcordic_rot_step`, `.text.dcordic_rot_step`
  regular_func dcordic_rot_step
  mov r2,r12
  ldmia r2!,{r3,r4}
@@ -1217,7 +1217,7 @@ dq_5:
 // convert packed double in r0:r1 to signed/unsigned 32/64-bit integer/fixed-point value in r0:r1 [with r2 places after point], with rounding towards -Inf
 // fixed-point versions only work with reasonable values in r2 because of the way dunpacks works
 
- double_section double2int_shim
+ double_section double2int_shim, `.time_critical.double2int_shim`, `.text.double2int_shim`
  regular_func double2int_shim
  movs r2,#0                    // and fall through
  regular_func double2fix_shim
@@ -1227,7 +1227,7 @@ dq_5:
  movs r0,r1
  pop {r15}
 
- double_section double2uint_shim
+ double_section double2uint_shim, `.time_critical.double2uint_shim`, `.text.double2uint_shim`
  regular_func double2uint_shim
  movs r2,#0                    // and fall through
  regular_func double2ufix_shim
@@ -1237,7 +1237,7 @@ dq_5:
  movs r0,r1
  pop {r15}
 
- double_section double2int64_shim
+ double_section double2int64_shim, `.time_critical.double2int64_shim`, `.text.double2int64_shim`
  regular_func double2int64_shim
  movs r2,#0                    // and fall through
  regular_func double2fix64_shim
@@ -1255,7 +1255,7 @@ dq_5:
  eors r1,r1,r0                 // generate extreme fixed-point values
  pop {r15}
 
- double_section double2uint64_shim
+ double_section double2uint64_shim, `.time_critical.double2uint64_shim`, `.text.double2uint64_shim`
  regular_func double2uint64_shim
  movs r2,#0                    // and fall through
  regular_func double2ufix64_shim
@@ -1336,7 +1336,7 @@ ret_dzero:
  movs r1,r3
  pop {r4,r15}
 
- double_section double2float_shim
+ double_section double2float_shim, `.time_critical.double2float_shim`, `.text.double2float_shim`
  regular_func double2float_shim
  lsls r2,r1,#1
  lsrs r2,#21                   // exponent
@@ -1391,7 +1391,7 @@ ret_dzero:
  lsls r0,#23
  bx r14
 
- double_section x2double_shims
+ double_section x2double_shims, `.time_critical.x2double_shims`, `.text.x2double_shims`
 // convert signed/unsigned 32/64-bit integer/fixed-point value in r0:r1 [with r2 places after point] to packed double in r0:r1, with rounding
 
  _align 2
@@ -1499,7 +1499,7 @@ uf2d:
 
 .ltorg
 
- double_section dunpacks
+ double_section dunpacks, `.time_critical.dunpacks`, `.text.dunpacks`
  regular_func dunpacks
  mdunpacks r0,r1,r2,r3,r4
  ldr r3,=#0x3ff
@@ -1518,7 +1518,7 @@ uf2d:
 // r2     quotient q (number of reductions)
 // if exponent >=10, returns r0:r1=0, r2=1024*mantissa sign
 // designed to work for 0.5<d<2, in particular d=ln2 (~0.7) and d=π/2 (~1.6)
- double_section dreduce
+ double_section dreduce, `.time_critical.dreduce`, `.text.dreduce`
  regular_func dreduce
  adds r2,#2                    // e+2
  bmi 1f                        // |x|<0.25, too small to need adjustment
@@ -1593,7 +1593,7 @@ uf2d:
  movs r2,#0
  bx r14
 
- double_section dtan_shim
+ double_section dtan_shim, `.time_critical.dtan_shim`, `.text.dtan_shim`
  regular_func dtan_shim
  push {r4-r7,r14}
  bl push_r8_r11
@@ -1607,7 +1607,7 @@ uf2d:
  bl pop_r8_r11
  b ddiv0                       // compute sin θ/cos θ
 
- double_section dcos_shim
+ double_section dcos_shim, `.time_critical.dcos_shim`, `.text.dcos_shim`
  regular_func dcos_shim
  push {r4-r7,r14}
  bl push_r8_r11
@@ -1615,7 +1615,7 @@ uf2d:
  bl dcos_finish
  b 1f
 
- double_section dsin_shim
+ double_section dsin_shim, `.time_critical.dsin_shim`, `.text.dsin_shim`
  regular_func dsin_shim
  push {r4-r7,r14}
  bl push_r8_r11
@@ -1625,7 +1625,7 @@ uf2d:
  bl pop_r8_r11
  pop {r4-r7,r15}
 
- double_section dsincos_shim
+ double_section dsincos_shim, `.time_critical.dsincos_shim`, `.text.dsincos_shim`
 
  // Note that this function returns in r0-r3
  regular_func dsincos_shim
@@ -1642,7 +1642,7 @@ uf2d:
  bl pop_r8_r11
  pop {r4-r7,r15}
 
- double_section dtrig_guts
+ double_section dtrig_guts, `.time_critical.dtrig_guts`, `.text.dtrig_guts`
 
 // unpack double θ in r0:r1, range reduce and calculate ε, cos α and sin α such that
 // θ=α+ε and |ε|≤2^-32
@@ -1947,7 +1947,7 @@ dtab_cc:
     _word 0x80000000, 0x00000000   // atan 2^-31 Q62
     _word 0x40000000, 0x00000000   // atan 2^-32 Q62
 
- double_section dexp_guts
+ double_section dexp_guts, `.time_critical.dexp_guts`, `.text.dexp_guts`
  regular_func dexp_shim
  push {r4-r7,r14}
  bl dunpacks

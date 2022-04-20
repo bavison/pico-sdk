@@ -21,11 +21,11 @@
 #endif
 
 // PICO_CONFIG: PICO_DIVIDER_IN_RAM, Whether divider functions should be placed in RAM, default=0, group=pico_divider
-_macro_1arg(div_section, name)
+_macro_3args(div_section, name, ram_name, flash_name)
 #if PICO_DIVIDER_IN_RAM
-.section RAM_SECTION_NAME(MA(name)), "ax"
+ _section(RAM_SECTION_NAME(\name), ram_name, "ax", CODE, 2)
 #else
-.section SECTION_NAME(MA(name)), "ax"
+ _section(SECTION_NAME(\name), flash_name, "ax", CODE, 2)
 #endif
  _endm(endm)
 
@@ -90,7 +90,7 @@ _macro(restore_div_state_and_return_64)
 #endif /* !PICO_DIVIDER_DISABLE_INTERRUPTS */
 
 // since idiv and idivmod only differ by a cycle, we'll make them the same!
- div_section WRAPPER_FUNC_NAME(__aeabi_idiv)
+ div_section WRAPPER_FUNC_NAME(__aeabi_idiv), `.time_critical.__wrap___aeabi_idiv`, `.text.__wrap___aeabi_idiv`
  _align 2
  wrapper_func __aeabi_idiv
  wrapper_func __aeabi_idivmod
@@ -155,7 +155,7 @@ _macro(restore_div_state_and_return_64)
 #endif /* !PICO_DIVIDER_DISABLE_INTERRUPTS */
 
 // since uidiv and uidivmod only differ by a cycle, we'll make them the same!
- div_section WRAPPER_FUNC_NAME(__aeabi_uidiv)
+ div_section WRAPPER_FUNC_NAME(__aeabi_uidiv), `.time_critical.__wrap___aeabi_uidiv`, `.text.__wrap___aeabi_uidiv`
  regular_func div_u32u32
  regular_func divmod_u32u32
  wrapper_func __aeabi_uidiv
@@ -213,7 +213,7 @@ _macro(restore_div_state_and_return_64)
     restore_div_state_and_return
 #endif /* !PICO_DIVIDER_DISABLE_INTERRUPTS */
 
- div_section WRAPPER_FUNC_NAME(__aeabi_ldiv)
+ div_section WRAPPER_FUNC_NAME(__aeabi_ldiv), `.time_critical.__wrap___aeabi_ldiv`, `.text.__wrap___aeabi_ldiv`
 
  _align 2
  wrapper_func __aeabi_ldivmod
@@ -860,7 +860,7 @@ y64_x64:
  blo 3b
  b 1b
 
- div_section divmod_s64s64_rem
+ div_section divmod_s64s64_rem, `.time_critical.divmod_s64s64_rem`, `.text.divmod_s64s64_rem`
  regular_func divmod_s64s64_rem
     push {r4, lr}
     bl divmod_s64s64
@@ -868,7 +868,7 @@ y64_x64:
     stmia r4!, {r2,r3}
     pop {r4, pc}
 
- div_section divmod_u64u64_rem
+ div_section divmod_u64u64_rem, `.time_critical.divmod_u64u64_rem`, `.text.divmod_u64u64_rem`
  regular_func divmod_u64u64_rem
     push {r4, lr}
     bl divmod_u64u64

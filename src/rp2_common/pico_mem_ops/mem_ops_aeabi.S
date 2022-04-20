@@ -9,11 +9,11 @@
 
  __pre_init __aeabi_mem_init, 00001
 
-_macro_1arg(mem_section, name)
+_macro_3args(mem_section, name, ram_name, flash_name)
 #if PICO_MEM_IN_RAM
-.section RAM_SECTION_NAME(MA(name)), "ax"
+ _section(RAM_SECTION_NAME(\name), ram_name, "ax", CODE, 2)
 #else
-.section SECTION_NAME(MA(name)), "ax"
+ _section(SECTION_NAME(\name), flash_name, "ax", CODE, 2)
 #endif
  _endm(endm)
 
@@ -26,7 +26,7 @@ _macro_1arg(mem_section, name)
 // NOTE: All code sections are placed in RAM (at the expense of some veneer cost for calls from flash) because
 //       otherwise code using basic c division operators will require XIP flash access.
 
-.section .data.aeabi_mem_funcs
+ _section(.data.aeabi_mem_funcs, `.data.aeabi_mem_funcs`, "a", CONST, 2)
  _global aeabi_mem_funcs, aeabi_mem_funcs_end
 
  _align 2
@@ -37,7 +37,7 @@ aeabi_mem_funcs:
     _word ROM_FUNC_MEMCPY44
 aeabi_mem_funcs_end:
 
-.section .text
+ _section(.text, `.text`, "ax", CODE, 2)
  regular_func __aeabi_mem_init
     ldr r0, =aeabi_mem_funcs
     movs r1, #MEM_FUNC_COUNT
@@ -52,7 +52,7 @@ aeabi_mem_funcs_end:
 // (such as a DMA engine), its device supplement specifies whether it may be used in
 // implementations of these functions and what effect such use has on the device’s state.
 
- mem_section aeabi_memset_memcpy
+ mem_section aeabi_memset_memcpy, `.time_critical.aeabi_memset_memcpy`, `.text.aeabi_memset_memcpy`
 
  wrapper_func __aeabi_memset
     // 2nd/3rd args are reversed
@@ -79,14 +79,14 @@ aeabi_mem_funcs_end:
     ldr r3, [r3, #MEMCPY4]
     bx r3
 
- mem_section memset
+ mem_section memset, `.time_critical.memset`, `.text.memset`
 
  wrapper_func memset
     ldr r3, =aeabi_mem_funcs
     ldr r3, [r3, #MEMSET]
     bx r3
 
- mem_section memcpy
+ mem_section memcpy, `.time_critical.memcpy`, `.text.memcpy`
  wrapper_func __aeabi_memcpy
  wrapper_func memcpy
     ldr r3, =aeabi_mem_funcs
