@@ -25,18 +25,18 @@ _macro_1arg(_double_wrapper_func, x)
 _macro_1arg(wrapper_func_d1, x)
    _double_wrapper_func \x
 #if PICO_DOUBLE_PROPAGATE_NANS
-    mov ip, lr
+    mov r12, lr
     bl __check_nan_d1
-    mov lr, ip
+    mov lr, r12
 #endif
  _endm(endm)
 
 _macro_1arg(wrapper_func_d2, x)
     _double_wrapper_func \x
 #if PICO_DOUBLE_PROPAGATE_NANS
-    mov ip, lr
+    mov r12, lr
     bl __check_nan_d2
-    mov lr, ip
+    mov lr, r12
 #endif
  _endm(endm)
 
@@ -50,7 +50,7 @@ __check_nan_d1:
    bhi 1f
    bx lr
 1:
-   bx ip
+   bx r12
 
 .thumb_func
 __check_nan_d2:
@@ -69,10 +69,10 @@ __check_nan_d2:
    pop {r0, r2}
    mov r0, r2
    mov r1, r3
-   bx ip
+   bx r12
 1:
    pop {r0, r2}
-   bx ip
+   bx r12
 #endif
 
 _macro_1arg(table_tail_call, SF_TABLE_OFFSET)
@@ -80,7 +80,7 @@ _macro_1arg(table_tail_call, SF_TABLE_OFFSET)
 #if PICO_DOUBLE_SUPPORT_ROM_V1 && PICO_RP2040_B0_SUPPORTED
 #ifndef NDEBUG
     movs r3, #0
-    mov ip, r3
+    mov r12, r3
 #endif
 #endif
     ldr r3, =sd_table
@@ -94,7 +94,7 @@ _macro_2args(shimmable_table_tail_call, SF_TABLE_OFFSET, shim)
     ldr r3, =sd_table
     ldr r3, [r3, #\SF_TABLE_OFFSET]
 #if PICO_DOUBLE_SUPPORT_ROM_V1 && PICO_RP2040_B0_SUPPORTED
-    mov ip, pc
+    mov r12, pc
 #endif
     str r3, [sp, #4]
     pop {r3, pc}
@@ -147,16 +147,16 @@ _macro_1arg(double_wrapper_section, func)
  wrapper_func_d2 __aeabi_dsub
 #if PICO_DOUBLE_PROPAGATE_NANS
     // we want to return nan for inf-inf or -inf - -inf, but without too much upfront cost
-    mov ip, r0
+    mov r12, r0
     mov r0, r1
     eors r0, r3
     bmi 1f // different signs
-    mov r0, ip
+    mov r0, r12
     push {r0-r3, lr}
     bl 2f
     b ddiv_dsub_nan_helper
 1:
-    mov r0, ip
+    mov r0, r12
 2:
 #endif
    shimmable_table_tail_call SF_TABLE_FSUB dsub_shim
@@ -174,12 +174,12 @@ _macro_1arg(double_wrapper_section, func)
 #endif
 #if !PICO_DIVIDER_DISABLE_INTERRUPTS
     // to support IRQ usage (or context switch) we must save/restore divider state around call if state is dirty
-    mov ip, r2
+    mov r12, r2
     ldr r2, =(SIO_BASE)
     ldr r2, [r2, #SIO_DIV_CSR_OFFSET]
     lsrs r2, #SIO_DIV_CSR_DIRTY_SHIFT_FOR_CARRY
     bcs ddiv_save_state
-    mov r2, ip
+    mov r2, r12
 #else
     // to avoid worrying about IRQs (or context switches), simply disable interrupts around call
     push {r4, lr}
@@ -196,7 +196,7 @@ ddiv_shim_call:
 ddiv_save_state:
     ldr r2, =(SIO_BASE)
     save_div_state_and_lr
-    mov r2, ip
+    mov r2, r12
     bl ddiv_shim_call
     ldr r2, =(SIO_BASE)
     restore_div_state_and_return
@@ -784,12 +784,12 @@ v2_rom_dsin_finish:
 dtan_in_range:
 #if !PICO_DIVIDER_DISABLE_INTERRUPTS
     // to support IRQ usage (or context switch) we must save/restore divider state around call if state is dirty
-    mov ip, r2
+    mov r12, r2
     ldr r2, =(SIO_BASE)
     ldr r2, [r2, #SIO_DIV_CSR_OFFSET]
     lsrs r2, #SIO_DIV_CSR_DIRTY_SHIFT_FOR_CARRY
     bcs dtan_save_state
-    mov r2, ip
+    mov r2, r12
 #else
     // to avoid worrying about IRQs (or context switches), simply disable interrupts around call
     push {r4, lr}
@@ -805,7 +805,7 @@ dtan_shim_call:
 dtan_save_state:
     ldr r2, =(SIO_BASE)
     save_div_state_and_lr
-    mov r2, ip
+    mov r2, r12
     bl dtan_shim_call
     ldr r2, =(SIO_BASE)
     restore_div_state_and_return

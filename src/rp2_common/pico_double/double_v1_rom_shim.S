@@ -29,7 +29,7 @@ _macro_1arg(double_section, name)
  double_section double_table_shim_on_use_helper
  regular_func double_table_shim_on_use_helper
     push {r0-r2, lr}
-    mov r0, ip
+    mov r0, r12
 #ifndef NDEBUG
     // sanity check to make sure we weren't called by non (shimmable_) table_tail_call macro
     cmp r0, #0
