@@ -9,12 +9,15 @@
 #define _align      .align
 #define _asciz      .asciz
 #define _byte       .byte
+#define else        .else
 #define _end        .end
+#define endif       .endif
 #define _endm(x)    .endm
 #define endr        .endr
 #define _equ        .equ
 #define _global     .global
 #define _hword      .hword
+#define if          .if
 #define _macro(x)   .macro x
 #define _macro_1arg(x,a)                   .macro x a
 #define _macro_2args(x,a,b)                .macro x a,b

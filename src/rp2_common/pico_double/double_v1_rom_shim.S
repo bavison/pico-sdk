@@ -76,7 +76,7 @@ _macro_3args(double_section, name, ram_name, flash_name)
 
  _equ debug,0
 _macro_1arg(mdump, k)
-.if debug
+ if debug
  push {r0-r3}
  push {r14}
  push {r0-r3}
@@ -93,7 +93,7 @@ _macro_1arg(mdump, k)
  pop {r0}
  mov r14,r0
  pop {r0-r3}
-.endif
+ endif
  _endm(endm)
 
 
@@ -633,7 +633,7 @@ dm_1:
 ddiv0:                         // entry point from dtan
  mdunpack r2,r3,r4,r7,r6       // unpack divisor
 
-.if use_hw_div
+ if use_hw_div
 
  movs r5,#IOPORT>>24
  lsls r5,#24
@@ -645,7 +645,7 @@ ddiv0:                         // entry point from dtan
 // if there are not enough cycles from now to the read of the quotient for
 // the divider to do its stuff we need a busy-wait here
 
-.endif
+ endif
 
 // unpack dividend by hand to save on register use
  lsrs r6,r1,#31
@@ -671,13 +671,13 @@ ddiv0:                         // entry point from dtan
  subs r1,r7
  lsrs r1,#1
 
-.if use_hw_div
+ if use_hw_div
 
  ldr r6,[r5,#DIV_QUOTIENT]
  adds r6,#1
  lsrs r6,#1
 
-.else
+ else
 
 // this is not beautiful; could be replaced by better code that uses knowledge of divisor range
  push {r0-r3}
@@ -689,7 +689,7 @@ ddiv0:                         // entry point from dtan
  lsrs r6,#1
  pop {r0-r3}
 
-.endif
+ endif
 
 // here
 // r0:r1 y mantissa
