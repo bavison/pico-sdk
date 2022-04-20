@@ -12,22 +12,22 @@
 
 _macro_1arg(float_section, name)
 #if PICO_FLOAT_IN_RAM
-.section RAM_SECTION_NAME(\name), "ax"
+.section RAM_SECTION_NAME(MA(name)), "ax"
 #else
-.section SECTION_NAME(\name), "ax"
+.section SECTION_NAME(MA(name)), "ax"
 #endif
  _endm(endm)
 
 _macro_1arg(float_wrapper_section, func)
- float_section WRAPPER_FUNC_NAME(\func)
+ float_section WRAPPER_FUNC_NAME(MA2(func))
  _endm(endm)
 
 _macro_1arg(_float_wrapper_func, x)
- wrapper_func \x
+ wrapper_func MA(x)
  _endm(endm)
 
 _macro_1arg(wrapper_func_f1, x)
-   _float_wrapper_func \x
+   _float_wrapper_func MA2(x)
 #if PICO_FLOAT_PROPAGATE_NANS
     mov ip, lr
     bl __check_nan_f1
@@ -36,7 +36,7 @@ _macro_1arg(wrapper_func_f1, x)
  _endm(endm)
 
 _macro_1arg(wrapper_func_f2, x)
-   _float_wrapper_func \x
+   _float_wrapper_func MA2(x)
 #if PICO_FLOAT_PROPAGATE_NANS
     mov ip, lr
     bl __check_nan_f2
@@ -79,20 +79,20 @@ _macro_1arg(table_tail_call, SF_TABLE_OFFSET)
 #endif
 #endif
     ldr r3, =sf_table
-    ldr r3, [r3, #\SF_TABLE_OFFSET]
+    ldr r3, [r3, #MA(SF_TABLE_OFFSET)]
     bx r3
  _endm(endm)
 
 _macro_2args(shimmable_table_tail_call, SF_TABLE_OFFSET, shim)
     ldr r3, =sf_table
-    ldr r3, [r3, #\SF_TABLE_OFFSET]
+    ldr r3, [r3, #MA(SF_TABLE_OFFSET)]
 #if PICO_FLOAT_SUPPORT_ROM_V1 && PICO_RP2040_B0_SUPPORTED
     mov ip, pc
 #endif
     bx r3
 #if PICO_FLOAT_SUPPORT_ROM_V1 && PICO_RP2040_B0_SUPPORTED
-    _byte \SF_TABLE_OFFSET, 0xdf
-    _word \shim
+    _byte MA(SF_TABLE_OFFSET), 0xdf
+    _word MA(shim)
 #endif
  _endm(endm)
 

@@ -23,19 +23,19 @@
 // PICO_CONFIG: PICO_DIVIDER_IN_RAM, Whether divider functions should be placed in RAM, default=0, group=pico_divider
 _macro_1arg(div_section, name)
 #if PICO_DIVIDER_IN_RAM
-.section RAM_SECTION_NAME(\name), "ax"
+.section RAM_SECTION_NAME(MA(name)), "ax"
 #else
-.section SECTION_NAME(\name), "ax"
+.section SECTION_NAME(MA(name)), "ax"
 #endif
  _endm(endm)
 
 // wait 8-n cycles for the hardware divider
 _macro_1arg(wait_div, n)
-.rept (8-\n) / 2
+.rept (8-MA(n)) / 2
   b 9f
 9:
 .endr
-.if (8-\n) % 2
+.if (8-MA(n)) % 2
  nop
 .endif
  _endm(endm)
@@ -272,10 +272,10 @@ divmod_s64s64_savestate:
 #endif /* !PICO_DIVIDER_DISABLE_INTERRUPTS */
 
 _macro_2args(dneg, lo, hi)
- mvns \hi,\hi
- negs \lo,\lo
+ mvns MA(hi),MA(hi)
+ negs MA(lo),MA(lo)
  bne l\@_1
- adds \hi,#1
+ adds MA(hi),#1
 l\@_1:
  _endm(endm)
 
