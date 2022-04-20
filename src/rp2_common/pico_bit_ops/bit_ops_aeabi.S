@@ -97,10 +97,10 @@ aeabi_bits_funcs_end:
     ldr r3, [r3, #POPCOUNT32]
     push {r1, r3, lr}
     blx r3
-    mov ip, r0
+    mov r12, r0
     pop {r0, r3}
     blx r3
-    mov r1, ip
+    mov r1, r12
     add r0, r1
     pop {pc}
 
@@ -124,10 +124,10 @@ aeabi_bits_funcs_end:
     ldr r3, [r3, #REVERSE32]
     push {r1, r3}
     blx r3
-    mov ip, r0 // reverse32 preserves ip
+    mov r12, r0 // reverse32 preserves r12
     pop {r0, r3}
     blx r3
-    mov r1, ip
+    mov r1, r12
     pop {pc}
 
  _end

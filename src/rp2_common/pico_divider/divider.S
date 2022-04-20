@@ -78,7 +78,7 @@ _macro(restore_div_state_and_return_64)
     //    ... interruptor using div will dividend, divisor, quotient registers as is (what we just restored ourselves),
     //        and we'll restore the remainder after the fact
 
-    mov ip, r2
+    mov r12, r2
     ldr r2, =SIO_BASE
     // note we are not use STM not because it can be restarted due to interrupt which is harmless, more because this is 1 cycle IO space
     // and so 4 reads is cheaper (and we don't have to adjust r2)
@@ -86,7 +86,7 @@ _macro(restore_div_state_and_return_64)
     str r5, [r2, #SIO_DIV_UDIVISOR_OFFSET]
     str r7, [r2, #SIO_DIV_REMAINDER_OFFSET]
     str r6, [r2, #SIO_DIV_QUOTIENT_OFFSET]
-    mov r2, ip
+    mov r2, r12
     pop {r4, r5, r6, r7, pc}
  _endm(endm)
 
@@ -224,11 +224,11 @@ _macro(restore_div_state_and_return_64)
  regular_func divmod_s64s64
 #if !PICO_DIVIDER_DISABLE_INTERRUPTS
     // to support IRQ usage (or context switch) we must save/restore divider state around call if state is dirty
-    mov ip, r2
+    mov r12, r2
     ldr r2, =SIO_BASE
     ldr r2, [r2, #SIO_DIV_CSR_OFFSET]
     lsrs r2, #SIO_DIV_CSR_DIRTY_SHIFT_FOR_CARRY
-    mov r2, ip
+    mov r2, r12
     bcs divmod_s64s64_savestate
     b divmod_s64s64_unsafe
  _align 2
@@ -252,11 +252,11 @@ divmod_s64s64_savestate:
  regular_func divmod_u64u64
 #if !PICO_DIVIDER_DISABLE_INTERRUPTS
     // to support IRQ usage (or context switch) we must save/restore divider state around call if state is dirty
-    mov ip, r2
+    mov r12, r2
     ldr r2, =SIO_BASE
     ldr r2, [r2, #SIO_DIV_CSR_OFFSET]
     lsrs r2, #SIO_DIV_CSR_DIRTY_SHIFT_FOR_CARRY
-    mov r2, ip
+    mov r2, r12
     bcs divmod_u64u64_savestate
     b divmod_u64u64_unsafe
  _align 2
