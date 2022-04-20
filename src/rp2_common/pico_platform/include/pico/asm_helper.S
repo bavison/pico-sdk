@@ -29,6 +29,7 @@
 #define rept        .rept
 #define _section(name, backquoted_name, flags, cd, align) .section name, flags
 #define _set        .set
+#define _space      .space
 #define _word       .word
 
 // Expand a macro argument
