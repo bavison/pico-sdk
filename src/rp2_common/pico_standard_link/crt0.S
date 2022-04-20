@@ -37,6 +37,7 @@
  _section(.vectors, "ax", CODE, 2)
  _align 2
 
+    data_in_code_area
  _global __vectors, __VECTOR_TABLE
 __VECTOR_TABLE:
 __vectors:
@@ -88,6 +89,8 @@ __vectors:
     _word isr_irq29
     _word isr_irq30
     _word isr_irq31
+
+ code_in_code_area
 
 // all default exception handlers do nothing, and we can check for them being set to our
 // default values by seeing if they point to somewhere between __defaults_isrs_start and __default_isrs_end
@@ -282,6 +285,7 @@ data_cpy:
 // we skip the copy, because it is listed in binary info
 
  _align 2
+    data_in_code_area
 data_cpy_table:
 #if PICO_COPY_TO_RAM
     _word __ram_text_source__
@@ -305,6 +309,8 @@ data_cpy_table:
 // ----------------------------------------------------------------------------
 // Provide safe defaults for _exit and runtime_init
 // Full implementations usually provided by platform.c
+
+ code_in_code_area
 
  weak_func runtime_init
     bx lr

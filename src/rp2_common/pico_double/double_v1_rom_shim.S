@@ -1078,12 +1078,15 @@ dq_1:
 
  _ltorg
 
+ data_in_code_area
 
 // round(sqrt(2^22./[68:8:252]))
 drsqrtapp:
     _byte 0xf8,0xeb,0xdf,0xd6,0xcd,0xc5,0xbe,0xb8
     _byte 0xb2,0xad,0xa8,0xa4,0xa0,0x9c,0x99,0x95
     _byte 0x92,0x8f,0x8d,0x8a,0x88,0x85,0x83,0x81
+
+ code_in_code_area
 
 dq_5:
 // here we are near a rounding boundary, C is set
@@ -1741,6 +1744,7 @@ dsin_finish:
 
  _ltorg
  _align 2
+ data_in_code_area
 dreddata0:
     _word 0x0000517d               // 2/π Q15
     _word 0x0014611A               // π/2 Q62=6487ED5110B4611A split into 21-bit pieces
@@ -1749,6 +1753,7 @@ dreddata0:
 
 
  _align 2
+ code_in_code_area
  regular_func datan2_shim
 // r0:r1 y
 // r2:r3 x
@@ -1914,6 +1919,8 @@ dreddata0:
 
  _ltorg
 
+ data_in_code_area
+
 dtab_cc:
     _word 0x61bb4f69, 0x1dac6705   // atan 2^-1 Q62
     _word 0x96406eb1, 0x0fadbafc   // atan 2^-2 Q62
@@ -1948,6 +1955,7 @@ dtab_cc:
     _word 0x80000000, 0x00000000   // atan 2^-31 Q62
     _word 0x40000000, 0x00000000   // atan 2^-32 Q62
 
+ code_in_code_area
  double_section dexp_guts
  regular_func dexp_shim
  push {r4-r7,r14}
@@ -2137,6 +2145,7 @@ dtab_cc:
  _ltorg
 
  _align 2
+ data_in_code_area
 dreddata1:
     _word 0x0000B8AA               // 1/ln2 Q15
     _word 0x0013DE6B               // ln2 Q62 Q62=2C5C85FDF473DE6B split into 21-bit pieces
