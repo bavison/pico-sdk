@@ -215,8 +215,7 @@ ret_pop45:
 // convert float in r0 to signed fixed point in r0:r1:r3, r1 places after point, rounding towards -Inf
 // result clamped so that r3 can only be 0 or -1
 // trashes r12
-.thumb_func
-f2fix:
+ local_func f2fix
  push {r4,r14}
  mov r12,r1
  asrs r3,r0,#31
@@ -252,9 +251,7 @@ ret_dzero:
 
  float_section d2fix_a_float, `.time_critical.d2fix_a_float`, `.text.d2fix_a_float`
 
-.weak d2fix_a // weak because it exists in float shims too
-.thumb_func
-d2fix_a:
+ weak_func d2fix_a // weak because it exists in float shims too
 // here
 // r0:r1 two's complement mantissa
 // r2    unbaised exponent

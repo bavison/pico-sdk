@@ -16,19 +16,13 @@
 
  _align 2
 
- _global call_apsr_f
-.type call_apsr_f,%function
-.thumb_func
-call_apsr_f:
+ regular_func call_apsr_f
     push {lr}
     blx r2
     mrs r0, apsr
     pop {pc}
 
- _global call_apsr_d
-.type call_apsr_d,%function
-.thumb_func
-call_apsr_d:
+ regular_func call_apsr_d
     push {r4, lr}
     ldr r4, [sp, #8]
     blx r4

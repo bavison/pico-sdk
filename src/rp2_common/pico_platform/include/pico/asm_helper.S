@@ -63,6 +63,12 @@
     _word \func
 .endm
 
+.macro local_func x
+.type \x,%function
+.thumb_func
+\x:
+.endm
+
 .macro weak_func x
 .weak \x
 .type \x,%function

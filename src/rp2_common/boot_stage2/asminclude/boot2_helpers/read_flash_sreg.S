@@ -11,10 +11,7 @@
 
 // Pass status read cmd into r0.
 // Returns status value in r0.
- _global read_flash_sreg
-.type read_flash_sreg,%function
-.thumb_func
-read_flash_sreg:
+  regular_func read_flash_sreg
     push {r1, lr}
     str r0, [r3, #SSI_DR0_OFFSET]
     // Dummy byte:

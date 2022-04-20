@@ -134,9 +134,7 @@ _macro_1arg(decl_isr, name)
  decl_isr isr_irq31
 
 // All unhandled USER IRQs fall through to here
- _global __unhandled_user_irq
-.thumb_func
-__unhandled_user_irq:
+ regular_func __unhandled_user_irq
     bl __get_current_exception
     subs r0, #16
  _global unhandled_user_irq_num_in_r0
@@ -178,10 +176,7 @@ binary_info_header:
 //   must then be sent back round the boot sequence to properly initialise flash
 
 // ELF entry point:
-.type _entry_point,%function
-.thumb_func
- _global _entry_point
-_entry_point:
+ regular_func _entry_point
 
 #if PICO_NO_FLASH
     // Vector through our own table (SP, VTOR will not have been set up at
@@ -205,9 +200,7 @@ _entry_point:
 // - calls main
 // - calls exit (which should eventually hang the processor via _exit)
 
-.type _reset_handler,%function
-.thumb_func
-_reset_handler:
+ local_func _reset_handler
     // Only core 0 should run the C runtime startup code; core 1 is normally
     // sleeping in the bootrom at this point but check to be sure
     ldr r0, =(SIO_BASE + SIO_CPUID_OFFSET)
@@ -248,10 +241,7 @@ platform_entry: // symbol for stack traces
     blx r1
     // exit should not return.  If it does, hang the core.
     // (fall thru into our hang _exit impl
-.weak _exit
-.type _exit,%function
-.thumb_func
-_exit:
+ weak_func _exit
 1: // separate label because _exit can be moved out of branch range
     bkpt #0
     b 1b
@@ -289,10 +279,7 @@ data_cpy_table:
 // Provide safe defaults for _exit and runtime_init
 // Full implementations usually provided by platform.c
 
-.weak runtime_init
-.type runtime_init,%function
-.thumb_func
-runtime_init:
+ weak_func runtime_init
     bx lr
 
 // ----------------------------------------------------------------------------
@@ -306,9 +293,7 @@ hold_non_core0_in_bootrom:
     bl rom_func_lookup
     bx r0
 
- _global __get_current_exception
-.thumb_func
-__get_current_exception:
+ regular_func __get_current_exception
     mrs  r0, ipsr
     uxtb r0, r0
     bx   lr

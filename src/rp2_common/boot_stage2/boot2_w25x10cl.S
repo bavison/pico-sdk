@@ -73,10 +73,7 @@
 
 // This code will get copied to 0x20000000 and then executed
 
- _global _stage2_boot
-.type _stage2_boot,%function
-.thumb_func
-_stage2_boot:
+ regular_func _stage2_boot
     push {lr}
     ldr r3, =XIP_SSI_BASE                // Use as base address where possible
 
