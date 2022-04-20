@@ -23,9 +23,9 @@
 // PICO_CONFIG: PICO_DIVIDER_IN_RAM, Whether divider functions should be placed in RAM, default=0, group=pico_divider
 _macro_1arg(div_section, name)
 #if PICO_DIVIDER_IN_RAM
-.section RAM_SECTION_NAME(MA(name)), "ax"
+ _section(RAM_SECTION_NAME(MA(name)), "ax", CODE, 2)
 #else
-.section SECTION_NAME(MA(name)), "ax"
+ _section(SECTION_NAME(MA(name)), "ax", CODE, 2)
 #endif
  _endm(endm)
 

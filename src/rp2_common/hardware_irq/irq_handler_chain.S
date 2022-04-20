@@ -8,7 +8,7 @@
 #include "hardware/irq.h"
 
 #if !PICO_DISABLE_SHARED_IRQ_HANDLERS
-.data
+ _section(.data, "aw", DATA, 2)
  _align 2
 
  _global irq_handler_chain_slots

@@ -12,9 +12,9 @@
 
 _macro_1arg(float_section, name)
 #if PICO_FLOAT_IN_RAM
-.section RAM_SECTION_NAME(MA(name)), "ax"
+ _section(RAM_SECTION_NAME(MA(name)), "ax", CODE, 2)
 #else
-.section SECTION_NAME(MA(name)), "ax"
+ _section(SECTION_NAME(MA(name)), "ax", CODE, 2)
 #endif
  _endm(endm)
 
