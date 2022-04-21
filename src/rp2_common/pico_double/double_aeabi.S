@@ -8,6 +8,42 @@
 #include "pico/bootrom/sf_table.h"
 #include "hardware/divider_helper.S"
 
+ _extern __aeabi_cdcmpeq
+ _extern __aeabi_cdcmple
+ _extern __aeabi_cdrcmple
+ _extern __aeabi_double_init
+ _extern dadd_shim
+ _extern datan2_shim
+ _extern dcos_shim
+ _extern ddiv_shim
+ _extern dexp_shim
+ _extern dln_shim
+ _extern dmul_shim
+ _extern double2fix64_shim
+ _extern double2fix_shim
+ _extern double2float_shim
+ _extern double2int64_shim
+ _extern double2int_shim
+ _extern double2ufix64_shim
+ _extern double2ufix_shim
+ _extern double2uint64_shim
+ _extern double2uint_shim
+ _extern dsincos_shim
+ _extern dsin_shim
+ _extern dsqrt_shim
+ _extern dsub_shim
+ _extern dtan_shim
+ _extern fix2double_shim
+ _extern fix642double_shim
+ _extern int642double_shim
+ _extern remainder
+ _extern sd_table
+ _extern sf_clz_func
+ _extern ufix2double_shim
+ _extern ufix642double_shim
+ _extern uint2double_shim
+ _extern uint642double_shim
+
  __pre_init __aeabi_double_init, 00020
 
 _macro_3args(double_section, name, ram_name, flash_name)
