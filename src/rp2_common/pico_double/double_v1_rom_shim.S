@@ -17,6 +17,10 @@
 
 #include "pico/asm_helper.S"
 
+ _extern pop_r8_r11
+ _extern push_r8_r11
+ _extern sd_table
+
 _macro_1arg(double_section, name)
 // todo separate flag for shims?
 #if PICO_DOUBLE_IN_RAM

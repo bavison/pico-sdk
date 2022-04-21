@@ -15,6 +15,7 @@
 #define _endm(x)    .endm
 #define endr        .endr
 #define _equ        .equ
+#define _extern     .extern
 #define _global     .global
 #define _hword      .hword
 #define if          .if
