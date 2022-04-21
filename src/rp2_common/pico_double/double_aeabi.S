@@ -79,7 +79,7 @@ _macro_1arg(wrapper_func_d2, x)
 #if PICO_DOUBLE_PROPAGATE_NANS
  local_func __check_nan_d1
    movs r3, #1
-   lsls r3, #21
+   lsls r3, r3, #21
    lsls r2, r1, #1
    adds r2, r3
    bhi 1f
@@ -90,7 +90,7 @@ _macro_1arg(wrapper_func_d2, x)
  local_func __check_nan_d2
    push {r0, r2}
    movs r2, #1
-   lsls r2, #21
+   lsls r2, r2, #21
    lsls r0, r1, #1
    adds r0, r2
    bhi 1f
@@ -213,7 +213,7 @@ _macro_3args(double_wrapper_section, func, ram_name, flash_name)
     mov r12, r2
     ldr r2, =(SIO_BASE)
     ldr r2, [r2, #SIO_DIV_CSR_OFFSET]
-    lsrs r2, #SIO_DIV_CSR_DIRTY_SHIFT_FOR_CARRY
+    lsrs r2, r2, #SIO_DIV_CSR_DIRTY_SHIFT_FOR_CARRY
     bcs ddiv_save_state
     mov r2, r12
 #else
@@ -251,16 +251,16 @@ ddiv_dsub_nan_helper:
 2:
     ldr r2, [sp, #4]
     ldr r3, [sp, #12]
-    lsls r2, #1
+    lsls r2, r2, #1
     asrs r2, r2, #21
-    lsls r3, #1
+    lsls r3, r3, #1
     asrs r3, r3, #24
     ands r2, r3
     adds r2, #1
     bne 3f
     // infinite to nan
     movs r2, #1
-    lsls r2, #19
+    lsls r2, r2, #19
     orrs r1, r2
 3:
     add sp, #16
@@ -288,7 +288,7 @@ ddiv_dsub_nan_helper:
     bne 3f
     // infinite to nan
     movs r2, #1
-    lsls r2, #19
+    lsls r2, r2, #19
     orrs r1, r2
 3:
     add sp, #16
@@ -322,7 +322,7 @@ ddiv_dsub_nan_helper:
 __aeabi_dfcmple_guts:
  ldr r7,=0x7ff                 // flush NaNs and denormals
  lsls r4,r1,#1
- lsrs r4,#21
+ lsrs r4,r4,#21
  beq 1f
  cmp r4,r7
  bne 2f
@@ -330,11 +330,11 @@ __aeabi_dfcmple_guts:
  bhi 7f
 1:
  movs r0,#0
- lsrs r1,#20
- lsls r1,#20
+ lsrs r1,r1,#20
+ lsls r1,r1,#20
 2:
  lsls r4,r3,#1
- lsrs r4,#21
+ lsrs r4,r4,#21
  beq 1f
  cmp r4,r7
  bne 2f
@@ -342,8 +342,8 @@ __aeabi_dfcmple_guts:
  bhi 7f
 1:
  movs r2,#0
- lsrs r3,#20
- lsls r3,#20
+ lsrs r3,r3,#20
+ lsls r3,r3,#20
 2:
  movs r6,#1
  eors r3,r1
@@ -435,7 +435,7 @@ __aeabi_dfcmple_guts:
  double_wrapper_section __aeabi_dcmpun, `.time_critical.__wrap___aeabi_dcmpun`, `.text.__wrap___aeabi_dcmpun`
  wrapper_func __aeabi_dcmpun
    movs r0, #1
-   lsls r0, #21
+   lsls r0, r0, #21
    lsls r2, r1, #1
    adds r2, r0
    bhi 1f
@@ -469,7 +469,7 @@ __aeabi_dfcmple_guts:
     eors r0, r1
     subs r0, r1
     beq 1b
-    lsls r1, #31
+    lsls r1, r1, #31
 2:
     push {r0, r1, r4, lr}
     ldr r3, =sf_clz_func
@@ -477,12 +477,12 @@ __aeabi_dfcmple_guts:
     blx r3
     pop {r2, r3}
     adds r4, r0, #1
-    lsls r2, r4
+    lsls r2, r2, r4
     lsls r0, r2, #20
-    lsrs r2, #12
+    lsrs r2, r2, #12
     ldr r1,=1055
     subs r1, r4
-    lsls r1, #20
+    lsls r1, r1, #20
     orrs r1, r3
     orrs r1, r2
     pop {r4, pc}
@@ -496,25 +496,25 @@ __aeabi_dfcmple_guts:
     lsrs r2, r4, #21
     movs r3, #0x80
     adds r2, r3
-    lsls r3, #3
+    lsls r3, r3, #3
     subs r2, r3
-    lsls r3, #21
+    lsls r3, r3, #21
     cmp r2, #126
     ble 1f
     subs r2, #158
     bge 2f
     asrs r4, r1, #31
-    lsls r1, #12
-    lsrs r1, #1
+    lsls r1, r1, #12
+    lsrs r1, r1, #1
     orrs r1, r3
     negs r2, r2
-    lsrs r1, r2
-    lsls r4, #1
+    lsrs r1, r1, r2
+    lsls r4, r4, #1
     adds r4, #1
     adds r2, #21
     cmp r2, #32
     bge 3f
-    lsrs r0, r2
+    lsrs r0, r0, r2
     orrs r0, r1
     muls r0, r4
     pop {r4, pc}
@@ -575,8 +575,8 @@ __aeabi_dfcmple_guts:
     cmn r1, r1
     bcc double2int64
     push {lr}
-    lsls r1, #1
-    lsrs r1, #1
+    lsls r1, r1, #1
+    lsrs r1, r1, #1
     movs r2, #0
     bl double2ufix64
     cmp r1, #0
@@ -588,7 +588,7 @@ __aeabi_dfcmple_guts:
     pop {pc}
 1:
     movs r1, #128
-    lsls r1, #24
+    lsls r1, r1, #24
     movs r0, #0
     pop {pc}
 
@@ -622,11 +622,11 @@ __aeabi_dfcmple_guts:
 #if PICO_DOUBLE_PROPAGATE_NANS
     // copy sign bit and 23 NAN id bits into sign bit and significant id bits, also set high id bit
 
-    lsrs r0, #30
+    lsrs r0, r0, #30
     lsls r2, r1, #12
-    lsrs r2, #9
-    asrs r1, #22
-    lsls r1, #22
+    lsrs r2, r2, #9
+    asrs r1, r1, #22
+    lsls r1, r1, #22
     orrs r0, r1
     orrs r0, r2
     bx lr
@@ -634,7 +634,7 @@ __aeabi_dfcmple_guts:
  wrapper_func __aeabi_d2f
 #if PICO_DOUBLE_PROPAGATE_NANS
     movs r3, #1
-    lsls r3, #21
+    lsls r3, r3, #21
     lsls r2, r1, #1
     adds r2, r3
     bhi 1b
@@ -662,7 +662,7 @@ __aeabi_dfcmple_guts:
     // rom version only works for -1024 < angle < 1024
     lsls r2, r1, #2
     bcc 1f
-    lsrs r2, #22
+    lsrs r2, r2, #22
     cmp r2, #9
     bge 2f
 1:
@@ -670,12 +670,12 @@ __aeabi_dfcmple_guts:
 2:
 #if PICO_DOUBLE_PROPAGATE_NANS
     lsls r2, r1, #1
-    asrs r2, #21
+    asrs r2, r2, #21
     adds r2, #1
     bne 3f
     // infinite to nan
     movs r2, #1
-    lsls r2, #19
+    lsls r2, r2, #19
     orrs r1, r2
     bx lr
 3:
@@ -692,7 +692,7 @@ __aeabi_dfcmple_guts:
     // rom version only works for -1024 < angle < 1024
     lsls r2, r1, #2
     bcc 1f
-    lsrs r2, #22
+    lsrs r2, r2, #22
     cmp r2, #9
     bge 2f
 1:
@@ -700,12 +700,12 @@ __aeabi_dfcmple_guts:
 2:
 #if PICO_DOUBLE_PROPAGATE_NANS
     lsls r2, r1, #1
-    asrs r2, #21
+    asrs r2, r2, #21
     adds r2, #1
     bne 3f
     // infinite to nan
     movs r2, #1
-    lsls r2, #19
+    lsls r2, r2, #19
     orrs r1, r2
     bx lr
 3:
@@ -721,12 +721,12 @@ __aeabi_dfcmple_guts:
 2:
 #if PICO_DOUBLE_PROPAGATE_NANS
     lsls r2, r1, #1
-    asrs r2, #21
+    asrs r2, r2, #21
     adds r2, #1
     bne 3f
     // infinite to nan
     movs r2, #1
-    lsls r2, #19
+    lsls r2, r2, #19
     orrs r1, r2
     pop {r4-r5}
     stmia r4!, {r0, r1}
@@ -745,7 +745,7 @@ __aeabi_dfcmple_guts:
     // rom version only works for -1024 < angle < 1024
     lsls r2, r1, #2
     bcc 1f
-    lsrs r2, #22
+    lsrs r2, r2, #22
     cmp r2, #9
     bge 2b
 1:
@@ -809,7 +809,7 @@ __aeabi_dfcmple_guts:
     // rom version only works for -1024 < angle < 1024
     lsls r2, r1, #2
     bcc dtan_in_range
-    lsrs r2, #22
+    lsrs r2, r2, #22
     cmp r2, #9
     bge dtan_angle_out_of_range
 dtan_in_range:
@@ -818,7 +818,7 @@ dtan_in_range:
     mov r12, r2
     ldr r2, =(SIO_BASE)
     ldr r2, [r2, #SIO_DIV_CSR_OFFSET]
-    lsrs r2, #SIO_DIV_CSR_DIRTY_SHIFT_FOR_CARRY
+    lsrs r2, r2, #SIO_DIV_CSR_DIRTY_SHIFT_FOR_CARRY
     bcs dtan_save_state
     mov r2, r12
 #else
@@ -844,12 +844,12 @@ dtan_save_state:
 dtan_angle_out_of_range:
 #if PICO_DOUBLE_PROPAGATE_NANS
     lsls r2, r1, #1
-    asrs r2, #21
+    asrs r2, r2, #21
     adds r2, #1
     bne 3f
     // infinite to nan
     movs r2, #1
-    lsls r2, #19
+    lsls r2, r2, #19
     orrs r1, r2
     bx lr
 3:

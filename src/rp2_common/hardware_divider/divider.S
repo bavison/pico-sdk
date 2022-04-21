@@ -52,7 +52,7 @@ _macro(__divider_delay)
     ldr r4, [r5, #SIO_DIV_CSR_OFFSET]
     // wait for results as we can't save signed-ness of operation
 1:
-    lsrs r4, #SIO_DIV_CSR_READY_SHIFT_FOR_CARRY
+    lsrs r4, r4, #SIO_DIV_CSR_READY_SHIFT_FOR_CARRY
     bcc 1b
     ldr r1, [r5, #SIO_DIV_UDIVIDEND_OFFSET]
     ldr r2, [r5, #SIO_DIV_UDIVISOR_OFFSET]
