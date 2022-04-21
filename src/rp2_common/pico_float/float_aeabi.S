@@ -73,9 +73,9 @@ _macro_1arg(wrapper_func_f2, x)
    lsls r3, r3, #24
    lsls r2, r0, #1
    adds r2, r3
-   bhi 1f
+   bhi __check_nan_f1_1
    bx lr
-1:
+__check_nan_f1_1:
    bx r12
 
  local_func __check_nan_f2
@@ -83,14 +83,14 @@ _macro_1arg(wrapper_func_f2, x)
    lsls r3, r3, #24
    lsls r2, r0, #1
    adds r2, r3
-   bhi 1f
+   bhi __check_nan_f2_2
    lsls r2, r1, #1
    adds r2, r3
-   bhi 2f
+   bhi __check_nan_f2_1
    bx lr
-2:
+__check_nan_f2_1:
    mov r0, r1
-1:
+__check_nan_f2_2:
    bx r12
 #endif
 
@@ -145,11 +145,11 @@ _macro_2args(shimmable_table_tail_call, SF_TABLE_OFFSET, shim)
     // we want to return nan for inf-inf or -inf - -inf, but without too much upfront cost
     mov r2, r0
     eors r2, r1
-    bmi 1f // different signs
+    bmi __aeabi_fsub_1 // different signs
     push {r0, r1, lr}
-    bl 1f
+    bl __aeabi_fsub_1
     b fdiv_fsub_nan_helper
-1:
+__aeabi_fsub_1:
 #endif
     table_tail_call SF_TABLE_FSUB
 
@@ -160,9 +160,9 @@ _macro_2args(shimmable_table_tail_call, SF_TABLE_OFFSET, shim)
  wrapper_func_f2 __aeabi_fdiv
 #if PICO_FLOAT_PROPAGATE_NANS
     push {r0, r1, lr}
-    bl 1f
+    bl __aeabi_fdiv_1
     b fdiv_fsub_nan_helper
-1:
+__aeabi_fdiv_1:
 #endif
 #if !PICO_DIVIDER_DISABLE_INTERRUPTS
     // to support IRQ usage (or context switch) we must save/restore divider state around call if state is dirty
@@ -198,21 +198,21 @@ fdiv_fsub_nan_helper:
     lsls r3, r0, #1
     asrs r3, r3, #24
     adds r3, #1
-    beq 2f
+    beq fdiv_fsub_nan_helper_1
     pop {pc}
-2:
+fdiv_fsub_nan_helper_1:
     lsls r1, r1, #1
     asrs r1, r1, #24
     lsls r2, r2, #1
     asrs r2, r2, #24
     ands r1, r2
     adds r1, #1
-    bne 3f
+    bne fdiv_fsub_nan_helper_2
     // infinite to nan
     movs r1, #1
     lsls r1, r1, #22
     orrs r0, r1
-3:
+fdiv_fsub_nan_helper_2:
     pop {pc}
 #endif
 
@@ -220,7 +220,7 @@ fdiv_fsub_nan_helper:
  wrapper_func_f2 __aeabi_fmul
 #if PICO_FLOAT_PROPAGATE_NANS
     push {r0, r1, lr}
-    bl 1f
+    bl __aeabi_fmul_3
     pop {r1, r2}
 
     // check for multiplication of infinite by zero (or rather check for infinite result with either
@@ -228,18 +228,18 @@ fdiv_fsub_nan_helper:
     lsls r3, r0, #1
     asrs r3, r3, #24
     adds r3, #1
-    beq 2f
+    beq __aeabi_fmul_1
     pop {pc}
-2:
+__aeabi_fmul_1:
     ands r1, r2
-    bne 3f
+    bne __aeabi_fmul_2
     // infinite to nan
     movs r1, #1
     lsls r1, r1, #22
     orrs r0, r1
-3:
+__aeabi_fmul_2:
     pop {pc}
-1:
+__aeabi_fmul_3:
 #endif
     table_tail_call SF_TABLE_FMUL
 
@@ -264,43 +264,43 @@ fdiv_fsub_nan_helper:
 __aeabi_cfcmple_guts:
     lsls r2,r0,#1
     lsrs r2,r2,#24
-    beq 1f
+    beq __aeabi_cfcmple_1
     cmp r2,#0xff
-    bne 2f
+    bne __aeabi_cfcmple_2
     lsls r2, r0, #9
-    bhi 3f
-1:
+    bhi __aeabi_cfcmple_7
+__aeabi_cfcmple_1:
     lsrs r0,r0,#23  // clear mantissa if denormal or infinite
     lsls r0,r0,#23
-2:
+__aeabi_cfcmple_2:
     lsls r2,r1,#1
     lsrs r2,r2,#24
-    beq 1f
+    beq __aeabi_cfcmple_3
     cmp r2,#0xff
-    bne 2f
+    bne __aeabi_cfcmple_4
     lsls r2, r1, #9
-    bhi 3f
-1:
+    bhi __aeabi_cfcmple_7
+__aeabi_cfcmple_3:
     lsrs r1,r1,#23  // clear mantissa if denormal or infinite
     lsls r1,r1,#23
-2:
+__aeabi_cfcmple_4:
     movs r2,#1      // initialise result
     eors r1,r0
-    bmi 2f          // opposite signs? then can proceed on basis of sign of x
+    bmi __aeabi_cfcmple_6 // opposite signs? then can proceed on basis of sign of x
     eors r1,r0      // restore y
-    bpl 1f
+    bpl __aeabi_cfcmple_5
     cmp r1,r0
     pop {r0-r2, pc}
-1:
+__aeabi_cfcmple_5:
     cmp r0,r1
     pop {r0-r2, pc}
-2:
+__aeabi_cfcmple_6:
     orrs r1, r0     // handle 0/-0
     adds r1, r1     // note this always sets C
-    beq 3f
+    beq __aeabi_cfcmple_7
     mvns r0, r0     // carry inverse of r0 sign
     adds r0, r0
-3:
+__aeabi_cfcmple_7:
     pop {r0-r2, pc}
 
 
@@ -310,10 +310,10 @@ __aeabi_cfcmple_guts:
  wrapper_func __aeabi_fcmpeq
     push {lr}
     bl __aeabi_cfcmpeq
-    beq 1f
+    beq __aeabi_fcmpeq_1
     movs r0, #0
     pop {pc}
-1:
+__aeabi_fcmpeq_1:
     movs r0, #1
     pop {pc}
 
@@ -332,10 +332,10 @@ __aeabi_cfcmple_guts:
  wrapper_func __aeabi_fcmple
     push {lr}
     bl __aeabi_cfcmple
-    bls 1f
+    bls __aeabi_fcmple_1
     movs r0, #0
     pop {pc}
-1:
+__aeabi_fcmple_1:
     movs r0, #1
     pop {pc}
 
@@ -346,10 +346,10 @@ __aeabi_cfcmple_guts:
     push {lr}
     // because of NaNs it is better to reverse the args than the result
     bl __aeabi_cfrcmple
-    bls 1f
+    bls __aeabi_fcmpge_1
     movs r0, #0
     pop {pc}
-1:
+__aeabi_fcmpge_1:
     movs r0, #1
     pop {pc}
 
@@ -369,13 +369,13 @@ __aeabi_cfcmple_guts:
    lsls r3, r3, #24
    lsls r2, r0, #1
    adds r2, r3
-   bhi 1f
+   bhi __aeabi_fcmpun_1
    lsls r2, r1, #1
    adds r2, r3
-   bhi 1f
+   bhi __aeabi_fcmpun_1
    movs r0, #0
    bx lr
-1:
+__aeabi_fcmpun_1:
    movs r0, #1
    bx lr
 
@@ -394,11 +394,11 @@ __aeabi_cfcmple_guts:
  wrapper_func __aeabi_i2f
         lsrs r1, r0, #31
         lsls r1, r1, #31
-        bpl 1f
+        bpl __aeabi_i2f_1
         rsbs r0, #0
-1:
+__aeabi_i2f_1:
         cmp r0, #0
-        beq 7f
+        beq __aeabi_i2f_7
 __aeabi_i2f_main:
 
         mov r12, lr
@@ -412,27 +412,27 @@ __aeabi_i2f_main:
         rsbs r0, #0
 
         adds r1,#0x80  // rounding
-        bcs 5f         // tripped carry? then have leading 1 in C as required (and result is even so can ignore sticky bits)
+        bcs __aeabi_i2f_5 // tripped carry? then have leading 1 in C as required (and result is even so can ignore sticky bits)
 
         lsls r3,r1,#24 // check bottom 8 bits of r1
-        beq 6f         // in rounding-tie case?
+        beq __aeabi_i2f_6 // in rounding-tie case?
         lsls r1,r1,#1  // remove leading 1
-3:
+__aeabi_i2f_2:
         lsrs r1,r1,#9  // align mantissa
         lsls r0,r0,#23 // align exponent
         orrs r0,r2     // assemble exponent and mantissa
-4:
+__aeabi_i2f_3:
         orrs r0,r1     // apply sign
-1:
+__aeabi_i2f_4:
         bx r12
-5:
+__aeabi_i2f_5:
         adds r0,#1     // correct exponent offset
-        b 3b
-6:
+        b __aeabi_i2f_2
+__aeabi_i2f_6:
         lsrs r1,r1,#9  // ensure even result
         lsls r1,r1,#10
-        b 3b
-7:
+        b __aeabi_i2f_2
+__aeabi_i2f_7:
         bx lr
 
 
@@ -445,9 +445,9 @@ __aeabi_i2f_main:
     movs r3, #0x80
     lsls r3, r3, #24
     cmp r2, #126
-    ble 1f
+    ble __aeabi_f2iz_1
     subs r2, #158
-    bge 2f
+    bge __aeabi_f2iz_2
     asrs r1, r0, #31
     lsls r0, r0, #9
     lsrs r0, r0, #1
@@ -458,10 +458,10 @@ __aeabi_i2f_main:
     adds r1, #1
     muls r0, r1
     bx lr
-1:
+__aeabi_f2iz_1:
     movs r0, #0
     bx lr
-2:
+__aeabi_f2iz_2:
     lsrs r0, r0, #31
     adds r0, r3
     subs r0, #1
@@ -475,10 +475,10 @@ __aeabi_i2f_main:
     movs r1, #0
     bl __aeabi_f2uiz
     cmp r0, #0
-    bmi 1f
+    bmi __aeabi_f2iz_3
     rsbs r0, #0
     pop {pc}
-1:
+__aeabi_f2iz_3:
     movs r0, #128
     lsls r0, r0, #24
     pop {pc}
@@ -518,23 +518,23 @@ __aeabi_i2f_main:
 
 // float FUNC_NAME(__aeabi_l2f)(long long)             long long to float (single precision) conversion
  float_wrapper_section __aeabi_l2f, `.time_critical.__wrap___aeabi_l2f`, `.text.__wrap___aeabi_l2f`
-1:
+__aeabi_l2f_1:
     ldr r2, =__aeabi_i2f
     bx r2
  wrapper_func __aeabi_l2f
     asrs r2, r0, #31
     cmp r1, r2
-    beq 1b
+    beq __aeabi_l2f_1
     shimmable_table_tail_call SF_TABLE_INT642FLOAT, int642float_shim
 
 // float FUNC_NAME(__aeabi_l2f)(long long)             long long to float (single precision) conversion
  float_wrapper_section __aeabi_ul2f, `.time_critical.__wrap___aeabi_ul2f`, `.text.__wrap___aeabi_ul2f`
-1:
+__aeabi_ul2f_1:
     ldr r2, =__aeabi_ui2f
     bx r2
  wrapper_func __aeabi_ul2f
     cmp r1, #0
-    beq 1b
+    beq __aeabi_ul2f_1
     shimmable_table_tail_call SF_TABLE_UINT642FLOAT, uint642float_shim
 
 // long long FUNC_NAME(__aeabi_f2lz)(float)             float (single precision) to long long C-style conversion [3]
@@ -549,13 +549,13 @@ __aeabi_i2f_main:
     movs r1, #0
     bl float2ufix64
     cmp r1, #0
-    bmi 1f
+    bmi __aeabi_f2lz_1
     movs r2, #0
     rsbs r0, #0
     sbcs r2, r1
     mov r1, r2
     pop {pc}
-1:
+__aeabi_f2lz_1:
     movs r1, #128
     lsls r1, r1, #24
     movs r0, #0
@@ -579,7 +579,7 @@ __aeabi_i2f_main:
     shimmable_table_tail_call SF_TABLE_FLOAT2UFIX64, float2ufix64_shim
 
  float_wrapper_section __aeabi_f2d, `.time_critical.__wrap___aeabi_f2d`, `.text.__wrap___aeabi_f2d`
-1:
+__aeabi_f2d_1:
 #if PICO_FLOAT_PROPAGATE_NANS
     // copy sign bit and 25 NAN id bits into sign bit and significant ID bits, also setting the high id bit
     asrs r1, r0, #3
@@ -595,7 +595,7 @@ __aeabi_i2f_main:
     lsls r3, r3, #24
     lsls r2, r0, #1
     adds r2, r3
-    bhi 1b
+    bhi __aeabi_f2d_1
 #endif
     shimmable_table_tail_call SF_TABLE_FLOAT2DOUBLE, float2double_shim
 
@@ -604,18 +604,18 @@ __aeabi_i2f_main:
 #if PICO_FLOAT_SUPPORT_ROM_V1 && PICO_RP2040_B0_SUPPORTED
     // check for negative
     asrs r1, r0, #23
-    bmi 1f
+    bmi srqtf_1
 #endif
     table_tail_call SF_TABLE_FSQRT
 #if PICO_FLOAT_SUPPORT_ROM_V1 && PICO_RP2040_B0_SUPPORTED
-1:
+srqtf_1:
     mvns r0, r1
     cmp r0, #255
-    bne 2f
+    bne srqtf_2
     // -0 or -Denormal return -0 (0x80000000)
     lsls r0, r0, #31
     bx lr
-2:
+srqtf_2:
     // return -Inf (0xff800000)
     asrs r0, r1, #31
     lsls r0, r0, #23
@@ -629,27 +629,27 @@ __aeabi_i2f_main:
     lsls r1, r0, #1
     lsrs r1, r1, #24
     cmp r1, #127 + 7
-    bge 1f
-2:
+    bge cosf_2
+cosf_1:
     table_tail_call SF_TABLE_FCOS
-1:
+cosf_2:
 #if PICO_FLOAT_PROPAGATE_NANS
     // also check for infinites
     cmp r1, #255
-    bne 3f
+    bne cosf_3
     // infinite to nan
     movs r1, #1
     lsls r1, r1, #22
     orrs r0, r1
     bx lr
-3:
+cosf_3:
 #endif
     ldr r1, =0x40c90fdb // 2 * M_PI
     push {lr}
     bl remainderf
     pop {r1}
     mov lr, r1
-    b 2b
+    b cosf_1
 
  float_wrapper_section sinf, `.time_critical.__wrap_sinf`, `.text.__wrap_sinf`
 // note we don't use _f1 since we do an infinity/nan check for outside of range
@@ -658,27 +658,27 @@ __aeabi_i2f_main:
     lsls r1, r0, #1
     lsrs r1, r1, #24
     cmp r1, #127 + 7
-    bge 1f
-2:
+    bge sinf_2
+sinf_1:
     table_tail_call SF_TABLE_FSIN
-1:
+sinf_2:
 #if PICO_FLOAT_PROPAGATE_NANS
     // also check for infinites
     cmp r1, #255
-    bne 3f
+    bne sinf_3
     // infinite to nan
     movs r1, #1
     lsls r1, r1, #22
     orrs r0, r1
     bx lr
-3:
+sinf_3:
 #endif
     ldr r1, =0x40c90fdb // 2 * M_PI
     push {lr}
     bl remainderf
     pop {r1}
     mov lr, r1
-    b 2b
+    b sinf_1
 
  float_wrapper_section sincosf, `.time_critical.__wrap_sincosf`, `.text.__wrap_sincosf`
 // note we don't use _f1 since we do an infinity/nan check for outside of range
@@ -688,8 +688,8 @@ __aeabi_i2f_main:
     lsls r3, r0, #1
     lsrs r3, r3, #24
     cmp r3, #127 + 7
-    bge 3f
-2:
+    bge sincosf_2
+sincosf_1:
     ldr r3, =sf_table
     ldr r3, [r3, #SF_TABLE_FSIN]
     blx r3
@@ -701,11 +701,11 @@ __aeabi_i2f_main:
  _align 2
     pop {pc}
 #endif
-3:
+sincosf_2:
 #if PICO_FLOAT_PROPAGATE_NANS
     // also check for infinites
     cmp r3, #255
-    bne 4f
+    bne sincosf_3
     // infinite to nan
     movs r3, #1
     lsls r3, r3, #22
@@ -714,14 +714,14 @@ __aeabi_i2f_main:
     str r0, [r2]
     add sp, #12
     bx lr
-4:
+sincosf_3:
 #endif
     ldr r1, =0x40c90fdb // 2 * M_PI
     push {lr}
     bl remainderf
     pop {r1}
     mov lr, r1
-    b 2b
+    b sincosf_1
 
  float_wrapper_section tanf, `.time_critical.__wrap_tanf`, `.text.__wrap_tanf`
 // note we don't use _f1 since we do an infinity/nan check for outside of range
@@ -760,13 +760,13 @@ ftan_out_of_range:
 #if PICO_FLOAT_PROPAGATE_NANS
     // also check for infinites
     cmp r1, #255
-    bne 3f
+    bne tanf_1
     // infinite to nan
     movs r1, #1
     lsls r1, r1, #22
     orrs r0, r1
     bx lr
-3:
+tanf_1:
 #endif
     ldr r1, =0x40c90fdb // 2 * M_PI
     push {lr}

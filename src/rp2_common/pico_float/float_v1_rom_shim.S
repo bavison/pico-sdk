@@ -29,27 +29,27 @@ _macro_3args(float_section, name, ram_name, flash_name)
 #ifndef NDEBUG
     // sanity check to make sure we weren't called by non (shimmable_) table_tail_call macro
     cmp r0, #0
-    bne 1f
+    bne float_table_shim_on_use_helper_1
     bkpt #0
 #endif
-1:
+float_table_shim_on_use_helper_1:
     ldrh r1, [r0]
     lsrs r2, r1, #8
     adds r0, #2
     cmp r2, #0xdf
-    bne 1b
+    bne float_table_shim_on_use_helper_1
     uxtb r1, r1 // r1 holds table offset
     lsrs r2, r0, #2
-    bcc 1f
+    bcc float_table_shim_on_use_helper_2
     // unaligned
     ldrh r2, [r0, #0]
     ldrh r0, [r0, #2]
     lsls r0, r0, #16
     orrs r0, r2
-    b 2f
-1:
+    b float_table_shim_on_use_helper_3
+float_table_shim_on_use_helper_2:
     ldr r0, [r0]
-2:
+float_table_shim_on_use_helper_3:
     ldr r2, =sf_table
     str r0, [r2, r1]
     str r0, [sp, #12]
@@ -65,12 +65,12 @@ _macro_3args(float_section, name, ram_name, flash_name)
  regular_func ufix642float_shim
  push {r4,r5,r14}
  cmp r1,#0
- bpl 3f          // positive? we can use signed code
+ bpl sixtyfourbit_to_float_shims_1 // positive? we can use signed code
  lsls r5,r1,#31  // contribution to sticky bits
  orrs r5,r0
  lsrs r0,r1,#1
  subs r2,#1
- b 4f
+ b sixtyfourbit_to_float_shims_4
 
 // convert int64 to float, rounding
  regular_func int642float_shim
@@ -79,25 +79,25 @@ _macro_3args(float_section, name, ram_name, flash_name)
 // convert signed 64-bit fix to float, rounding; number of r0:r1 bits after point in r2
  regular_func fix642float_shim
  push {r4,r5,r14}
-3:
+sixtyfourbit_to_float_shims_1:
  movs r5,r0
  orrs r5,r1
  beq ret_pop45   // zero? return +0
  asrs r5,r1,#31  // sign bits
-2:
+sixtyfourbit_to_float_shims_2:
  asrs r4,r1,#24  // try shifting 7 bits at a time
  cmp r4,r5
- bne 1f          // next shift will overflow?
+ bne sixtyfourbit_to_float_shims_3 // next shift will overflow?
  lsls r1,r1,#7
  lsrs r4,r0,#25
  orrs r1,r4
  lsls r0,r0,#7
  adds r2,#7
- b 2b
-1:
+ b sixtyfourbit_to_float_shims_2
+sixtyfourbit_to_float_shims_3:
  movs r5,r0
  movs r0,r1
-4:
+sixtyfourbit_to_float_shims_4:
  rsbs r2,#0
  adds r2,#32+29
 
@@ -127,40 +127,40 @@ ret_pop45:
  adds r4,r2,r3  // this is -760 if both arguments are 0 and at least -380-126=-506 otherwise
  asrs r4,r4,#9
  adds r4,#1
- bmi 2f         // force y to 0 proper, so result will be zero
+ bmi fatan2_shim_2 // force y to 0 proper, so result will be zero
  subs r4,r2,r3  // calculate shift
- bge 1f         // ex>=ey?
+ bge fatan2_shim_1 // ex>=ey?
  rsbs r4,#0     // make shift positive
  asrs r0,r0,r4
  cmp r4,#28
- blo 3f
+ blo fatan2_shim_4
  asrs r0,r0,#31
- b 3f
-1:
+ b fatan2_shim_4
+fatan2_shim_1:
  asrs r1,r1,r4
  cmp r4,#28
- blo 3f
-2:
+ blo fatan2_shim_4
+fatan2_shim_2:
 // here |x|>>|y| or both x and y are ±0
  cmp r0,#0
- bge 4f         // x positive, return signed 0
+ bge fatan2_shim_3 // x positive, return signed 0
  ldr r3, =0x2cfc         // &pi_q29, circular coefficients
  ldr r0,[r3]    // x negative, return +/- pi
  asrs r1,r1,#31
  eors r0,r1
- b 7f
-4:
+ b fatan2_shim_7
+fatan2_shim_3:
  asrs r0,r1,#31
- b 7f
-3:
+ b fatan2_shim_7
+fatan2_shim_4:
  movs r2,#0              // initial angle
  ldr r3, =0x2cfc         // &pi_q29, circular coefficients
  cmp r0,#0               // x negative
- bge 5f
+ bge fatan2_shim_5
  rsbs r0,#0              // rotate to 1st/4th quadrants
  rsbs r1,#0
  ldr r2,[r3]             // pi Q29
-5:
+fatan2_shim_5:
  movs r4,#1              // m=1
  ldr r5, =0x2b97         // cordic_vec
  blx r5                  // also produces magnitude (with scaling factor 1.646760119), which is discarded
@@ -170,13 +170,13 @@ ret_pop45:
  ldr r3, =0x2cfc         // &pi_q29, circular coefficients
  ldr r2,[r3]             // pi Q29
  adds r4,r0,r2           // attempt to fix -3pi/2..-pi case
- bcs 6f                  // -pi/2..0? leave result as is
+ bcs fatan2_shim_6       // -pi/2..0? leave result as is
  subs r4,r0,r2           // <pi? leave as is
- bmi 6f
+ bmi fatan2_shim_6
  subs r0,r4,r2           // >pi: take off 2pi
-6:
+fatan2_shim_6:
  subs r0,#1              // fiddle factor so atan2(0,1)==0
-7:
+fatan2_shim_7:
  movs r2,#0              // exponent for pack
  ldr r3, =0x2b19
  bx r3
@@ -190,11 +190,11 @@ ret_pop45:
      asrs r2, r0, #23
      adds r2, #128
      adds r2, #128
-     beq 1f
+     beq float2fix_shim_1
      // call original
      ldr r2, =0x2acd
      bx r2
-     1:
+float2fix_shim_1:
      movs r0, #0
      bx lr
 
@@ -223,9 +223,9 @@ ret_pop45:
  asrs r3,r0,#31
  lsls r0,r0,#1
  lsrs r2,r0,#24
- beq 1f                        // zero?
+ beq float264_shims_1          // zero?
  cmp r2,#0xff                  // Inf?
- beq 2f
+ beq float264_shims_2
  subs r1,r2,#1
  subs r2,#0x7f                 // remove exponent bias
  lsls r1,r1,#24
@@ -236,12 +236,12 @@ ret_pop45:
  lsls r0,r0,#28
  ldr r4, =d2fix_a
  bx r4
-1:
+float264_shims_1:
  movs r0,#0
  movs r1,r0
  movs r3,r0
  pop {r4,r15}
-2:
+float264_shims_2:
  mvns r0,r3                    // return max/min value
  mvns r1,r3
  pop {r4,r15}
@@ -260,10 +260,10 @@ ret_dzero:
 // r3    mantissa sign extension bits
  add r2,r12                    // exponent plus offset for required binary point position
  subs r2,#52                   // required shift
- bmi 1f                        // shift down?
+ bmi d2fix_a_2                 // shift down?
 // here a shift up by r2 places
  cmp r2,#12                    // will clamp?
- bge 2f
+ bge d2fix_a_1
  movs r4,r0
  lsls r1,r1,r2
  lsls r0,r0,r2
@@ -272,14 +272,14 @@ ret_dzero:
  lsrs r4,r4,r2
  orrs r1,r4
  pop {r4,r15}
-2:
+d2fix_a_1:
  mvns r0,r3
  mvns r1,r3                    // overflow: clamp to extreme fixed-point values
  pop {r4,r15}
-1:
+d2fix_a_2:
 // here a shift down by -r2 places
  adds r2,#32
- bmi 1f                        // long shift?
+ bmi d2fix_a_3                 // long shift?
  mov r4,r1
  lsls r4,r4,r2
  rsbs r2,#0
@@ -288,26 +288,26 @@ ret_dzero:
  lsrs r0,r0,r2
  orrs r0,r4
  pop {r4,r15}
-1:
+d2fix_a_3:
 // here a long shift down
  movs r0,r1
  asrs r1,r1,#31                // shift down 32 places
  adds r2,#32
- bmi 1f                        // very long shift?
+ bmi d2fix_a_4                 // very long shift?
  rsbs r2,#0
  adds r2,#32
  asrs r0,r0,r2
  pop {r4,r15}
-1:
+d2fix_a_4:
  movs r0,r3                    // result very near zero: use sign extension bits
  movs r1,r3
  pop {r4,r15}
 d2f64_a:
  asrs r2,r1,#31
  cmp r2,r3
- bne 1f                        // sign extension bits fail to match sign of result?
+ bne d2fix_a_5                 // sign extension bits fail to match sign of result?
  pop {r15}
-1:
+d2fix_a_5:
  mvns r0,r3
  movs r1,#1
  lsls r1,r1,#31
@@ -320,24 +320,24 @@ d2f64_a:
  lsls r3,r3,#31
  lsls r1,r0,#1
  lsrs r2,r1,#24                // exponent
- beq 1f                        // zero?
+ beq float2double_shim_1       // zero?
  cmp r2,#0xff                  // Inf?
- beq 2f
+ beq float2double_shim_3
  lsrs r1,r1,#4                 // exponent and top 20 bits of mantissa
  ldr r2,=(0x3ff-0x7f)<<20      // difference in exponent offsets
  adds r1,r2
  orrs r1,r3
  lsls r0,r0,#29                // bottom 3 bits of mantissa
  bx r14
-1:
+float2double_shim_1:
  movs r1,r3                    // return signed zero
-3:
+float2double_shim_2:
  movs r0,#0
  bx r14
-2:
+float2double_shim_3:
  ldr r1,=0x7ff00000            // return signed infinity
  adds r1,r3
- b 3b
+ b float2double_shim_2
 
 #endif
 

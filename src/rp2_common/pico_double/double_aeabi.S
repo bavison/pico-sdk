@@ -323,51 +323,51 @@ __aeabi_dfcmple_guts:
  ldr r7,=0x7ff                 // flush NaNs and denormals
  lsls r4,r1,#1
  lsrs r4,r4,#21
- beq 1f
+ beq __aeabi_cdcmple_1
  cmp r4,r7
- bne 2f
+ bne __aeabi_cdcmple_2
  lsls r4, r1, #12
- bhi 7f
-1:
+ bhi __aeabi_cdcmple_6
+__aeabi_cdcmple_1:
  movs r0,#0
  lsrs r1,r1,#20
  lsls r1,r1,#20
-2:
+__aeabi_cdcmple_2:
  lsls r4,r3,#1
  lsrs r4,r4,#21
- beq 1f
+ beq __aeabi_cdcmple_3
  cmp r4,r7
- bne 2f
+ bne __aeabi_cdcmple_4
  lsls r4, r3, #12
- bhi 7f
-1:
+ bhi __aeabi_cdcmple_6
+__aeabi_cdcmple_3:
  movs r2,#0
  lsrs r3,r3,#20
  lsls r3,r3,#20
-2:
+__aeabi_cdcmple_4:
  movs r6,#1
  eors r3,r1
- bmi 4f                        // opposite signs? then can proceed on basis of sign of x
+ bmi __aeabi_cdcmple_9         // opposite signs? then can proceed on basis of sign of x
  eors r3,r1                    // restore r3
- bpl 2f
+ bpl __aeabi_cdcmple_7
  cmp r3,r1
- bne 7f
-1:
+ bne __aeabi_cdcmple_6
+__aeabi_cdcmple_5:
  cmp r2,r0
-7:
+__aeabi_cdcmple_6:
  pop {r0-r7,r15}
-2:
+__aeabi_cdcmple_7:
  cmp r1,r3
- bne 7b
-1:
+ bne __aeabi_cdcmple_6
+__aeabi_cdcmple_8:
  cmp r0,r2
  pop {r0-r7,r15}
-4:
+__aeabi_cdcmple_9:
  orrs r3,r1                    // make -0==+0
  adds r3,r3
  orrs r3,r0
  orrs r3,r2
- beq 7b
+ beq __aeabi_cdcmple_6
  mvns r1, r1     // carry inverse of r1 sign
  adds r1, r1
  pop {r0-r7,r15}
@@ -379,10 +379,10 @@ __aeabi_dfcmple_guts:
  wrapper_func __aeabi_dcmpeq
     push {lr}
     bl __aeabi_cdcmpeq
-    beq 1f
+    beq __aeabi_dcmpeq_1
     movs r0, #0
     pop {pc}
-1:
+__aeabi_dcmpeq_1:
     movs r0, #1
     pop {pc}
 
@@ -401,10 +401,10 @@ __aeabi_dfcmple_guts:
  wrapper_func __aeabi_dcmple
     push {lr}
     bl __aeabi_cdcmple
-    bls 1f
+    bls __aeabi_dcmple_1
     movs r0, #0
     pop {pc}
-1:
+__aeabi_dcmple_1:
     movs r0, #1
     pop {pc}
 
@@ -415,10 +415,10 @@ __aeabi_dfcmple_guts:
     push {lr}
     // because of NaNs it is better to reverse the args than the result
     bl __aeabi_cdrcmple
-    bls 1f
+    bls __aeabi_dcmpge_1
     movs r0, #0
     pop {pc}
-1:
+__aeabi_dcmpge_1:
     movs r0, #1
     pop {pc}
 
@@ -438,13 +438,13 @@ __aeabi_dfcmple_guts:
    lsls r0, r0, #21
    lsls r2, r1, #1
    adds r2, r0
-   bhi 1f
+   bhi __aeabi_dcmpun_1
    lsls r2, r3, #1
    adds r2, r0
-   bhi 1f
+   bhi __aeabi_dcmpun_1
    movs r0, #0
    bx lr
-1:
+__aeabi_dcmpun_1:
    movs r0, #1
    bx lr
 
@@ -460,17 +460,17 @@ __aeabi_dfcmple_guts:
  wrapper_func __aeabi_ui2d
     movs r1, #0
     cmp r0, #0
-    bne 2f
-1:
+    bne __aeabi_i2d_2
+__aeabi_i2d_1:
     bx lr
 // double FUNC_NAME(__aeabi_i2d)(int)                     integer to double (double precision) conversion
  wrapper_func __aeabi_i2d
     asrs r1, r0, #31
     eors r0, r1
     subs r0, r1
-    beq 1b
+    beq __aeabi_i2d_1
     lsls r1, r1, #31
-2:
+__aeabi_i2d_2:
     push {r0, r1, r4, lr}
     ldr r3, =sf_clz_func
     ldr r3, [r3]
@@ -500,9 +500,9 @@ __aeabi_dfcmple_guts:
     subs r2, r3
     lsls r3, r3, #21
     cmp r2, #126
-    ble 1f
+    ble __aeabi_d2iz_1
     subs r2, #158
-    bge 2f
+    bge __aeabi_d2iz_3
     asrs r4, r1, #31
     lsls r1, r1, #12
     lsrs r1, r1, #1
@@ -513,19 +513,19 @@ __aeabi_dfcmple_guts:
     adds r4, #1
     adds r2, #21
     cmp r2, #32
-    bge 3f
+    bge __aeabi_d2iz_2
     lsrs r0, r0, r2
     orrs r0, r1
     muls r0, r4
     pop {r4, pc}
-1:
+__aeabi_d2iz_1:
     movs r0, #0
     pop {r4, pc}
-3:
+__aeabi_d2iz_2:
     mov r0, r1
     muls r0, r4
     pop {r4, pc}
-2:
+__aeabi_d2iz_3:
     // overflow
     lsrs r0, r1, #31
     adds r0, r3
@@ -580,13 +580,13 @@ __aeabi_dfcmple_guts:
     movs r2, #0
     bl double2ufix64
     cmp r1, #0
-    bmi 1f
+    bmi __aeabi_d2lz_1
     movs r2, #0
     rsbs r0, #0
     sbcs r2, r1
     mov r1, r2
     pop {pc}
-1:
+__aeabi_d2lz_1:
     movs r1, #128
     lsls r1, r1, #24
     movs r0, #0
@@ -618,7 +618,7 @@ __aeabi_dfcmple_guts:
     shimmable_table_tail_call SF_TABLE_FLOAT2UFIX, double2ufix_shim
 
  double_wrapper_section __aeabi_d2f, `.time_critical.__wrap___aeabi_d2f`, `.text.__wrap___aeabi_d2f`
-1:
+__aeabi_d2f_1:
 #if PICO_DOUBLE_PROPAGATE_NANS
     // copy sign bit and 23 NAN id bits into sign bit and significant id bits, also set high id bit
 
@@ -637,7 +637,7 @@ __aeabi_dfcmple_guts:
     lsls r3, r3, #21
     lsls r2, r1, #1
     adds r2, r3
-    bhi 1b
+    bhi __aeabi_d2f_1
 #endif
     // note double->float in double table at same index as float->double in double table
     shimmable_table_tail_call SF_TABLE_FLOAT2DOUBLE, double2float_shim
@@ -661,69 +661,69 @@ __aeabi_dfcmple_guts:
  wrapper_func cos
     // rom version only works for -1024 < angle < 1024
     lsls r2, r1, #2
-    bcc 1f
+    bcc cos_1
     lsrs r2, r2, #22
     cmp r2, #9
-    bge 2f
-1:
+    bge cos_2
+cos_1:
     shimmable_table_tail_call SF_TABLE_FCOS, dcos_shim
-2:
+cos_2:
 #if PICO_DOUBLE_PROPAGATE_NANS
     lsls r2, r1, #1
     asrs r2, r2, #21
     adds r2, #1
-    bne 3f
+    bne cos_3
     // infinite to nan
     movs r2, #1
     lsls r2, r2, #19
     orrs r1, r2
     bx lr
-3:
+cos_3:
 #endif
     push {lr}
     bl sincostan_remainder
     pop {r2}
     mov lr, r2
-    b 1b
+    b cos_1
 
  double_wrapper_section sin, `.time_critical.__wrap_sin`, `.text.__wrap_sin`
 // don't use _d1 as we're doing a range check anyway and infinites/nans are bigger than 1024
  wrapper_func sin
     // rom version only works for -1024 < angle < 1024
     lsls r2, r1, #2
-    bcc 1f
+    bcc sin_1
     lsrs r2, r2, #22
     cmp r2, #9
-    bge 2f
-1:
+    bge sin_2
+sin_1:
     shimmable_table_tail_call SF_TABLE_FSIN, dsin_shim
-2:
+sin_2:
 #if PICO_DOUBLE_PROPAGATE_NANS
     lsls r2, r1, #1
     asrs r2, r2, #21
     adds r2, #1
-    bne 3f
+    bne sin_3
     // infinite to nan
     movs r2, #1
     lsls r2, r2, #19
     orrs r1, r2
     bx lr
-3:
+sin_3:
 #endif
     push {lr}
     bl sincostan_remainder
     pop {r2}
     mov lr, r2
-    b 1b
+    b sin_1
 
  double_wrapper_section sincos, `.time_critical.__wrap_sincos`, `.text.__wrap_sincos`
     // out of line remainder code for abs(angle)>=1024
-2:
+sincos_1:
 #if PICO_DOUBLE_PROPAGATE_NANS
     lsls r2, r1, #1
     asrs r2, r2, #21
     adds r2, #1
-    bne 3f
+    bne sincos_2
     // infinite to nan
     movs r2, #1
     lsls r2, r2, #19
@@ -732,30 +732,30 @@ __aeabi_dfcmple_guts:
     stmia r4!, {r0, r1}
     stmia r5!, {r0, r1}
     pop {r4, r5, pc}
-3:
+sincos_2:
 #endif
     push {lr}
     bl sincostan_remainder
     pop {r2}
     mov lr, r2
-    b 1f // continue with sincos
+    b sincos_3 // continue with sincos
 
  wrapper_func sincos
     push {r2-r5, lr}
     // rom version only works for -1024 < angle < 1024
     lsls r2, r1, #2
-    bcc 1f
+    bcc sincos_3
     lsrs r2, r2, #22
     cmp r2, #9
-    bge 2b
-1:
-    bl 2f // call the shim
+    bge sincos_1
+sincos_3:
+    bl sincos_4 // call the shim
     pop {r4-r5}
     stmia r4!, {r0, r1}
     stmia r5!, {r2, r3}
     pop {r4, r5, pc}
 
-2:
+sincos_4:
     shimmable_table_tail_call SF_TABLE_V3_FSINCOS, sincos_shim_bootstrap
 
  local_func sincos_shim_bootstrap
@@ -764,13 +764,13 @@ __aeabi_dfcmple_guts:
     ldrb r3, [r3]
 #if PICO_DOUBLE_SUPPORT_ROM_V1 && PICO_RP2040_B0_SUPPORTED
     cmp r3, #1
-    bne 1f
+    bne sincos_shim_bootstrap_1
     ldr r3, =dsincos_shim
-    b 2f
+    b sincos_shim_bootstrap_2
 #endif
-1:
+sincos_shim_bootstrap_1:
     ldr r3, =dsincos_shim_v2
-2:
+sincos_shim_bootstrap_2:
     ldr r2, =sd_table
     str r3, [r2, #SF_TABLE_V3_FSINCOS]
     str r3, [sp, #8]
@@ -846,13 +846,13 @@ dtan_angle_out_of_range:
     lsls r2, r1, #1
     asrs r2, r2, #21
     adds r2, #1
-    bne 3f
+    bne tan_1
     // infinite to nan
     movs r2, #1
     lsls r2, r2, #19
     orrs r1, r2
     bx lr
-3:
+tan_1:
 #endif
     push {lr}
     bl sincostan_remainder

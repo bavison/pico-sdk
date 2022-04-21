@@ -45,7 +45,7 @@ irq_handler_chain_slots:
  endif
     // next is the 8 bit unsigned priority
     _byte 0x00
-1:
+
     // and finally the handler function pointer
     _word 0x00000000
  _set next_slot_number, next_slot_number + 1

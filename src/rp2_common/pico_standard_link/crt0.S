@@ -232,13 +232,13 @@ binary_info_header:
     adr r4, data_cpy_table
 
     // assume there is at least one entry
-1:
+next:
     ldmia r4!, {r1-r3}
     cmp r1, #0
-    beq 2f
+    beq done
     bl data_cpy
-    b 1b
-2:
+    b next
+done:
 
     // Zero out the BSS
     ldr r1, =__bss_start__
@@ -263,9 +263,9 @@ platform_entry: // symbol for stack traces
     // exit should not return.  If it does, hang the core.
     // (fall thru into our hang _exit impl
  weak_func _exit
-1: // separate label because _exit can be moved out of branch range
+infinite: // separate label because _exit can be moved out of branch range
     bkpt #0
-    b 1b
+    b infinite
 
 data_cpy_loop:
     ldm r1!, {r0}

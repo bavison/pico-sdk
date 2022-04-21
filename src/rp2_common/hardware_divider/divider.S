@@ -6,11 +6,10 @@
 
 _macro(__divider_delay)
     // delay 8 cycles
-    b 1f
-1:  b 1f
-1:  b 1f
-1:  b 1f
-1:
+    b .+2
+    b .+2
+    b .+2
+    b .+2
  _endm(endm)
 
  _align 2
@@ -51,9 +50,9 @@ _macro(__divider_delay)
     ldr r5, =SIO_BASE
     ldr r4, [r5, #SIO_DIV_CSR_OFFSET]
     // wait for results as we can't save signed-ness of operation
-1:
+wait:
     lsrs r4, r4, #SIO_DIV_CSR_READY_SHIFT_FOR_CARRY
-    bcc 1b
+    bcc wait
     ldr r1, [r5, #SIO_DIV_UDIVIDEND_OFFSET]
     ldr r2, [r5, #SIO_DIV_UDIVISOR_OFFSET]
     ldr r3, [r5, #SIO_DIV_REMAINDER_OFFSET]
