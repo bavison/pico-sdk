@@ -54,7 +54,7 @@ _macro(save_div_state_and_lr_64)
 1:
     ldr r5, [r6, #SIO_DIV_CSR_OFFSET]
     // wait for results as we can't save signed-ness of operation
-    lsrs r5, #SIO_DIV_CSR_READY_SHIFT_FOR_CARRY
+    lsrs r5, r5, #SIO_DIV_CSR_READY_SHIFT_FOR_CARRY
     bcc 1b
     // note we must read quotient last, and since it isn't the last reg, we'll not use ldmia!
     ldr r4, [r6, #SIO_DIV_UDIVIDEND_OFFSET]
@@ -103,7 +103,7 @@ _macro(restore_div_state_and_return_64)
     // to support IRQ usage (or context switch) we must save/restore divider state around call if state is dirty
     ldr r2, =SIO_BASE
     ldr r3, [r2, #SIO_DIV_CSR_OFFSET]
-    lsrs r3, #SIO_DIV_CSR_DIRTY_SHIFT_FOR_CARRY
+    lsrs r3, r3, #SIO_DIV_CSR_DIRTY_SHIFT_FOR_CARRY
     bcs divmod_s32s32_savestate
  regular_func divmod_s32s32_unsafe
 #else
@@ -134,7 +134,7 @@ _macro(restore_div_state_and_return_64)
 #endif /* PICO_DIVIDER_DISABLE_INTERRUPTS */
     push {r2, lr}
     movs r1, #0x80
-    lsls r1, #24
+    lsls r1, r1, #24
     asrs r2, r0, #31
     eors r1, r2
     cmp r0, #0
@@ -167,7 +167,7 @@ _macro(restore_div_state_and_return_64)
     // to support IRQ usage (or context switch) we must save/restore divider state around call if state is dirty
     ldr r2, =SIO_BASE
     ldr r3, [r2, #SIO_DIV_CSR_OFFSET]
-    lsrs r3, #SIO_DIV_CSR_DIRTY_SHIFT_FOR_CARRY
+    lsrs r3, r3, #SIO_DIV_CSR_DIRTY_SHIFT_FOR_CARRY
     bcs divmod_u32u32_savestate
  regular_func divmod_u32u32_unsafe
 #else
@@ -227,7 +227,7 @@ _macro(restore_div_state_and_return_64)
     mov r12, r2
     ldr r2, =SIO_BASE
     ldr r2, [r2, #SIO_DIV_CSR_OFFSET]
-    lsrs r2, #SIO_DIV_CSR_DIRTY_SHIFT_FOR_CARRY
+    lsrs r2, r2, #SIO_DIV_CSR_DIRTY_SHIFT_FOR_CARRY
     mov r2, r12
     bcs divmod_s64s64_savestate
     b divmod_s64s64_unsafe
@@ -255,7 +255,7 @@ divmod_s64s64_savestate:
     mov r12, r2
     ldr r2, =SIO_BASE
     ldr r2, [r2, #SIO_DIV_CSR_OFFSET]
-    lsrs r2, #SIO_DIV_CSR_DIRTY_SHIFT_FOR_CARRY
+    lsrs r2, r2, #SIO_DIV_CSR_DIRTY_SHIFT_FOR_CARRY
     mov r2, r12
     bcs divmod_u64u64_savestate
     b divmod_u64u64_unsafe
@@ -309,8 +309,8 @@ l\@_1:
  beq 5f                    // then pass 0 to __aeabi_ldiv0
 4:
  movs r0,#0
- lsrs r1,#31
- lsls r1,#31               // get sign bit
+ lsrs r1, r1,#31
+ lsls r1, r1,#31           // get sign bit
  bne 5f                    // y -ve? pass -2^63 to __aeabi_ldiv0
  mvns r0,r0
  lsrs r1,r0,#1             // y +ve: pass 2^63-1 to __aeabi_ldiv0
@@ -408,7 +408,7 @@ y64:
  lsrs r4,r0,#16
  ldr r3,[r7,#SIO_DIV_REMAINDER_OFFSET] // r0=y0-q0*x; 0<=r0<x
  ldr r1,[r7,#SIO_DIV_QUOTIENT_OFFSET]  // q0=y0/x;
- lsls r3,#16
+ lsls r3,r3,#16
  orrs r3,r4
  str r3,[r7,#SIO_DIV_UDIVIDEND_OFFSET] // y1=(r0<<16)+(((ui32)y)>>16);
  str r2,[r7,#SIO_DIV_UDIVISOR_OFFSET]  // must set divisor again, as we do not save/restore regs at all in IRQs if not dirty
@@ -416,14 +416,14 @@ y64:
  uxth r4,r0
  ldr r3,[r7,#SIO_DIV_REMAINDER_OFFSET] // r1=y1-q1*x; 0<=r1<x
  ldr r5,[r7,#SIO_DIV_QUOTIENT_OFFSET]  // q1=y1/x;
- lsls r3,#16
+ lsls r3,r3,#16
  orrs r3,r4
  str r3,[r7,#SIO_DIV_UDIVIDEND_OFFSET] // y1=(r0<<16)+(((ui32)y)>>16);
  str r2,[r7,#SIO_DIV_UDIVISOR_OFFSET]  // must set divisor again, as we do not save/restore regs at all in IRQs if not dirty
  wait_div 3
  movs r3,#0
  lsls r4,r5,#16             // quotient=(q0<<32)+(q1<<16)+q2
- lsrs r5,#16
+ lsrs r5,r5,#16
  ldr r2,[r7,#SIO_DIV_REMAINDER_OFFSET] // r2=y2-q2*x; 0<=r2<x
  ldr r0,[r7,#SIO_DIV_QUOTIENT_OFFSET]  // q2=y2/x;
  adds r0,r4
@@ -440,22 +440,22 @@ y64_x32:
  movs r5,#0                // xsh=0
  lsrs r4,r2,#24
  bne 1f
- lsls r2,#8                // if(x0<1U<<24) x0<<=8,xsh =8;
+ lsls r2,r2,#8             // if(x0<1U<<24) x0<<=8,xsh =8;
  adds r5,#8
 1:
  lsrs r4,r2,#28
  bne 1f
- lsls r2,#4                // if(x0<1U<<28) x0<<=4,xsh+=4;
+ lsls r2,r2,#4             // if(x0<1U<<28) x0<<=4,xsh+=4;
  adds r5,#4
 1:
  lsrs r4,r2,#30
  bne 1f
- lsls r2,#2                // if(x0<1U<<30) x0<<=2,xsh+=2;
+ lsls r2,r2,#2             // if(x0<1U<<30) x0<<=2,xsh+=2;
  adds r5,#2
 1:
  lsrs r4,r2,#31
  bne 1f
- lsls r2,#1                // if(x0<1U<<31) x0<<=1,xsh+=1;
+ lsls r2,r2,#1             // if(x0<1U<<31) x0<<=1,xsh+=1;
  adds r5,#1
 1:
 // now 2^31<=x0<2^32, 0<=xsh<16 (amount x is shifted in x0); number of quotient bits to be calculated qb=xsh+33 33<=qb<49
@@ -479,13 +479,13 @@ y64_x32:
 // r12   x
 
  muls r6,r4
- lsrs r6,#16               // q=((ui32)(y>>48)*r)>>16;
+ lsrs r6,r6,#16            // q=((ui32)(y>>48)*r)>>16;
  lsls r7,r6,#13
  mov r14,r7                // quh=q0<<13
 
  muls r3,r6                // x0l*q
  lsrs r7,r3,#15
- lsls r3,#17               // r3:r7 is (x0l*q)<<17
+ lsls r3,r3,#17            // r3:r7 is (x0l*q)<<17
  subs r0,r3
  sbcs r1,r7                // y-=(x0l*q)<<17
 
@@ -496,20 +496,20 @@ y64_x32:
 
  lsrs r6,r1,#3
  muls r6,r4
- lsrs r6,#16               // q=((ui32)(y>>35)*r)>>16;
+ lsrs r6,r6,#16            // q=((ui32)(y>>35)*r)>>16;
  add r14,r6                // quh+=q1
 
  uxth r3,r2                // x0l
  muls r3,r6                // x0l*q
  lsrs r7,r3,#28
- lsls r3,#4                // r3:r7 is (x0l*q)<<4
+ lsls r3,r3,#4             // r3:r7 is (x0l*q)<<4
  subs r0,r3
  sbcs r1,r7                // y-=(x0l*q)<<4
 
  lsrs r3,r2,#16            // x0h
  muls r3,r6                // x0h*q
  lsrs r7,r3,#12
- lsls r3,#20               // r3:r7 is (x0h*q)<<4
+ lsls r3,r3,#20            // r3:r7 is (x0h*q)<<4
  subs r0,r3
  sbcs r1,r7                // y-=(x0h*q)<<4
 
@@ -517,13 +517,13 @@ y64_x32:
  lsls r7,r1,#10
  orrs r6,r7                // y>>22
  muls r6,r4
- lsrs r6,#16               // q=((ui32)(y>>22)*r)>>16;
+ lsrs r6,r6,#16            // q=((ui32)(y>>22)*r)>>16;
 
  cmp r5,#9
  blt last0                 // if(xsh<9) goto last0;
 
 // on this path xsh>=9, which means x<2^23
- lsrs r2,#9                // x0>>9: this shift loses no bits
+ lsrs r2,r2,#9             // x0>>9: this shift loses no bits
 // the remainder y-x0*q is guaranteed less than a very small multiple of the remaining quotient
 // bits (at most 6 bits) times x, and so fits in one word
  muls r2,r6                // x0*q
@@ -532,7 +532,7 @@ y64_x32:
 1:
  lsrs r6,r0,#9
  muls r6,r4
- lsrs r6,#16               // q=((ui32)(y>>9)*r)>>16;
+ lsrs r6,r6,#16            // q=((ui32)(y>>9)*r)>>16;
 
 // here
 // r0 y
@@ -545,8 +545,8 @@ y64_x32:
 
  movs r3,#22
  subs r3,r5                // 22-xsh
- lsrs r6,r3                // q>>=22-xsh
- lsrs r7,r3                // qul>>=22-xsh
+ lsrs r6,r6,r3             // q>>=22-xsh
+ lsrs r7,r7,r3             // qul>>=22-xsh
  adds r7,r6                // qul+=q
  mov r4,r12
  muls r6,r4                // x*q
@@ -555,8 +555,8 @@ y64_x32:
  adds r5,#4                // xsh+4
  adds r3,#6                // 28-xsh
  movs r1,r0
- lsrs r1,r3
- lsls r0,r5                // r0:r1 is quh<<(4+xsh)
+ lsrs r1,r1,r3
+ lsls r0,r0,r5             // r0:r1 is quh<<(4+xsh)
  adds r0,r7
  bcc 1f
 2:
@@ -585,7 +585,7 @@ y64_x32:
 last0:
  movs r7,#9
  subs r7,r5                // 9-xsh
- lsrs r6,r7
+ lsrs r6,r6,r7
  mov r4,r12                // x
  uxth r2,r4
  muls r2,r6                // q*xlo
@@ -596,7 +596,7 @@ last0:
  lsrs r2,r4,#16            // xhi
  muls r2,r6                // q*xhi
  lsrs r3,r2,#16
- lsls r2,#16
+ lsls r2,r2,#16
  subs r2,r0,r2
  sbcs r1,r3                // y-q*xhi
  movs r3,r1                // y now in r2:r3
@@ -604,8 +604,8 @@ last0:
  adds r5,#4                // xsh+4
  adds r7,#19               // 28-xsh
  movs r1,r0
- lsrs r1,r7
- lsls r0,r5                // r0:r1 is quh<<(4+xsh)
+ lsrs r1,r1,r7
+ lsls r0,r0,r5             // r0:r1 is quh<<(4+xsh)
  adds r0,r6
  bcc 1f
  adds r1,#1                // quh<<(xsh+4))+q
@@ -651,26 +651,26 @@ y64_x48:
  movs r5,#0                // xsh=0
  lsrs r4,r3,#8
  bne 1f
- lsls r3,#8
+ lsls r3,r3,#8
  lsrs r6,r2,#24
  orrs r3,r6
- lsls r2,#8                // if(x0<1U<<40) x0<<=8,xsh =8;
+ lsls r2,r2,#8             // if(x0<1U<<40) x0<<=8,xsh =8;
  adds r5,#8
 1:
  lsrs r4,r3,#12
  bne 1f
- lsls r3,#4
+ lsls r3,r3,#4
  lsrs r6,r2,#28
  orrs r3,r6
- lsls r2,#4                // if(x0<1U<<44) x0<<=4,xsh+=4;
+ lsls r2,r2,#4             // if(x0<1U<<44) x0<<=4,xsh+=4;
  adds r5,#4
 1:
  lsrs r4,r3,#14
  bne 1f
- lsls r3,#2
+ lsls r3,r3,#2
  lsrs r6,r2,#30
  orrs r3,r6
- lsls r2,#2                // if(x0<1U<<46) x0<<=2,xsh+=2;
+ lsls r2,r2,#2             // if(x0<1U<<46) x0<<=2,xsh+=2;
  adds r5,#2
 1:
  lsrs r4,r3,#15
@@ -700,7 +700,7 @@ y64_x48:
 // r5    xsh 0<=xsh<16
 
  muls r6,r4
- lsrs r6,#16               // q=((ui32)(y>>48)*r)>>16;
+ lsrs r6,r6,#16            // q=((ui32)(y>>48)*r)>>16;
  lsls r7,r6,#13
  mov r14,r7                // save q<<13
  uxth r7,r2                // x0l
@@ -720,22 +720,22 @@ y64_x48:
  lsrs r7,r2,#16            // x0m
  muls r7,r6
  lsls r6,r7,#17
- lsrs r7,#15
+ lsrs r7,r7,#15
  subs r0,r6
  sbcs r1,r7                // y-=((ui64)q*x0)<<1;
 
  lsrs r6,r1,#3             // y>>35
  muls r6,r4
- lsrs r6,#16               // q=((ui32)(y>>35)*r)>>16;
+ lsrs r6,r6,#16            // q=((ui32)(y>>35)*r)>>16;
 
  cmp r5,#12
  blt last1                 // if(xsh<12) goto last1;
 
  add r14,r6                // qu<<13+q
- lsrs r2,#12
+ lsrs r2,r2,#12
  lsls r7,r3,#20
  orrs r2,r7
- lsrs r3,#12               // x0>>12
+ lsrs r3,r3,#12            // x0>>12
 
  uxth r7,r2                // x0l
  muls r7,r6
@@ -749,7 +749,7 @@ y64_x48:
  lsrs r7,r2,#16            // x0m
  muls r7,r6
  lsls r6,r7,#16
- lsrs r7,#16
+ lsrs r7,r7,#16
  subs r0,r6
  sbcs r1,r7                // y-=((ui64)q*x0)>>12
 
@@ -759,11 +759,11 @@ y64_x48:
  muls r6,r4
  movs r7,#41
  subs r7,r5
- lsrs r6,r7                // q=((ui32)(y>>22)*r)>>(16+25-xsh)
+ lsrs r6,r6,r7             // q=((ui32)(y>>22)*r)>>(16+25-xsh)
 
  subs r5,#12
  mov r7,r14
- lsls r7,r5
+ lsls r7,r7,r5
 2:
  adds r7,r6                // qu=(qu<<(xsh-12))+q
  pop {r4,r5}               // recall x
@@ -783,7 +783,7 @@ y64_x48:
  lsrs r2,r4,#16
  muls r2,r6
  lsrs r3,r2,#16
- lsls r2,#16               // xm*q
+ lsls r2,r2,#16            // xm*q
  subs r0,r2
  sbcs r1,r3                // y-=(ui64)q*x
 
@@ -806,10 +806,10 @@ last1:
 
  movs r7,#12
  subs r7,r5
- lsrs r6,r7                // q>>=12-xsh
+ lsrs r6,r6,r7             // q>>=12-xsh
  mov r7,r14
- lsrs r7,#13
- lsls r7,r5
+ lsrs r7,r7,#13
+ lsls r7,r7,r5
  adds r7,r7                // qu<<(xsh+1)
  b 2b
 
@@ -835,10 +835,10 @@ y64_x64:
  lsrs r6,r3,#16
  muls r5,r4
  muls r6,r4
- lsls r6,#16
+ lsls r6,r6,#16
  lsrs r7,r5,#16
  orrs r6,r7
- lsls r5,#16
+ lsls r5,r5,#16
  subs r0,r5
  sbcs r1,r6                //   y-=(ui64)q*x
 
