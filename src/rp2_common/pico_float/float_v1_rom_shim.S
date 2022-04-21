@@ -55,7 +55,7 @@ _macro_1arg(float_section, name)
     str r0, [sp, #12]
     pop {r0-r2, pc}
 
- float_section 642float_shims
+ float_section sixtyfourbit_to_float_shims
 
 // convert uint64 to float, rounding
  regular_func uint642float_shim
