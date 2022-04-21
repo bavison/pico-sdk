@@ -4,6 +4,9 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
+#if defined __GNUC__
+
+
 #include "pico.h"
 
 #define _align      .align
@@ -84,3 +87,104 @@
 
 #define code_in_code_area
 #define data_in_code_area
+
+
+#elif defined __IASMARM__
+
+
+#define __ASSEMBLER__
+#include "pico.h"
+
+// Note the blank line after this is important!
+#define BACKTICK `
+
+#define QUOTED(string,quote) quote ## string ## quote
+#define BACKTICK_QUOTED(string) QUOTED(string,BACKTICK)
+
+                                section         `.text`:CODE:NOROOT(2)
+                                aapcs           base, interwork
+                                preserve8
+                                require8
+                                thumb
+
+#define _align                  alignrom
+#define _byte                   dc8
+#define _end                    end
+#define _endm(x)                endm
+
+_equ                            macro           x, y
+x                               equ             y
+                                endm
+
+#define _extern                 extern
+#define _global                 public
+#define _hword                  dc16
+#define _ltorg                  ltorg
+#define _macro(x)                               x macro
+#define _macro_1arg(x,a)                        x macro a
+#define _macro_2args(x,a,b)                     x macro a,b
+#define _macro_3args(x,a,b,c)                   x macro a,b,c
+#define _macro_5args(x,a,b,c,d,e)               x macro a,b,c,d,e
+#define _macro_6args(x,a,b,c,d,e,f)             x macro a,b,c,d,e,f
+#define _macro_9args(x,a,b,c,d,e,f,g,h,i)       x macro a,b,c,d,e,f,g,h,i
+#define _org                    ;
+
+_set                            macro           x, y
+x                               set             y
+                                endm
+
+#define _section(name, flags, cd, align)        section BACKTICK_QUOTED(name):cd:NOROOT(align)
+#define _root_section(name, flags, cd, align)   section BACKTICK_QUOTED(name):cd:ROOT(align)
+#define _space                  ds
+#define _word                   dc32
+
+// Expand a macro argument
+// Two identical deinitions of the preprocessor macros are required to work
+// around a bug in the IAR assembler where we use nested assembly macros
+#define MA(x)  x
+#define MA2(x) x
+
+// do not put align in here as it is used mid function sometimes
+regular_func                    macro           x
+                                public          x
+                                thumb
+x:
+                                endm
+
+regular_func_with_section       macro           x
+                                section         `.text.\1`:CODE:NOROOT(2)
+                                regular_func    x
+                                endm
+
+// do not put align in here as it is used mid function sometimes
+wrapper_func                    macro           x
+                                regular_func    BACKTICK_QUOTED(WRAPPER_FUNC_NAME(\1))
+                                endm
+
+__pre_init                      macro           func, priority_string
+                                section         `.preinit_array.\2`:DATA:ROOT(2)
+                                alignrom        2
+                                dc32            func
+                                endm
+
+local_func                      macro           x
+                                thumb
+x:
+                                endm
+weak_func                       macro           x
+                                pubweak         x
+                                thumb
+x:
+                                endm
+
+#define code_in_code_area thumb
+#define data_in_code_area data
+
+
+#else
+
+
+#error Unsupported toolchain
+
+
+#endif
