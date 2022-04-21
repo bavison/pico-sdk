@@ -55,7 +55,7 @@ _macro_3args(float_section, name, ram_name, flash_name)
     str r0, [sp, #12]
     pop {r0-r2, pc}
 
- float_section 642float_shims, `.time_critical.642float_shims`, `.text.642float_shims`
+ float_section sixtyfourbit_to_float_shims, `.time_critical.sixtyfourbit_to_float_shims`, `.text.sixtyfourbit_to_float_shims`
 
 // convert uint64 to float, rounding
  regular_func uint642float_shim
