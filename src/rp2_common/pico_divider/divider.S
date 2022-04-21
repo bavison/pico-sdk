@@ -49,13 +49,14 @@ _macro_1arg(wait_div, n)
 
 #if !PICO_DIVIDER_DISABLE_INTERRUPTS
 _macro(save_div_state_and_lr_64)
+ local wait
     push {r4, r5, r6, r7, lr}
     ldr r6, =SIO_BASE
-1:
+wait:
     ldr r5, [r6, #SIO_DIV_CSR_OFFSET]
     // wait for results as we can't save signed-ness of operation
     lsrs r5, r5, #SIO_DIV_CSR_READY_SHIFT_FOR_CARRY
-    bcc 1b
+    bcc wait
     // note we must read quotient last, and since it isn't the last reg, we'll not use ldmia!
     ldr r4, [r6, #SIO_DIV_UDIVIDEND_OFFSET]
     ldr r5, [r6, #SIO_DIV_UDIVISOR_OFFSET]
@@ -275,11 +276,12 @@ divmod_s64s64_savestate:
 #endif /* !PICO_DIVIDER_DISABLE_INTERRUPTS */
 
 _macro_2args(dneg, lo, hi)
+ local skip
  mvns MA(hi),MA(hi)
  rsbs MA(lo),#0
- bne l\@_1
+ bne skip
  adds MA(hi),#1
-l\@_1:
+skip:
  _endm(endm)
 
  _align 2

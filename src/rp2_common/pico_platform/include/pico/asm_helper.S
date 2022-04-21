@@ -37,6 +37,7 @@
 // Expand a macro argument
 #define MA(x) \##x
 
+.altmacro
 .syntax unified
 .cpu cortex-m0plus
 .thumb
