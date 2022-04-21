@@ -37,27 +37,27 @@ _macro_1arg(double_section, name)
 #ifndef NDEBUG
     // sanity check to make sure we weren't called by non (shimmable_) table_tail_call macro
     cmp r0, #0
-    bne 1f
+    bne double_table_shim_on_use_helper_1
     bkpt #0
 #endif
-1:
+double_table_shim_on_use_helper_1:
     ldrh r1, [r0]
     lsrs r2, r1, #8
     adds r0, #2
     cmp r2, #0xdf
-    bne 1b
+    bne double_table_shim_on_use_helper_1
     uxtb r1, r1 // r1 holds table offset
     lsrs r2, r0, #2
-    bcc 1f
+    bcc double_table_shim_on_use_helper_2
     // unaligned
     ldrh r2, [r0, #0]
     ldrh r0, [r0, #2]
     lsls r0, r0, #16
     orrs r0, r2
-    b 2f
-1:
+    b double_table_shim_on_use_helper_3
+double_table_shim_on_use_helper_2:
     ldr r0, [r0]
-2:
+double_table_shim_on_use_helper_3:
     ldr r2, =sd_table
     str r0, [r2, r1]
     str r0, [sp, #12]
@@ -216,14 +216,14 @@ da_pack:
 // to provide a correct continuation of the exact result.
 // now pack result back up
  lsrs r3,r1,#31                // get sign bit
- beq 1f                        // skip on positive
+ beq dadd_shim_1               // skip on positive
  mvns r1,r1                    // negate mantissa
  mvns r0,r0
  movs r2,#0
  negs r4,r4
  adcs r0,r2
  adcs r1,r2
-1:
+dadd_shim_1:
  mov r2,r12                    // get exponent
  lsrs r5,r1,#21
  bne da_0                      // shift down required?
@@ -243,9 +243,9 @@ da_1:
  bcc da_3
 da_4:
  adds r0,#1                    // round up
- bcc 2f
+ bcc dadd_shim_2
  adds r1,#1
-2:
+dadd_shim_2:
  cmp r4,#0                     // sticky bits zero?
  bne da_3
  lsrs r0,r0,#1                 // round to even
@@ -267,11 +267,11 @@ da_7:
  lsls r1,r3,#31
  ldr r3,=0x7ff00000
  orrs r1,r3
- b 1f
+ b dadd_shim_3
 da_6:
 // here exponent underflow: return signed zero
  lsls r1,r3,#31
-1:
+dadd_shim_3:
  movs r0,#0
  pop {r4-r7,r15}
 
@@ -304,9 +304,9 @@ da_xrgty:                      // xe>ye and shift>=32 places
 
  movs r4,r2
  lsls r4,r4,r7                 // these would be shifted off the bottom of the sticky bits
- beq 1f
+ beq dadd_shim_4
  movs r4,#1
-1:
+dadd_shim_4:
  lsrs r2,r2,r6
  orrs r4,r2
  movs r2,r3
@@ -339,9 +339,9 @@ da_yrgtx:
 
  movs r4,r0
  lsls r4,r4,r6                 // these would be shifted off the bottom of the sticky bits
- beq 1f
+ beq dadd_shim_5
  movs r4,#1
-1:
+dadd_shim_5:
  lsrs r0,r0,r7
  orrs r4,r0
  movs r0,r1
@@ -522,28 +522,28 @@ _macro_6args(square32_64, rx, rzl, rzh, rt0, rt1, rt2)
  orrs r0,r2
  lsls r5,r5,#11                // now r5:r0:r1 Q83=Q(51+32), extra LSBs in r12
  lsrs r2,r1,#20
- bne 1f                        // skip if in range [2..4)
+ bne dmul_shim_1               // skip if in range [2..4)
  adds r5,r5                    // shift up so always [2..4) Q83, i.e. [1..2) Q84=Q(52+32)
  adcs r0,r0
  adcs r1,r1
  subs r3,#1                    // correct exponent
-1:
+dmul_shim_1:
  ldr r6,=0x3ff
  subs r3,r6                    // correct for exponent bias
  lsls r6,r6,#1                 // 0x7fe
  cmp r3,r6
  bhs dm_0                      // exponent over- or underflow
  lsls r5,r5,#1                 // rounding bit to carry
- bcc 1f                        // result is correctly rounded
+ bcc dmul_shim_2               // result is correctly rounded
  adds r0,#1
  movs r6,#0
  adcs r1,r6                    // round up
  mov r6,r12                    // remaining sticky bits
  orrs r5,r6
- bne 1f                        // some sticky bits set?
+ bne dmul_shim_2               // some sticky bits set?
  lsrs r0,r0,#1
  lsls r0,r0,#1                 // round to even
-1:
+dmul_shim_2:
  lsls r3,r3,#20
  adds r1,r3
 dm_2:
@@ -555,15 +555,15 @@ dm_2:
 dm_0:
  bge dm_1                      // overflow?
  adds r3,#1                    // would-be zero exponent?
- bne 1f
+ bne dmul_shim_3
  adds r0,#1
- bne 1f                        // all-ones mantissa?
+ bne dmul_shim_3               // all-ones mantissa?
  adds r1,#1
  lsrs r7,r1,#21
- beq 1f
+ beq dmul_shim_3
  lsrs r1,r1,#1
  b dm_2
-1:
+dmul_shim_3:
  lsls r1,r4,#31
  movs r0,#0
  pop {r4-r7,r15}
@@ -661,16 +661,16 @@ ddiv0:                         // entry point from dtan
  mov r12,r6                    // result sign in r12b0; r12b1 trashed
  lsls r1,r1,#1
  lsrs r7,r1,#21                // exponent
- beq 1f                        // zero exponent?
+ beq ddiv_shim_1               // zero exponent?
  adds r6,r7,#1
  lsrs r6,r6,#11
- beq 2f                        // exponent != 0x7ff? then done
-1:
+ beq ddiv_shim_2               // exponent != 0x7ff? then done
+ddiv_shim_1:
  movs r0,#0
  movs r1,#0
  subs r7,#64                   // less drastic fiddling of exponents to get 0/0, Inf/Inf correct
  lsls r7,r7,#12
-2:
+ddiv_shim_2:
  subs r6,r7,r4
  lsls r6,r6,#2
  add r12,r12,r6                // (signed) exponent in r12[31..8]
@@ -820,11 +820,11 @@ dd_1:
 
  cmp r4,#0
 
- bmi 1f
+ bmi ddiv_shim_3
  movs r2,#0                    // round up
  adds r0,#1
  adcs r1,r2
-1:
+ddiv_shim_3:
  lsrs r0,r0,#1                 // shift back down to Q52
  lsls r2,r1,#31
  orrs r0,r2
@@ -960,10 +960,10 @@ dq_1:
  lsls r4,r2,#20
  subs r1,r4                    // insert implied 1
  lsrs r2,r2,#1
- bcc 1f                        // even exponent? skip
+ bcc dsqrt_shim_1              // even exponent? skip
  adds r0,r0,r0                 // odd exponent: shift up mantissa
  adcs r1,r1,r1
-1:
+dsqrt_shim_1:
  lsrs r3,r3,#2
  adds r2,r3
  lsls r2,r2,#20
@@ -1109,11 +1109,11 @@ dq_5:
 
  negs r1,r1
  sbcs r0,r2                    // remainder y-a5^2
- bmi 1f                        // y<a5^2: no need to increment a5
+ bmi dsqrt_shim_2              // y<a5^2: no need to increment a5
  movs r3,#0
  adds r4,#1
  adcs r5,r3                    // bump a5 if over rounding boundary
-1:
+dsqrt_shim_2:
  lsrs r0,r4,#1
  lsrs r1,r5,#1
  lsls r5,r5,#31
@@ -1146,8 +1146,8 @@ dq_5:
  mov r12,r2
  mov r2,r11
  cmp r2,#0
- blt 1f
- b 2f
+ blt dcordic_2
+ b dcordic_1
 
  double_section dcordic_rot_step
  regular_func dcordic_rot_step
@@ -1155,8 +1155,8 @@ dq_5:
  ldmia r2!,{r3,r4}
  mov r12,r2
  cmp r1,#0
- bge 1f
-2:
+ bge dcordic_2
+dcordic_1:
 // ω<0 / y>=0
 // ω+=dω
 // x+=y>>i, y-=x>>i
@@ -1194,7 +1194,7 @@ dq_5:
 // ω>0 / y<0
 // ω-=dω
 // x-=y>>i, y+=x>>i
-1:
+dcordic_2:
  subs r0,r3
  sbcs r1,r4
 
@@ -1257,9 +1257,9 @@ dq_5:
 
  asrs r2,r1,#31
  cmp r2,r3
- bne 1f                        // sign extension bits fail to match sign of result?
+ bne double2int64_shim_1       // sign extension bits fail to match sign of result?
  pop {r15}
-1:
+double2int64_shim_1:
  mvns r0,r3
  movs r1,#1
  lsls r1,r1,#31
@@ -1283,9 +1283,9 @@ dq_5:
  bl dunpacks
  asrs r4,r2,#16
  adds r4,#1
- bge 1f
+ bge d2fix_1
  movs r1,#0                    // -0 -> +0
-1:
+d2fix_1:
  asrs r3,r1,#31
  ldr r4, =d2fix_a
  bx r4
@@ -1302,10 +1302,10 @@ ret_dzero:
 // r3    mantissa sign extension bits
  add r2,r12                    // exponent plus offset for required binary point position
  subs r2,#52                   // required shift
- bmi 1f                        // shift down?
+ bmi d2fix_a_2                 // shift down?
 // here a shift up by r2 places
  cmp r2,#12                    // will clamp?
- bge 2f
+ bge d2fix_a_1
  movs r4,r0
  lsls r1,r1,r2
  lsls r0,r0,r2
@@ -1314,14 +1314,14 @@ ret_dzero:
  lsrs r4,r4,r2
  orrs r1,r4
  pop {r4,r15}
-2:
+d2fix_a_1:
  mvns r0,r3
  mvns r1,r3                    // overflow: clamp to extreme fixed-point values
  pop {r4,r15}
-1:
+d2fix_a_2:
 // here a shift down by -r2 places
  adds r2,#32
- bmi 1f                        // long shift?
+ bmi d2fix_a_3                 // long shift?
  mov r4,r1
  lsls r4,r4,r2
  negs r2,r2
@@ -1330,17 +1330,17 @@ ret_dzero:
  lsrs r0,r0,r2
  orrs r0,r4
  pop {r4,r15}
-1:
+d2fix_a_3:
 // here a long shift down
  movs r0,r1
  asrs r1,r1,#31                // shift down 32 places
  adds r2,#32
- bmi 1f                        // very long shift?
+ bmi d2fix_a_4                 // very long shift?
  negs r2,r2
  adds r2,#32
  asrs r0,r0,r2
  pop {r4,r15}
-1:
+d2fix_a_4:
  movs r0,r3                    // result very near zero: use sign extension bits
  movs r1,r3
  pop {r4,r15}
@@ -1351,9 +1351,9 @@ ret_dzero:
  lsrs r2,r2,#21                // exponent
  ldr r3,=0x3ff-0x7f
  subs r2,r3                    // fix exponent bias
- ble 1f                        // underflow or zero
+ ble double2float_shim_4       // underflow or zero
  cmp r2,#0xff
- bge 2f                        // overflow or infinity
+ bge double2float_shim_7       // overflow or infinity
  lsls r2,r2,#23                // position exponent of result
  lsrs r3,r1,#31
  lsls r3,r3,#31
@@ -1365,35 +1365,35 @@ ret_dzero:
  orrs r0,r1                    // assemble mantissa
  orrs r0,r2                    // insert exponent and sign
  lsls r3,r3,#1
- bcc 3f                        // no rounding
- beq 4f                        // all sticky bits 0?
-5:
+ bcc double2float_shim_2       // no rounding
+ beq double2float_shim_3       // all sticky bits 0?
+double2float_shim_1:
  adds r0,#1
-3:
+double2float_shim_2:
  bx r14
-4:
+double2float_shim_3:
  lsrs r3,r0,#1                 // odd? then round up
- bcs 5b
+ bcs double2float_shim_1
  bx r14
-1:
- beq 6f                        // check case where value is just less than smallest normal
-7:
+double2float_shim_4:
+ beq double2float_shim_6       // check case where value is just less than smallest normal
+double2float_shim_5:
  lsrs r0,r1,#31
  lsls r0,r0,#31
  bx r14
-6:
+double2float_shim_6:
  lsls r2,r1,#12                // 20 1:s at top of mantissa?
  asrs r2,r2,#12
  adds r2,#1
- bne 7b
+ bne double2float_shim_5
  lsrs r2,r0,#29                // and 3 more 1:s?
  cmp r2,#7
- bne 7b
+ bne double2float_shim_5
  movs r2,#1                    // return smallest normal with correct sign
- b 8f
-2:
+ b double2float_shim_8
+double2float_shim_7:
  movs r2,#0xff
-8:
+double2float_shim_8:
  lsrs r0,r1,#31                // return signed infinity
  lsls r0,r0,#8
  adds r0,r2
@@ -1444,48 +1444,48 @@ uf2d:
 // r2 -Q (will become exponent)
 // r3 sign across all bits
  cmp r1,#0
- bne 1f                        // short normalising shift?
+ bne x2double_shims_1          // short normalising shift?
  movs r1,r0
- beq 2f                        // zero? return it
+ beq x2double_shims_5          // zero? return it
  movs r0,#0
  subs r2,#32                   // fix exponent
-1:
+x2double_shims_1:
  asrs r4,r1,#21
- bne 3f                        // will need shift down (and rounding?)
- bcs 4f                        // normalised already?
-5:
+ bne x2double_shims_7          // will need shift down (and rounding?)
+ bcs x2double_shims_3          // normalised already?
+x2double_shims_2:
  subs r2,#1
  adds r0,r0                    // shift up
  adcs r1,r1
  lsrs r4,r1,#21
- bcc 5b
-4:
+ bcc x2double_shims_2
+x2double_shims_3:
  ldr r4,=0x7fe
  cmp r2,r4
- bhs 6f                        // over/underflow? return signed zero/infinity
-7:
+ bhs x2double_shims_6          // over/underflow? return signed zero/infinity
+x2double_shims_4:
  lsls r2,r2,#20                // pack and return
  adds r1,r2
  lsls r3,r3,#31
  adds r1,r3
-2:
+x2double_shims_5:
  pop {r4,r5,r15}
-6:                             // return signed zero/infinity according to unclamped exponent in r2
+x2double_shims_6:              // return signed zero/infinity according to unclamped exponent in r2
  mvns r2,r2
  lsrs r2,r2,#21
  movs r0,#0
  movs r1,#0
- b 7b
+ b x2double_shims_4
 
-3:
+x2double_shims_7:
 // here we need to shift down to normalise and possibly round
- bmi 1f                        // already normalised to Q63?
-2:
+ bmi x2double_shims_9          // already normalised to Q63?
+x2double_shims_8:
  subs r2,#1
  adds r0,r0                    // shift up
  adcs r1,r1
- bpl 2b
-1:
+ bpl x2double_shims_8
+x2double_shims_9:
 // here we have a 1 in b63 of r0:r1
  adds r2,#11                   // correct exponent for subsequent shift down
  lsls r4,r0,#21                // save bits for rounding
@@ -1494,16 +1494,16 @@ uf2d:
  orrs r0,r5
  lsrs r1,r1,#11
  lsls r4,r4,#1
- beq 1f                        // sticky bits are zero?
-8:
+ beq x2double_shims_11         // sticky bits are zero?
+x2double_shims_10:
  movs r4,#0
  adcs r0,r4
  adcs r1,r4
- b 4b
-1:
- bcc 4b                        // sticky bits are zero but not on rounding boundary
+ b x2double_shims_3
+x2double_shims_11:
+ bcc x2double_shims_3          // sticky bits are zero but not on rounding boundary
  lsrs r4,r0,#1                 // increment if odd (force round to even)
- b 8b
+ b x2double_shims_10
 
 
  _ltorg
@@ -1530,10 +1530,10 @@ uf2d:
  double_section dreduce
  regular_func dreduce
  adds r2,#2                    // e+2
- bmi 1f                        // |x|<0.25, too small to need adjustment
+ bmi dreduce_3                 // |x|<0.25, too small to need adjustment
  cmp r2,#12
- bge 4f
-2:
+ bge dreduce_2
+dreduce_1:
  movs r5,#17
  subs r5,r2                    // 15-e
  movs r3,r1                    // Q20
@@ -1563,24 +1563,24 @@ uf2d:
  subs r0,r6
  sbcs r1,r7                    // remainder Q62
  bx r14
-4:
+dreduce_2:
  movs r2,#12                   // overflow: clamp to +/-1024
  movs r0,#0
  asrs r1,r1,#31
  lsls r1,r1,#1
  adds r1,#1
  lsls r1,r1,#20
- b 2b
+ b dreduce_1
 
-1:
+dreduce_3:
  lsls r1,r1,#8
  lsrs r3,r0,#24
  orrs r1,r3
  lsls r0,r0,#8                 // r0:r1 Q60, to be shifted down -r2 places
  negs r3,r2
  adds r2,#32                   // shift down in r3, complementary shift in r2
- bmi 1f                        // long shift?
-2:
+ bmi dreduce_5                 // long shift?
+dreduce_4:
  movs r4,r1
  asrs r1,r1,r3
  lsls r4,r4,r2
@@ -1591,12 +1591,12 @@ uf2d:
  adcs r1,r2
  bx r14
 
-1:
+dreduce_5:
  movs r0,r1                    // down 32 places
  asrs r1,r1,#31
  subs r3,#32
  adds r2,#32
- bpl 2b
+ bpl dreduce_4
  movs r0,#0                    // very long shift? return 0
  movs r1,#0
  movs r2,#0
@@ -1622,7 +1622,7 @@ uf2d:
  bl push_r8_r11
  bl dsincos_internal
  bl dcos_finish
- b 1f
+ b dsin_shim_1
 
  double_section dsin_shim
  regular_func dsin_shim
@@ -1630,7 +1630,7 @@ uf2d:
  bl push_r8_r11
  bl dsincos_internal
  bl dsin_finish
-1:
+dsin_shim_1:
  bl pop_r8_r11
  pop {r4-r7,r15}
 
@@ -1670,37 +1670,37 @@ uf2d:
  ldr r5,=0x9df04dbb           // this value compensates for the non-unity scaling of the CORDIC rotations
  ldr r6,=0x36f656c5
  lsls r2,r2,#31
- bcc 1f
+ bcc dsincos_internal_1
 // quadrant 2 or 3
  mvns r6,r6
  negs r5,r5
  adcs r6,r4
-1:
+dsincos_internal_1:
  lsls r2,r2,#1
- bcs 1f
+ bcs dsincos_internal_2
 // even quadrant
  mov r10,r4
  mov r11,r4
  mov r8,r5
  mov r9,r6
- b 2f
-1:
+ b dsincos_internal_3
+dsincos_internal_2:
 // odd quadrant
  mov r8,r4
  mov r9,r4
  mov r10,r5
  mov r11,r6
-2:
+dsincos_internal_3:
  adr r4,dtab_cc
  mov r12,r4
  movs r7,#1
  movs r6,#31
-1:
+dsincos_internal_4:
  bl dcordic_rot_step
  adds r7,#1
  subs r6,#1
  cmp r7,#33
- bne 1b
+ bne dsincos_internal_4
  pop {r15}
 
 dcos_finish:
@@ -1766,81 +1766,81 @@ dreddata0:
  ldr r5,=0x7ff00000
  movs r4,r1
  ands r4,r5                    // y==0?
- beq 1f
+ beq datan2_shim_1
  cmp r4,r5                     // or Inf/NaN?
- bne 2f
-1:
+ bne datan2_shim_2
+datan2_shim_1:
  lsrs r1,r1,#20                // flush
  lsls r1,r1,#20
  movs r0,#0
-2:
+datan2_shim_2:
  movs r4,r3
  ands r4,r5                    // x==0?
- beq 1f
+ beq datan2_shim_3
  cmp r4,r5                     // or Inf/NaN?
- bne 2f
-1:
+ bne datan2_shim_4
+datan2_shim_3:
  lsrs r3,r3,#20                // flush
  lsls r3,r3,#20
  movs r2,#0
-2:
+datan2_shim_4:
  movs r6,#0                    // quadrant offset
  lsls r5,r5,#11                // constant 0x80000000
  cmp r3,#0
- bpl 1f                        // skip if x positive
+ bpl datan2_shim_5             // skip if x positive
  movs r6,#2
  eors r3,r5
  eors r1,r5
- bmi 1f                        // quadrant offset=+2 if y was positive
+ bmi datan2_shim_5             // quadrant offset=+2 if y was positive
  negs r6,r6                    // quadrant offset=-2 if y was negative
-1:
+datan2_shim_5:
 // now in quadrant 0 or 3
  adds r7,r1,r5                 // r7=-r1
- bpl 1f
+ bpl datan2_shim_6
 // y>=0: in quadrant 0
  cmp r1,r3
- ble 2f                        // y<~x so 0≤θ<~π/4: skip
+ ble datan2_shim_8             // y<~x so 0≤θ<~π/4: skip
  adds r6,#1
  eors r1,r5                    // negate x
- b 3f                          // and exchange x and y = rotate by -π/2
-1:
+ b datan2_shim_7               // and exchange x and y = rotate by -π/2
+datan2_shim_6:
  cmp r3,r7
- bge 2f                        // -y<~x so -π/4<~θ≤0: skip
+ bge datan2_shim_8             // -y<~x so -π/4<~θ≤0: skip
  subs r6,#1
  eors r3,r5                    // negate y and ...
-3:
+datan2_shim_7:
  movs r7,r0                    // exchange x and y
  movs r0,r2
  movs r2,r7
  movs r7,r1
  movs r1,r3
  movs r3,r7
-2:
+datan2_shim_8:
 // here -π/4<~θ<~π/4
 // r6 has quadrant offset
  push {r6}
  cmp r2,#0
- bne 1f
+ bne datan2_shim_10
  cmp r3,#0
- beq 10f                       // x==0 going into division?
+ beq datan2_shim_9             // x==0 going into division?
  lsls r4,r3,#1
  asrs r4,r4,#21
  adds r4,#1
- bne 1f                        // x==Inf going into division?
+ bne datan2_shim_10            // x==Inf going into division?
  lsls r4,r1,#1
  asrs r4,r4,#21
  adds r4,#1                    // y also ±Inf?
- bne 10f
+ bne datan2_shim_9
  subs r1,#1                    // make them both just finite
  subs r3,#1
- b 1f
+ b datan2_shim_10
 
-10:
+datan2_shim_9:
  movs r0,#0
  movs r1,#0
- b 12f
+ b datan2_shim_15
 
-1:
+datan2_shim_10:
  bl ddiv_shim
  movs r2,#62
  bl double2fix64_shim
@@ -1858,12 +1858,12 @@ dreddata0:
  mov r12,r4
  movs r7,#1
  movs r6,#31
-1:
+datan2_shim_11:
  bl dcordic_vec_step
  adds r7,#1
  subs r6,#1
  cmp r7,#33
- bne 1b
+ bne datan2_shim_11
 // r0:r1   atan(y/x) Q62
 // r8:r9   x residual Q62
 // r10:r11 y residual Q62
@@ -1874,47 +1874,47 @@ dreddata0:
  movs r4,#1
  lsls r4,r4,#29
  movs r7,#0
-2:
+datan2_shim_12:
  lsrs r2,r2,#1
  movs r3,r3                    // preserve carry
- bmi 1f
+ bmi datan2_shim_13
  sbcs r3,r2
  adds r0,r4
  adcs r1,r7
  lsrs r4,r4,#1
- bne 2b
- b 3f
-1:
+ bne datan2_shim_12
+ b datan2_shim_14
+datan2_shim_13:
  adcs r3,r2
  subs r0,r4
  sbcs r1,r7
  lsrs r4,r4,#1
- bne 2b
-3:
+ bne datan2_shim_12
+datan2_shim_14:
  lsls r6,r1,#31
  asrs r1,r1,#1
  lsrs r0,r0,#1
  orrs r0,r6                    // Q61
 
-12:
+datan2_shim_15:
  pop {r6}
 
  cmp r6,#0
- beq 1f
+ beq datan2_shim_18
  ldr r4,=0x885A308D           // π/2 Q61
  ldr r5,=0x3243F6A8
- bpl 2f
+ bpl datan2_shim_16
  mvns r4,r4                    // negative quadrant offset
  mvns r5,r5
-2:
+datan2_shim_16:
  lsls r6,r6,#31
- bne 2f                        // skip if quadrant offset is ±1
+ bne datan2_shim_17            // skip if quadrant offset is ±1
  adds r0,r4
  adcs r1,r5
-2:
+datan2_shim_17:
  adds r0,r4
  adcs r1,r5
-1:
+datan2_shim_18:
  movs r2,#61
  bl fix642double_shim
 
@@ -1967,13 +1967,13 @@ dtab_cc:
  adr r4,dreddata1
  bl dreduce
  cmp r1,#0
- bge 1f
+ bge dexp_shim_1
  ldr r4,=0xF473DE6B
  ldr r5,=0x2C5C85FD           // ln2 Q62
  adds r0,r4
  adcs r1,r5
  subs r2,#1
-1:
+dexp_shim_1:
  push {r2}
  movs r7,#1                    // shift
  adr r6,dtab_exp
@@ -1981,12 +1981,12 @@ dtab_cc:
  movs r3,#1
  lsls r3,r3,#30                // x=1 Q62
 
-3:
+dexp_shim_2:
  ldmia r6!,{r4,r5}
  mov r12,r6
  subs r0,r4
  sbcs r1,r5
- bmi 1f
+ bmi dexp_shim_3
 
  negs r6,r7
  adds r6,#32                   // complementary shift
@@ -1999,16 +1999,16 @@ dtab_cc:
  orrs r4,r6
  adcs r2,r4
  adcs r3,r5                    // x+=x>>i
- b 2f
+ b dexp_shim_4
 
-1:
+dexp_shim_3:
  adds r0,r4                    // restore argument
  adcs r1,r5
-2:
+dexp_shim_4:
  mov r6,r12
  adds r7,#1
  cmp r7,#33
- bne 3b
+ bne dexp_shim_2
 
 // here
 // r0:r1   ε (residual x, where x=a+ε) Q62, |ε|≤2^-32 (so fits in r0)
@@ -2026,7 +2026,7 @@ dtab_cc:
  pop {r2}
  negs r2,r2
  adds r2,#62
- bl fix642double_shim                 // in principle we can pack faster than this because we know the exponent
+ bl fix642double_shim          // in principle we can pack faster than this because we know the exponent
  pop {r4-r7,r15}
 
  _ltorg
@@ -2035,11 +2035,11 @@ dtab_cc:
  regular_func dln_shim
  push {r4-r7,r14}
  lsls r7,r1,#1
- bcs 5f                        // <0 ...
+ bcs dln_shim_5                // <0 ...
  asrs r7,r7,#21
- beq 5f                        // ... or =0? return -Inf
+ beq dln_shim_5                // ... or =0? return -Inf
  adds r7,#1
- beq 6f                        // Inf/NaN? return +Inf
+ beq dln_shim_6                // Inf/NaN? return +Inf
  bl dunpacks
  push {r2}
  lsls r1,r1,#9
@@ -2054,7 +2054,7 @@ dtab_cc:
  movs r2,#0
  movs r3,#0                    // y=0 Q62
 
-3:
+dln_shim_1:
  negs r6,r7
  adds r6,#32                   // complementary shift
  movs r5,r1
@@ -2068,7 +2068,7 @@ dtab_cc:
  adcs r5,r1                    // x+(x>>i)
 
  lsrs r6,r5,#30
- bne 1f                        // x+(x>>i)>1?
+ bne dln_shim_2                // x+(x>>i)>1?
  movs r0,r4
  movs r1,r5                    // x+=x>>i
  mov r6,r12
@@ -2076,12 +2076,12 @@ dtab_cc:
  subs r2,r4
  sbcs r3,r5
 
-1:
+dln_shim_2:
  movs r4,#8
  add r12,r4
  adds r7,#1
  cmp r7,#33
- bne 3b
+ bne dln_shim_1
 // here:
 // r0:r1 residual x, nearly 1 Q62
 // r2:r3 y ~ ln m/2 = ln m - ln2 Q62
@@ -2119,10 +2119,10 @@ dtab_cc:
  adcs r4,r5
 // r0:r1:r4 result Q62
  movs r2,#62
-1:
+dln_shim_3:
  asrs r5,r1,#31
  cmp r4,r5
- beq 2f                        // r4 a sign extension of r1?
+ beq dln_shim_4                // r4 a sign extension of r1?
  lsrs r0,r0,#4                 // no: shift down 4 places and try again
  lsls r6,r1,#28
  orrs r0,r6
@@ -2131,17 +2131,17 @@ dtab_cc:
  orrs r1,r6
  asrs r4,r4,#4
  subs r2,#4
- b 1b
-2:
+ b dln_shim_3
+dln_shim_4:
  bl fix642double_shim
  pop {r4-r7,r15}
 
-5:
+dln_shim_5:
  ldr r1,=0xfff00000
  movs r0,#0
  pop {r4-r7,r15}
 
-6:
+dln_shim_6:
  ldr r1,=0x7ff00000
  movs r0,#0
  pop {r4-r7,r15}
