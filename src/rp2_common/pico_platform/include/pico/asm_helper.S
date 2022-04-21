@@ -4,6 +4,9 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
+#if defined __GNUC__
+
+
 #include "pico.h"
 
 // do not put align in here as it is used mid function sometimes
@@ -37,3 +40,56 @@ endm
 
 #define code_in_code_area
 #define data_in_code_area
+
+
+#elif defined __IASMARM__
+
+
+#define __ASSEMBLER__
+#include "pico.h"
+
+// Note the blank line after this is important!
+#define BACKTICK `
+
+#define QUOTED(string,quote) quote ## string ## quote
+#define BACKTICK_QUOTED(string) QUOTED(string,BACKTICK)
+
+// do not put align in here as it is used mid function sometimes
+regular_func                    macro           x
+                                public          x
+                                thumb
+x:
+                                endm
+
+regular_func_with_section       macro           x
+                                section         `.text.\1`:CODE:NOROOT(2)
+                                regular_func    x
+                                endm
+
+// do not put align in here as it is used mid function sometimes
+wrapper_func                    macro           x
+                                regular_func    BACKTICK_QUOTED(WRAPPER_FUNC_NAME(\1))
+                                endm
+
+// gnu_func is for functions unique to GNU C libraries, so uses wrapper only in GNU case
+gnu_func                        macro           x
+                                regular_func    \1
+                                endm
+
+__pre_init                      macro           func, priority_string
+                                section         `.preinit_array.\2`:DATA:ROOT(2)
+                                alignrom        2
+                                dc32            func
+                                endm
+
+#define code_in_code_area thumb
+#define data_in_code_area data
+
+
+#else
+
+
+#error Unsupported toolchain
+
+
+#endif
