@@ -39,6 +39,7 @@
 #define MA(x)  \##x
 #define MA2(x) \##x
 
+.altmacro
 .syntax unified
 .cpu cortex-m0plus
 .thumb
