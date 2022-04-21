@@ -493,11 +493,11 @@ __aeabi_f2iz_4:
 
  float_section float2int
  regular_func float2int
-    shimmable_table_tail_call SF_TABLE_FLOAT2INT float2int_shim
+    shimmable_table_tail_call SF_TABLE_FLOAT2INT, float2int_shim
 
  float_section float2fix
  regular_func float2fix
-    shimmable_table_tail_call SF_TABLE_FLOAT2FIX float2fix_shim
+    shimmable_table_tail_call SF_TABLE_FLOAT2FIX, float2fix_shim
 
  float_section float2ufix
  regular_func float2ufix
@@ -518,11 +518,11 @@ __aeabi_f2iz_4:
 
  float_section fix642float
  regular_func fix642float
-    shimmable_table_tail_call SF_TABLE_FIX642FLOAT fix642float_shim
+    shimmable_table_tail_call SF_TABLE_FIX642FLOAT, fix642float_shim
 
  float_section ufix642float
  regular_func ufix642float
-    shimmable_table_tail_call SF_TABLE_UFIX642FLOAT ufix642float_shim
+    shimmable_table_tail_call SF_TABLE_UFIX642FLOAT, ufix642float_shim
 
 // float FUNC_NAME(__aeabi_l2f)(long long)             long long to float (single precision) conversion
  float_wrapper_section __aeabi_l2f
@@ -533,7 +533,7 @@ __aeabi_f2iz_4:
     asrs r2, r0, #31
     cmp r1, r2
     beq 1b
-    shimmable_table_tail_call SF_TABLE_INT642FLOAT int642float_shim
+    shimmable_table_tail_call SF_TABLE_INT642FLOAT, int642float_shim
 
 // float FUNC_NAME(__aeabi_l2f)(long long)             long long to float (single precision) conversion
  float_wrapper_section __aeabi_ul2f
@@ -543,7 +543,7 @@ __aeabi_f2iz_4:
  wrapper_func __aeabi_ul2f
     cmp r1, #0
     beq 1b
-    shimmable_table_tail_call SF_TABLE_UINT642FLOAT uint642float_shim
+    shimmable_table_tail_call SF_TABLE_UINT642FLOAT, uint642float_shim
 
 // long long FUNC_NAME(__aeabi_f2lz)(float)             float (single precision) to long long C-style conversion [3]
  float_wrapper_section __aeabi_f2lz
@@ -575,20 +575,20 @@ __aeabi_f2lz_2:
 
  float_section float2int64
  regular_func float2int64
-    shimmable_table_tail_call SF_TABLE_FLOAT2INT64 float2int64_shim
+    shimmable_table_tail_call SF_TABLE_FLOAT2INT64, float2int64_shim
 
  float_section float2fix64
  regular_func float2fix64
-    shimmable_table_tail_call SF_TABLE_FLOAT2FIX64 float2fix64_shim
+    shimmable_table_tail_call SF_TABLE_FLOAT2FIX64, float2fix64_shim
 
 // unsigned long long FUNC_NAME(__aeabi_f2ulz)(float)     float to unsigned long long C-style conversion [3]
  float_wrapper_section __aeabi_f2ulz
  wrapper_func __aeabi_f2ulz
-    shimmable_table_tail_call SF_TABLE_FLOAT2UINT64 float2uint64_shim
+    shimmable_table_tail_call SF_TABLE_FLOAT2UINT64, float2uint64_shim
 
  float_section float2ufix64
  regular_func float2ufix64
-    shimmable_table_tail_call SF_TABLE_FLOAT2UFIX64 float2ufix64_shim
+    shimmable_table_tail_call SF_TABLE_FLOAT2UFIX64, float2ufix64_shim
 
  float_wrapper_section __aeabi_f2d
 1:
@@ -609,7 +609,7 @@ __aeabi_f2lz_2:
     adds r2, r3
     bhi 1b
 #endif
-    shimmable_table_tail_call SF_TABLE_FLOAT2DOUBLE float2double_shim
+    shimmable_table_tail_call SF_TABLE_FLOAT2DOUBLE, float2double_shim
 
  float_wrapper_section sqrtf
  wrapper_func_f1 sqrtf
@@ -789,7 +789,7 @@ ftan_out_of_range:
 
  float_wrapper_section atan2f
  wrapper_func_f2 atan2f
-    shimmable_table_tail_call SF_TABLE_FATAN2 fatan2_shim
+    shimmable_table_tail_call SF_TABLE_FATAN2, fatan2_shim
 
  float_wrapper_section expf
  wrapper_func_f1 expf
