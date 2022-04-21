@@ -195,10 +195,10 @@ _macro_3args(double_wrapper_section, func, ram_name, flash_name)
     mov r0, r12
 2:
 #endif
-   shimmable_table_tail_call SF_TABLE_FSUB dsub_shim
+   shimmable_table_tail_call SF_TABLE_FSUB, dsub_shim
 
  wrapper_func_d2 __aeabi_dadd
-   shimmable_table_tail_call SF_TABLE_FADD dadd_shim
+   shimmable_table_tail_call SF_TABLE_FADD, dadd_shim
 
 // double FUNC_NAME(__aeabi_ddiv)(double n, double d)     double-precision division, n / d
  wrapper_func_d2 __aeabi_ddiv
@@ -226,7 +226,7 @@ _macro_3args(double_wrapper_section, func, ram_name, flash_name)
     pop {r4, pc}
 #endif
 ddiv_shim_call:
-    shimmable_table_tail_call SF_TABLE_FDIV ddiv_shim
+    shimmable_table_tail_call SF_TABLE_FDIV, ddiv_shim
 
 #if !PICO_DIVIDER_DISABLE_INTERRUPTS
 ddiv_save_state:
@@ -295,7 +295,7 @@ ddiv_dsub_nan_helper:
     pop {pc}
 1:
 #endif
-   shimmable_table_tail_call SF_TABLE_FMUL dmul_shim
+   shimmable_table_tail_call SF_TABLE_FMUL, dmul_shim
 
 // void FUNC_NAME(__aeabi_cdrcmple)(double, double)         reversed 3-way (<, =, ?>) compare [1], result in PSR ZC flags
  double_wrapper_section __aeabi_cdcmple, `.time_critical.__wrap___aeabi_cdcmple`, `.text.__wrap___aeabi_cdcmple`
@@ -453,7 +453,7 @@ __aeabi_dfcmple_guts:
 
 // double FUNC_NAME(__aeabi_ui2d)(unsigned)             unsigned to double (double precision) conversion
  double_wrapper_section __aeabi_ui2d, `.time_critical.__wrap___aeabi_ui2d`, `.text.__wrap___aeabi_ui2d`
-    shimmable_table_tail_call SF_TABLE_UINT2FLOAT uint2double_shim
+    shimmable_table_tail_call SF_TABLE_UINT2FLOAT, uint2double_shim
 
  double_wrapper_section __aeabi_i2d, `.time_critical.__wrap___aeabi_i2d`, `.text.__wrap___aeabi_i2d`
 
@@ -534,39 +534,39 @@ __aeabi_dfcmple_guts:
 
  double_section double2int, `.time_critical.double2int`, `.text.double2int`
  regular_func double2int
-    shimmable_table_tail_call SF_TABLE_FLOAT2INT double2int_shim
+    shimmable_table_tail_call SF_TABLE_FLOAT2INT, double2int_shim
 
 // unsigned FUNC_NAME(__aeabi_d2uiz)(double)             double (double precision) to unsigned C-style conversion [3]
  double_wrapper_section __aeabi_d2uiz, `.time_critical.__wrap___aeabi_d2uiz`, `.text.__wrap___aeabi_d2uiz`
  wrapper_func __aeabi_d2uiz
  regular_func double2uint
-    shimmable_table_tail_call SF_TABLE_FLOAT2UINT double2uint_shim
+    shimmable_table_tail_call SF_TABLE_FLOAT2UINT, double2uint_shim
 
  double_section fix2double, `.time_critical.fix2double`, `.text.fix2double`
  regular_func fix2double
-    shimmable_table_tail_call SF_TABLE_FIX2FLOAT fix2double_shim
+    shimmable_table_tail_call SF_TABLE_FIX2FLOAT, fix2double_shim
 
  double_section ufix2double, `.time_critical.ufix2double`, `.text.ufix2double`
  regular_func ufix2double
-    shimmable_table_tail_call SF_TABLE_UFIX2FLOAT ufix2double_shim
+    shimmable_table_tail_call SF_TABLE_UFIX2FLOAT, ufix2double_shim
 
  double_section fix642double, `.time_critical.fix642double`, `.text.fix642double`
  regular_func fix642double
-    shimmable_table_tail_call SF_TABLE_FIX642FLOAT fix642double_shim
+    shimmable_table_tail_call SF_TABLE_FIX642FLOAT, fix642double_shim
 
  double_section ufix2double, `.time_critical.ufix2double`, `.text.ufix2double`
  regular_func ufix642double
-    shimmable_table_tail_call SF_TABLE_UFIX642FLOAT ufix642double_shim
+    shimmable_table_tail_call SF_TABLE_UFIX642FLOAT, ufix642double_shim
 
 // double FUNC_NAME(__aeabi_l2d)(long long)             long long to double (double precision) conversion
  double_wrapper_section __aeabi_l2d, `.time_critical.__wrap___aeabi_l2d`, `.text.__wrap___aeabi_l2d`
  wrapper_func __aeabi_l2d
-    shimmable_table_tail_call SF_TABLE_INT642FLOAT int642double_shim
+    shimmable_table_tail_call SF_TABLE_INT642FLOAT, int642double_shim
 
 // double FUNC_NAME(__aeabi_l2f)(long long)             long long to double (double precision) conversion
  double_wrapper_section __aeabi_ul2d, `.time_critical.__wrap___aeabi_ul2d`, `.text.__wrap___aeabi_ul2d`
  wrapper_func __aeabi_ul2d
-    shimmable_table_tail_call SF_TABLE_UINT642FLOAT uint642double_shim
+    shimmable_table_tail_call SF_TABLE_UINT642FLOAT, uint642double_shim
 
 // long long FUNC_NAME(__aeabi_d2lz)(double)             double (double precision) to long long C-style conversion [3]
  double_wrapper_section __aeabi_d2lz, `.time_critical.__wrap___aeabi_d2lz`, `.text.__wrap___aeabi_d2lz`
@@ -594,28 +594,28 @@ __aeabi_dfcmple_guts:
 
  double_section double2int64, `.time_critical.double2int64`, `.text.double2int64`
  regular_func double2int64
-    shimmable_table_tail_call SF_TABLE_FLOAT2INT64 double2int64_shim
+    shimmable_table_tail_call SF_TABLE_FLOAT2INT64, double2int64_shim
 
 // unsigned long long FUNC_NAME(__aeabi_d2ulz)(double)     double to unsigned long long C-style conversion [3]
  double_wrapper_section __aeabi_d2ulz, `.time_critical.__wrap___aeabi_d2ulz`, `.text.__wrap___aeabi_d2ulz`
  wrapper_func __aeabi_d2ulz
-    shimmable_table_tail_call SF_TABLE_FLOAT2UINT64 double2uint64_shim
+    shimmable_table_tail_call SF_TABLE_FLOAT2UINT64, double2uint64_shim
 
  double_section double2fix64, `.time_critical.double2fix64`, `.text.double2fix64`
  regular_func double2fix64
-    shimmable_table_tail_call SF_TABLE_FLOAT2FIX64 double2fix64_shim
+    shimmable_table_tail_call SF_TABLE_FLOAT2FIX64, double2fix64_shim
 
  double_section double2ufix64, `.time_critical.double2ufix64`, `.text.double2ufix64`
  regular_func double2ufix64
-    shimmable_table_tail_call SF_TABLE_FLOAT2UFIX64 double2ufix64_shim
+    shimmable_table_tail_call SF_TABLE_FLOAT2UFIX64, double2ufix64_shim
 
  double_section double2fix, `.time_critical.double2fix`, `.text.double2fix`
  regular_func double2fix
-    shimmable_table_tail_call SF_TABLE_FLOAT2FIX double2fix_shim
+    shimmable_table_tail_call SF_TABLE_FLOAT2FIX, double2fix_shim
 
  double_section double2ufix, `.time_critical.double2ufix`, `.text.double2ufix`
  regular_func double2ufix
-    shimmable_table_tail_call SF_TABLE_FLOAT2UFIX double2ufix_shim
+    shimmable_table_tail_call SF_TABLE_FLOAT2UFIX, double2ufix_shim
 
  double_wrapper_section __aeabi_d2f, `.time_critical.__wrap___aeabi_d2f`, `.text.__wrap___aeabi_d2f`
 1:
@@ -640,11 +640,11 @@ __aeabi_dfcmple_guts:
     bhi 1b
 #endif
     // note double->float in double table at same index as float->double in double table
-    shimmable_table_tail_call SF_TABLE_FLOAT2DOUBLE double2float_shim
+    shimmable_table_tail_call SF_TABLE_FLOAT2DOUBLE, double2float_shim
 
  double_wrapper_section srqt, `.time_critical.__wrap_srqt`, `.text.__wrap_srqt`
  wrapper_func_d1 sqrt
-    shimmable_table_tail_call SF_TABLE_FSQRT dsqrt_shim
+    shimmable_table_tail_call SF_TABLE_FSQRT, dsqrt_shim
 
  double_wrapper_section sincostan_remainder, `.time_critical.__wrap_sincostan_remainder`, `.text.__wrap_sincostan_remainder`
  regular_func sincostan_remainder
@@ -666,7 +666,7 @@ __aeabi_dfcmple_guts:
     cmp r2, #9
     bge 2f
 1:
-    shimmable_table_tail_call SF_TABLE_FCOS dcos_shim
+    shimmable_table_tail_call SF_TABLE_FCOS, dcos_shim
 2:
 #if PICO_DOUBLE_PROPAGATE_NANS
     lsls r2, r1, #1
@@ -696,7 +696,7 @@ __aeabi_dfcmple_guts:
     cmp r2, #9
     bge 2f
 1:
-    shimmable_table_tail_call SF_TABLE_FSIN dsin_shim
+    shimmable_table_tail_call SF_TABLE_FSIN, dsin_shim
 2:
 #if PICO_DOUBLE_PROPAGATE_NANS
     lsls r2, r1, #1
@@ -756,7 +756,7 @@ __aeabi_dfcmple_guts:
     pop {r4, r5, pc}
 
 2:
-    shimmable_table_tail_call SF_TABLE_V3_FSINCOS sincos_shim_bootstrap
+    shimmable_table_tail_call SF_TABLE_V3_FSINCOS, sincos_shim_bootstrap
 
  local_func sincos_shim_bootstrap
     push {r2, r3, r4}
@@ -831,7 +831,7 @@ dtan_in_range:
     pop {r4, pc}
 #endif
 dtan_shim_call:
-    shimmable_table_tail_call SF_TABLE_FTAN dtan_shim
+    shimmable_table_tail_call SF_TABLE_FTAN, dtan_shim
 #if !PICO_DIVIDER_DISABLE_INTERRUPTS
 dtan_save_state:
     ldr r2, =(SIO_BASE)
@@ -862,14 +862,14 @@ dtan_angle_out_of_range:
 
  double_wrapper_section atan2, `.time_critical.__wrap_atan2`, `.text.__wrap_atan2`
  wrapper_func_d2 atan2
-    shimmable_table_tail_call SF_TABLE_FATAN2 datan2_shim
+    shimmable_table_tail_call SF_TABLE_FATAN2, datan2_shim
 
  double_wrapper_section exp, `.time_critical.__wrap_exp`, `.text.__wrap_exp`
  wrapper_func_d1 exp
-    shimmable_table_tail_call SF_TABLE_FEXP dexp_shim
+    shimmable_table_tail_call SF_TABLE_FEXP, dexp_shim
 
  double_wrapper_section log, `.time_critical.__wrap_log`, `.text.__wrap_log`
  wrapper_func_d1 log
-    shimmable_table_tail_call SF_TABLE_FLN dln_shim
+    shimmable_table_tail_call SF_TABLE_FLN, dln_shim
 
  _end
