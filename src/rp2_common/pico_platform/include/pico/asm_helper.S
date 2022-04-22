@@ -27,6 +27,7 @@
 #define _macro_5args(x,a,b,c,d,e)          .macro x a,b,c,d,e
 #define _macro_6args(x,a,b,c,d,e,f)        .macro x a,b,c,d,e,f
 #define _macro_9args(x,a,b,c,d,e,f,g,h,i)  .macro x a,b,c,d,e,f,g,h,i
+#define _org        .org
 #define rept        .rept
 #define _section(name, backquoted_name, flags, cd, align) .section name, flags
 #define _set        .set
