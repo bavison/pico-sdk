@@ -499,8 +499,13 @@ static inline uint __get_current_exception(void) {
     return exception;
 }
 
+#if PICO_C_COMPILER_IS_IAR || PICO_C_COMPILER_IS_ARMCLANG
+#define WRAPPER_FUNC(x) $Sub$$ ## x
+#define REAL_FUNC(x) $Super$$ ## x
+#else
 #define WRAPPER_FUNC(x) __wrap_ ## x
 #define REAL_FUNC(x) __real_ ## x
+#endif
 
 #ifdef __cplusplus
 }
@@ -539,7 +544,11 @@ __force_inline static uint get_core_num(void) {
 
 #else // __ASSEMBLER__
 
+#if defined(__IASMARM__) || defined(PICO_USE_ARM_LINK)
+#define WRAPPER_FUNC_NAME(x) $Sub$$##x
+#else
 #define WRAPPER_FUNC_NAME(x) __wrap_##x
+#endif
 #define SECTION_NAME(x) .text.##x
 #define RAM_SECTION_NAME(x) .time_critical.##x
 
