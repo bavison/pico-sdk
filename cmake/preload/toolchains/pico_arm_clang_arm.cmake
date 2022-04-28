@@ -41,3 +41,5 @@ option(PICO_DEOPTIMIZED_DEBUG "Build debug builds with -O0" 0)
 
 set(ARM_TOOLCHAIN_COMMON_FLAGS " --cpu=Cortex-M0plus")
 include(${CMAKE_CURRENT_LIST_DIR}/set_flags.cmake)
+
+add_compile_definitions(PICO_USE_ARM_LINK)
