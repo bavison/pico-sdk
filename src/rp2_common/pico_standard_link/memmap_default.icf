@@ -1,0 +1,152 @@
+define memory mem with size = 4G;
+
+define rom region FLASH     = mem:[from 0x10000000 size 0x200000];
+define ram region RAM       = mem:[from 0x20000000 size 0x40000];
+define ram region SCRATCH_X = mem:[from 0x20040000 size 0x1000];
+define ram region SCRATCH_Y = mem:[from 0x20041000 size 0x1000];
+
+initialize by copy { readwrite };
+initialize by copy { section .time_critical* };
+do not initialize  { section .uninitialized_data*, section .heap*, section .stack* };
+
+
+place at address 0x10000000 { readonly section .boot2 };
+place at address 0x100000fc { readonly section .checksum };
+
+define block TEXT with fixed order {
+  readonly section .vectors,
+  readonly section .binary_info_header,
+  readonly section .reset,
+  readonly section .init,
+  readonly section .text*,
+  readonly section .fini,
+  readonly section .ctors,
+  readonly section .dtors,
+  readonly section .eh_frame*,
+};
+
+define block RODATA with fixed order {
+  readonly section .rodata*,
+  readonly section .flashdata*,
+};
+
+define block EXTAB with fixed order {
+  readonly section .ARM.extab*,
+};
+
+define block EXIDX with fixed order {
+  readonly section .ARM.exidx*,
+};
+
+define block BINARY_INFO with fixed order {
+  readonly section .binary_info.keep.*,
+  readonly section .binary_info.*,
+};
+
+define block DATA_INITIALIZERS with fixed order {
+  readonly section vtable_init,
+  readonly section .time_critical*_init,
+  readonly section .data*_init,
+  readonly section .after_data.*_init,
+  readonly section .mutex_array.*_init,
+  readonly section .mutex_array_init,
+  readonly section .preinit_array.*_init,
+  readonly section .preinit_array_init,
+  readonly section .fini_array.*_init,
+  readonly section .fini_array_init,
+  readonly section .jcr_init,
+};
+
+define block INIT_ARRAYS with fixed order {
+  readonly section .init_array.*,
+  readonly section .init_array,
+};
+
+define exported symbol __StackLimit = end(RAM) + 1;
+define exported symbol __StackOneTop = end(SCRATCH_X) + 1;
+define exported symbol __StackTop = end(SCRATCH_Y) + 1;
+
+define block SCRATCH_X_INITIALIZERS with fixed order {
+  readonly section .scratch_x.*_init,
+};
+
+define block SCRATCH_Y_INITIALIZERS with fixed order {
+  readonly section .scratch_y.*_init,
+};
+
+define block FLASH with fixed order {
+  block TEXT,
+  block RODATA,
+  block EXTAB,
+  block EXIDX,
+  block BINARY_INFO,
+  block DATA_INITIALIZERS,
+  block SCRATCH_X_INITIALIZERS,
+  block SCRATCH_Y_INITIALIZERS,
+  block INIT_ARRAYS,
+  readonly section .iar.init_table,
+  readonly section .flash_end,
+};
+place at address 0x10000100 { block FLASH };
+
+
+define block RAM_VECTOR_TABLE with fixed order {
+  readwrite section .ram_vector_table,
+};
+
+define block MUTEX_ARRAYS with fixed order {
+  readwrite section .mutex_array.*,
+  readwrite section .mutex_array,
+};
+
+define block PREINIT_ARRAYS with fixed order {
+  readwrite section .preinit_array.*,
+  readwrite section .preinit_array,
+};
+
+define block DATA with fixed order {
+  readwrite section vtable,
+  readwrite section .time_critical*,
+  readwrite section .data*,
+  readwrite section .after_data.*,
+  block MUTEX_ARRAYS,
+  block PREINIT_ARRAYS,
+  readwrite section .fini_array.*,
+  readwrite section .fini_array,
+  readwrite section .jcr,
+};
+
+define block UNINITIALIZED_DATA with fixed order {
+  readwrite section .uninitialized_data*,
+};
+
+define block BSS with fixed order {
+  readwrite section .bss*,
+};
+
+define block HEAP with fixed order {
+  readwrite section .heap*,
+};
+
+define block RAM with fixed order {
+  block RAM_VECTOR_TABLE,
+  block DATA,
+  block UNINITIALIZED_DATA,
+  block BSS,
+  block HEAP,
+};
+place in RAM { block RAM };
+
+
+define block SCRATCH_X with fixed order {
+  readwrite section .scratch_x.*,
+  readwrite section .stack1*,
+};
+place in SCRATCH_X { block SCRATCH_X };
+
+
+define block SCRATCH_Y with fixed order {
+  readwrite section .scratch_y.*,
+  readwrite section .stack*,
+};
+place in SCRATCH_Y { block SCRATCH_Y };
