@@ -456,8 +456,13 @@ __INLINE_PICO_PLATFORM uint __get_current_exception(void) {
     return exception;
 }
 
+#ifdef __ICCARM__
+#define WRAPPER_FUNC(x) $Sub$$ ## x
+#define REAL_FUNC(x) $Super$$ ## x
+#else
 #define WRAPPER_FUNC(x) __wrap_ ## x
 #define REAL_FUNC(x) __real_ ## x
+#endif
 
 #ifdef __ICCARM__
 /* Compatible definitions of GCC builtins */
@@ -511,7 +516,11 @@ __force_inline static uint get_core_num(void) {
 #define __CONCAT1(a, b) a ## b
 #endif
 
+#ifdef __IASMARM__
+#define WRAPPER_FUNC_NAME(x) __CONCAT1($Sub$$,x)
+#else
 #define WRAPPER_FUNC_NAME(x) __CONCAT1(__wrap_,x)
+#endif
 #define SECTION_NAME(x) .text.##x
 #define RAM_SECTION_NAME(x) .time_critical.##x
 
