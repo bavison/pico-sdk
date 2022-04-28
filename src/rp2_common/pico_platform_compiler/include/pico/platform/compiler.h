@@ -198,8 +198,15 @@ __force_inline static void __compiler_memory_barrier(void) {
  */
 #define __check_type_compatible(type_a, type_b) static_assert(__builtin_types_compatible_p(type_a, type_b), __STRING(type_a) " is not compatible with " __STRING(type_b));
 
+#if PICO_C_COMPILER_IS_IAR || PICO_C_COMPILER_IS_ARMCLANG
+#define WRAPPER_FUNC(x) $Sub$$ ## x
+#define REAL_FUNC(x) $Super$$ ## x
+#else
 #define WRAPPER_FUNC(x) __wrap_ ## x
 #define REAL_FUNC(x) __real_ ## x
+#endif
+// A variant of REAL_FUNC that expands its argument first
+#define XREAL_FUNC(x) REAL_FUNC(x)
 
 #ifdef __cplusplus
 }
@@ -219,7 +226,11 @@ __force_inline static void __compiler_memory_barrier(void) {
 #error Unsupported toolchain
 #endif
 
+#if defined(__IASMARM__) || defined(PICO_USE_ARM_LINK)
+#define WRAPPER_FUNC_NAME(x) $Sub$$##x
+#else
 #define WRAPPER_FUNC_NAME(x) __wrap_##x
+#endif
 
 #endif // !__ASSEMBLER__
 

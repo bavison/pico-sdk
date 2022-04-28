@@ -303,38 +303,44 @@ int64_t __attribute__((pcs("aapcs"))) __aeabi_d2lz(double);
 double __attribute__((pcs("aapcs"))) __aeabi_dmul(double, double);
 double __attribute__((pcs("aapcs"))) __aeabi_ddiv(double, double);
 #if LIB_PICO_DOUBLE_PICO
-double __attribute__((pcs("aapcs"))) __real___aeabi_i2d(int);
-double __attribute__((pcs("aapcs"))) __real___aeabi_ui2d(int);
-double __attribute__((pcs("aapcs"))) __real___aeabi_l2d(int64_t);
-double __attribute__((pcs("aapcs"))) __real___aeabi_ul2d(int64_t);
-double __attribute__((pcs("aapcs"))) __real___aeabi_dmul(double, double);
-double __attribute__((pcs("aapcs"))) __real___aeabi_ddiv(double, double);
-int32_t __attribute__((pcs("aapcs"))) __real___aeabi_d2iz(double);
-int64_t __attribute__((pcs("aapcs"))) __real___aeabi_d2lz(double);
-double __real_sqrt(double);
-double __real_cos(double);
-double __real_sin(double);
-double __real_tan(double);
-double __real_exp(double);
-double __real_log(double);
-double __real_atan2(double, double);
-double __real_pow(double, double);
-double __real_trunc(double);
-double __real_ldexp(double, int);
-double __real_fmod(double, double);
-double __real_fma(double, double, double);
+double __attribute__((pcs("aapcs"))) REAL_FUNC(__aeabi_i2d)(int);
+double __attribute__((pcs("aapcs"))) REAL_FUNC(__aeabi_ui2d)(int);
+double __attribute__((pcs("aapcs"))) REAL_FUNC(__aeabi_l2d)(int64_t);
+double __attribute__((pcs("aapcs"))) REAL_FUNC(__aeabi_ul2d)(int64_t);
+double __attribute__((pcs("aapcs"))) REAL_FUNC(__aeabi_dmul)(double, double);
+double __attribute__((pcs("aapcs"))) REAL_FUNC(__aeabi_ddiv)(double, double);
+int32_t __attribute__((pcs("aapcs"))) REAL_FUNC(__aeabi_d2iz)(double);
+int64_t __attribute__((pcs("aapcs"))) REAL_FUNC(__aeabi_d2lz)(double);
+double REAL_FUNC(sqrt)(double);
+double REAL_FUNC(cos)(double);
+double REAL_FUNC(sin)(double);
+double REAL_FUNC(tan)(double);
+double REAL_FUNC(exp)(double);
+double REAL_FUNC(log)(double);
+double REAL_FUNC(atan2)(double, double);
+double REAL_FUNC(pow)(double, double);
+double REAL_FUNC(trunc)(double);
+double REAL_FUNC(ldexp)(double, int);
+double REAL_FUNC(fmod)(double, double);
+double REAL_FUNC(fma)(double, double, double);
+#if PICO_C_COMPILER_IS_IAR || PICO_C_COMPILER_IS_ARMCLANG
+#define $Super$$fma_fast $Super$$fma
+#define $Super$$ddiv_fast $Super$$__aeabi_ddiv
+#define $Super$$sqrt_fast $Super$$sqrt
+#else
 #define __real_fma_fast __real_fma
 #define __real_ddiv_fast __real___aeabi_ddiv
 #define __real_sqrt_fast __real_sqrt
+#endif
 
 #define FRAC ((double)(1ull << 50))
 #define allowed_range(a) (fabs(a) / FRAC)
 #define assert_close(a, b) test_assert((fabs((a) - (b)) <= allowed_range(a) || ({ printf("  error: %f != %f\n", a, b); 0; })) || (isinf(a) && isinf(b) && ((a) < 0) == ((b) < 0)))
-#define check1(func,p0) ({ typeof(p0) r = func(p0), r2 = __CONCAT(__real_, func)(p0); test_assert(r == r2); r; })
-#define check2(func,p0,p1) ({ typeof(p0) r = func(p0,p1), r2 = __CONCAT(__real_, func)(p0,p1); test_assert(r == r2); r; })
-#define check_close1(func,p0) ({ typeof(p0) r = func(p0), r2 = __CONCAT(__real_, func)(p0); if (isnan(p0)) assert_nan(r); else assert_close(r, r2); r; })
-#define check_close2(func,p0,p1) ({ typeof(p0) r = func(p0,p1), r2 = __CONCAT(__real_, func)(p0,p1); if (isnan(p0) || isnan(p1)) assert_nan(r); else assert_close(r, r2); r; })
-#define check_close3(func,p0,p1,p2) ({ typeof(p0) r = func(p0,p1,p2), r2 = __CONCAT(__real_, func)(p0,p1,p2); if (isnan(p0) || isnan(p1) || isnan(p2)) assert_nan(r); else assert_close(r, r2); r; })
+#define check1(func,p0) ({ typeof(p0) r = func(p0), r2 = XREAL_FUNC(func)(p0); test_assert(r == r2); r; })
+#define check2(func,p0,p1) ({ typeof(p0) r = func(p0,p1), r2 = XREAL_FUNC(func)(p0,p1); test_assert(r == r2); r; })
+#define check_close1(func,p0) ({ typeof(p0) r = func(p0), r2 = XREAL_FUNC(func)(p0); if (isnan(p0)) assert_nan(r); else assert_close(r, r2); r; })
+#define check_close2(func,p0,p1) ({ typeof(p0) r = func(p0,p1), r2 = XREAL_FUNC(func)(p0,p1); if (isnan(p0) || isnan(p1)) assert_nan(r); else assert_close(r, r2); r; })
+#define check_close3(func,p0,p1,p2) ({ typeof(p0) r = func(p0,p1,p2), r2 = XREAL_FUNC(func)(p0,p1,p2); if (isnan(p0) || isnan(p1) || isnan(p2)) assert_nan(r); else assert_close(r, r2); r; })
 #else
 #define check1(func,p0) func(p0)
 #define check2(func,p0,p1) func(p0,p1)
