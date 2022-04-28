@@ -345,9 +345,13 @@ double WRAPPER_FUNC(exp2)(double x) {
     x-=e;
     return dldexp(exp(x*LOG2),e);
 }
+#ifndef __ICCARM__
 double WRAPPER_FUNC(log2)(double x) { check_nan_d1(x); return log(x)*LOG2E;  }
+#endif
 double WRAPPER_FUNC(exp10)(double x) { check_nan_d1(x); return pow(10,x); }
+#ifndef __ICCARM__
 double WRAPPER_FUNC(log10)(double x) { check_nan_d1(x); return log(x)*LOG10E; }
+#endif
 
 // todo these are marked as lofi
 double WRAPPER_FUNC(expm1(double x) { check_nan_d1(x); return exp)(x)-1; }

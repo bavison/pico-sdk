@@ -333,9 +333,13 @@ float WRAPPER_FUNC(atanhf)(float x) {
 }
 
 float WRAPPER_FUNC(exp2f)(float x) { check_nan_f1(x); return (float)exp((double)x*LOG2); }
+#ifndef __ICCARM__
 float WRAPPER_FUNC(log2f)(float x) { check_nan_f1(x); return logf(x)*LOG2Ef;  }
+#endif
 float WRAPPER_FUNC(exp10f)(float x) { check_nan_f1(x); return (float)exp((double)x*LOG10); }
+#ifndef __ICCARM__
 float WRAPPER_FUNC(log10f)(float x) { check_nan_f1(x); return logf(x)*LOG10Ef; }
+#endif
 
 float WRAPPER_FUNC(expm1f)(float x) { check_nan_f1(x); return (float)(exp((double)x)-1); }
 float WRAPPER_FUNC(log1pf)(float x) { check_nan_f1(x); return (float)(log(1+(double)x)); }
