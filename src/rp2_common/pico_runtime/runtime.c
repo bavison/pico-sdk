@@ -93,13 +93,21 @@ void runtime_init(void) {
 
     // Start and end points of the constructor list,
     // defined by the linker script.
+#ifdef __ICCARM__
+#pragma section = "PREINIT_ARRAYS"
+    void (**p__preinit_array_start)(void) = (void (**)(void)) __section_begin("PREINIT_ARRAYS");
+    void (**p__preinit_array_end)(void) = (void (**)(void)) __section_end("PREINIT_ARRAYS");
+#else
     extern void (*__preinit_array_start)(void);
     extern void (*__preinit_array_end)(void);
+    void (**p__preinit_array_start)(void) = &__preinit_array_start;
+    void (**p__preinit_array_end)(void) = &__preinit_array_end;
+#endif
 
     // Call each function in the list.
     // We have to take the address of the symbols, as __preinit_array_start *is*
     // the first function pointer, not the address of it.
-    for (void (**p)(void) = &__preinit_array_start; p < &__preinit_array_end; ++p) {
+    for (void (**p)(void) = p__preinit_array_start; p < p__preinit_array_end; ++p) {
         (*p)();
     }
 
@@ -125,10 +133,18 @@ void runtime_init(void) {
     static_assert(!(sizeof(recursive_mutex_t)&3), "");
     static_assert(!offsetof(mutex_t, core), "");
     static_assert(!offsetof(recursive_mutex_t, core), "");
+#ifdef __ICCARM__
+#pragma section = "MUTEX_ARRAYS"
+    lock_core_t *p__mutex_array_start = __section_begin("MUTEX_ARRAYS");
+    lock_core_t *p__mutex_array_end = __section_end("MUTEX_ARRAYS");
+#else
     extern lock_core_t __mutex_array_start;
     extern lock_core_t __mutex_array_end;
+    lock_core_t *p__mutex_array_start = &__mutex_array_start;
+    lock_core_t *p__mutex_array_end = &__mutex_array_end;
+#endif
 
-    for (lock_core_t *l = &__mutex_array_start; l < &__mutex_array_end; ) {
+    for (lock_core_t *l = p__mutex_array_start; l < p__mutex_array_end; ) {
         if (l->spin_lock) {
             assert(1 == (uintptr_t)l->spin_lock); // indicator for a recursive mutex
             recursive_mutex_t *rm = (recursive_mutex_t *)l;
@@ -168,8 +184,14 @@ void runtime_init(void) {
 
     // Start and end points of the constructor list,
     // defined by the linker script.
+#ifdef __ICCARM__
+#pragma section = "INIT_ARRAYS"
+    void (*__init_array_start)(void) = (void (*)(void)) __section_begin("INIT_ARRAYS");
+    void (*__init_array_end)(void)   = (void (*)(void)) __section_end("INIT_ARRAYS");
+#else
     extern void (*__init_array_start)(void);
     extern void (*__init_array_end)(void);
+#endif
 
     // Call each function in the list.
     // We have to take the address of the symbols, as __init_array_start *is*
@@ -191,12 +213,18 @@ void __attribute__((noreturn)) _exit(__unused int status) {
 }
 
 void *_sbrk(int incr) {
+#ifdef __ICCARM__
+#pragma section = ".heap"
+    char *heap_start = __section_begin(".heap");
+#else
     extern char end; /* Set by linker.  */
+    char *heap_start = &end;
+#endif
     static char *heap_end;
     char *prev_heap_end;
 
     if (heap_end == 0)
-        heap_end = &end;
+        heap_end = heap_start;
 
     prev_heap_end = heap_end;
     char *next_heap_end = heap_end + incr;

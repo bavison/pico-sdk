@@ -10,23 +10,69 @@
 #include "hardware/regs/sio.h"
 #include "pico/binary_info/defs.h"
 
- _extern __binary_info_end
+#ifdef __IASMARM__
+
+ _extern `BINARY_INFO$$Base`
+ _set __binary_info_start, `BINARY_INFO$$Base`
+ _extern `BINARY_INFO$$Limit`
+ _set __binary_info_end, `BINARY_INFO$$Limit`
+
+ _extern `BSS$$Base`
+ _set __bss_start__, `BSS$$Base`
+ _extern `BSS$$Limit`
+ _set __bss_end__, `BSS$$Limit`
+
+ _extern `DATA_INITIALIZERS$$Base`
+ _set __etext, `DATA_INITIALIZERS$$Base`
+ _extern `DATA$$Base`
+ _set __data_start__, `DATA$$Base`
+ _extern `DATA$$Limit`
+ _set __data_end__, `DATA$$Limit`
+
+ _extern `SCRATCH_X_INITIALIZERS$$Base`
+ _set __scratch_x_source__, `SCRATCH_X_INITIALIZERS$$Base`
+ _extern `SCRATCH_X$$Base`
+ _set __scratch_x_start__, `SCRATCH_X$$Base`
+ _extern `SCRATCH_X$$Limit`
+ _set __scratch_x_end__, `SCRATCH_X$$Limit`
+
+ _extern `SCRATCH_Y_INITIALIZERS$$Base`
+ _set __scratch_y_source__, `SCRATCH_Y_INITIALIZERS$$Base`
+ _extern `SCRATCH_Y$$Base`
+ _set __scratch_y_start__, `SCRATCH_Y$$Base`
+ _extern `SCRATCH_Y$$Limit`
+ _set __scratch_y_end__, `SCRATCH_Y$$Limit`
+
+ _extern `SCRATCH_Y$$Limit`
+ _set __StackTop, `SCRATCH_Y$$Limit`
+
+ #else
+
  _extern __binary_info_start
- _extern __bss_end__
+ _extern __binary_info_end
+
  _extern __bss_start__
- _extern __data_end__
- _extern __data_start__
+ _extern __bss_end__
+
  _extern __etext
+ _extern __data_start__
+ _extern __data_end__
+
+ _extern __scratch_x_source__
+ _extern __scratch_x_start__
+ _extern __scratch_x_end__
+
+ _extern __scratch_y_source__
+ _extern __scratch_y_start__
+ _extern __scratch_y_end__
+
+ _extern __StackTop
+
+#endif
+
  _extern exit
  _extern main
  _extern rom_func_lookup
- _extern __scratch_x_end__
- _extern __scratch_x_source__
- _extern __scratch_x_start__
- _extern __scratch_y_end__
- _extern __scratch_y_source__
- _extern __scratch_y_start__
- _extern __StackTop
 
 #ifdef NDEBUG
 #ifndef COLLAPSE_IRQS
