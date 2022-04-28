@@ -37,3 +37,5 @@ set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
 
 set(ARM_TOOLCHAIN_COMMON_FLAGS " --cpu=Cortex-M0plus")
 include(${CMAKE_CURRENT_LIST_DIR}/util/set_flags.cmake)
+
+add_compile_definitions(PICO_USE_ARM_LINK)
