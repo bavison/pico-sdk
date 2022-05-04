@@ -526,6 +526,15 @@ _call_xip_setup:
     add sp, #256
 #endif
 
+#ifdef __IASMARM__
+
+    // The IAR linker can compress static initialisers, which reduces image
+    // size, but requires that we use the IAR runtime to initialise statics
+ extern __iar_data_init3
+    bl __iar_data_init3
+
+#else
+
     // In a NO_FLASH binary, don't perform .data etc copy, since it's loaded
     // in-place by the SRAM load. Still need to clear .bss
 #if !PICO_NO_FLASH
@@ -552,6 +561,8 @@ bss_fill_test:
     cmp r1, r2
     bne bss_fill_loop
 
+#endif
+
 platform_entry: // symbol for stack traces
 #if PICO_CRT0_NEAR_CALLS && !PICO_COPY_TO_RAM
     bl runtime_init
@@ -573,7 +584,7 @@ platform_entry: // symbol for stack traces
     b 1b
 
 
-#if !PICO_NO_FLASH
+#if !defined(__IASMARM__) && !PICO_NO_FLASH
 data_cpy_loop:
     ldm r1!, {r0}
     stm r2!, {r0}
