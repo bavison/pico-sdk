@@ -229,6 +229,15 @@ binary_info_header:
     cmp r0, #0
     bne hold_non_core0_in_bootrom
 
+#ifdef __IASMARM__
+
+    // The IAR linker can compress static initialisers, which reduces image
+    // size, but requires that we use the IAR runtime to initialise statics
+ extern __iar_data_init3
+    bl __iar_data_init3
+
+#else
+
     // In a NO_FLASH binary, don't perform .data copy, since it's loaded
     // in-place by the SRAM load. Still need to clear .bss
 #if !PICO_NO_FLASH
@@ -255,6 +264,8 @@ bss_fill_test:
     cmp r1, r2
     bne bss_fill_loop
 
+#endif
+
 platform_entry: // symbol for stack traces
     // Use 32-bit jumps, in case these symbols are moved out of branch range
     // (e.g. if main is in SRAM and crt0 in flash)
@@ -270,7 +281,7 @@ infinite: // separate label because _exit can be moved out of branch range
     bkpt #0
     b infinite
 
-#if !PICO_NO_FLASH
+#if !defined(__IASMARM__) && !PICO_NO_FLASH
 data_cpy_loop:
     ldm r1!, {r0}
     stm r2!, {r0}
