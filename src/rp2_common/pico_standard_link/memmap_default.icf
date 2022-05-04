@@ -113,8 +113,6 @@ define block DATA with fixed order {
   readwrite section .fini_array.*,
   readwrite section .fini_array,
   readwrite section .jcr,
-  readwrite section .binary_info.keep.*,
-  readwrite section .binary_info.*,
 };
 
 define block UNINITIALIZED_DATA with fixed order {
