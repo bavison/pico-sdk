@@ -139,11 +139,13 @@ place in RAM { block RAM };
 
 define block SCRATCH_X with fixed order {
   readwrite section .scratch_x.*,
+  readwrite section .stack1*,
 };
 place in SCRATCH_X { block SCRATCH_X };
 
 
 define block SCRATCH_Y with fixed order {
   readwrite section .scratch_y.*,
+  readwrite section .stack*,
 };
 place in SCRATCH_Y { block SCRATCH_Y };

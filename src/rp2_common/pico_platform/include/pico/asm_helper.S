@@ -33,6 +33,7 @@
 #define _org        .org
 #define rept        .rept
 #define _section(name, backquoted_name, flags, cd, align) .section name, flags
+#define _root_section(name, backquoted_name, flags, cd, align) .section name, flags
 #define _set        .set
 #define _space      .space
 #define _word       .word
@@ -126,6 +127,7 @@ x                               set             y
                                 endm
 
 #define _section(name, backquoted_name, flags, cd, align) section backquoted_name:cd:NOROOT(align)
+#define _root_section(name, backquoted_name, flags, cd, align) section backquoted_name:cd:ROOT(align)
 #define _space                  ds
 #define _word                   dc32
 
