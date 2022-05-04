@@ -5,7 +5,8 @@ define ram region RAM       = mem:[from 0x20000000 size 0x40000];
 define ram region SCRATCH_X = mem:[from 0x20040000 size 0x1000];
 define ram region SCRATCH_Y = mem:[from 0x20041000 size 0x1000];
 
-do not initialize { readwrite data };
+initialize by copy { readwrite };
+initialize by copy { section .time_critical* };
 
 
 define block BOOT2 with fixed order {
@@ -44,7 +45,7 @@ define block BINARY_INFO with fixed order {
 
 define block DATA_INITIALIZERS with fixed order {
   readonly section vtable_init,
-  readonly section .time_critical*,
+  readonly section .time_critical*_init,
   readonly section .data*_init,
   readonly section .after_data.*_init,
   readonly section .mutex_array.*_init,
@@ -76,6 +77,7 @@ define block FLASH with fixed order {
   block DATA_INITIALIZERS,
   block SCRATCH_X_INITIALIZERS,
   block SCRATCH_Y_INITIALIZERS,
+  readonly section .iar.init_table,
   readonly section .flash_end,
 };
 place in FLASH { block FLASH };
