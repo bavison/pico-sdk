@@ -7,6 +7,7 @@ define ram region SCRATCH_Y = mem:[from 0x20041000 size 0x1000];
 
 initialize by copy { readwrite };
 initialize by copy { section .time_critical* };
+do not initialize  { section .uninitialized_data*, section .heap*, section .stack* };
 
 
 define block BOOT2 with fixed order {
