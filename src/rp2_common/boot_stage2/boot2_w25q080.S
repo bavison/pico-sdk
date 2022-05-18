@@ -274,5 +274,3 @@ configure_ssi:
  _global literals
 literals:
  _ltorg
-
- _end
