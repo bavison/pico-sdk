@@ -161,7 +161,13 @@ void runtime_init(void) {
 #ifndef __GNUC__
 #define __builtin_memcpy memcpy
 #endif
+#ifdef __ICCARM__
+    /* Ensure we copy from the flash vector table, as vtor may already be pointing at RAM if launched from debugger */
+    #pragma section = ".vectors"
+    __builtin_memcpy(ram_vector_table, __section_begin(".vectors"), sizeof(ram_vector_table));
+#else
     __builtin_memcpy(ram_vector_table, (uint32_t *) scb_hw->vtor, sizeof(ram_vector_table));
+#endif
     scb_hw->vtor = (uintptr_t) ram_vector_table;
 #endif
 
