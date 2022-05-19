@@ -85,6 +85,14 @@
 
 .section .text
 
+#ifdef __IASMARM__
+ // Ensure there's a reference to __checksum to keep IAR ELF Tool happy
+ extern  __checksum
+ require __checksum
+ // Place in .boot section, and don't optimise out of binary
+ section `.boot2`:CODE:ROOT(2)
+#endif
+
 .global _stage2_boot
 .type _stage2_boot,%function
 .thumb_func
