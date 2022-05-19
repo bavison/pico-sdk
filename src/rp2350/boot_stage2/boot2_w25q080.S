@@ -143,6 +143,14 @@
 pico_default_asm_setup
 .section .text
 
+#ifdef __IASMARM__
+ // Ensure there's a reference to __checksum to keep IAR ELF Tool happy
+ extern  __checksum
+ require __checksum
+ // Place in .boot2 section, and don't optimise out of binary
+ section `.boot2`:CODE:ROOT(2)
+#endif
+
 // ----------------------------------------------------------------------------
 // RISC-V implementation
 
