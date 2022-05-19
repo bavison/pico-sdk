@@ -86,6 +86,14 @@
 // Start of 2nd Stage Boot Code
 // ----------------------------------------------------------------------------
 
+#ifdef __IASMARM__
+ // Ensure there's a reference to __checksum to keep IAR ELF Tool happy
+ extern  __checksum
+ require __checksum
+ // Place in .boot section, and don't optimise out of binary
+ section `.boot2`:CODE:ROOT(2)
+#endif
+
 // The exit point is passed in lr. If entered from bootrom, this will be the
 // flash address immediately following this second stage (0x10000100).
 // Otherwise it will be a return address -- second stage being called as a
