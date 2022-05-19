@@ -10,9 +10,8 @@ initialize by copy { section .time_critical* };
 do not initialize  { section .uninitialized_data*, section .heap*, section .stack* };
 
 
-define block BOOT2 with fixed order {
-  readonly section .boot2,
-};
+place at address 0x10000000 { readonly section .boot2 };
+place at address 0x100000fc { readonly section .checksum };
 
 define block TEXT with fixed order {
   readonly section .vectors,
@@ -69,7 +68,6 @@ define block SCRATCH_Y_INITIALIZERS with fixed order {
 };
 
 define block FLASH with fixed order {
-  block BOOT2,
   block TEXT,
   block RODATA,
   block EXTAB,
@@ -81,7 +79,7 @@ define block FLASH with fixed order {
   readonly section .iar.init_table,
   readonly section .flash_end,
 };
-place in FLASH { block FLASH };
+place at address 0x10000100 { block FLASH };
 
 
 define block RAM_VECTOR_TABLE with fixed order {
