@@ -80,6 +80,14 @@
 // Start of 2nd Stage Boot Code
 // ----------------------------------------------------------------------------
 
+#ifdef __IASMARM__
+ // Ensure there's a reference to __checksum to keep IAR ELF Tool happy
+ extern  __checksum
+ require __checksum
+ // Place in .boot section, and don't optimise out of binary
+ section `.boot2`:CODE:ROOT(2)
+#endif
+
  regular_func _stage2_boot
     push {lr}
 
