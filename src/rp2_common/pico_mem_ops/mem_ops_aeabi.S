@@ -28,7 +28,7 @@ _macro_3args(mem_section, name, ram_name, flash_name)
 // NOTE: All code sections are placed in RAM (at the expense of some veneer cost for calls from flash) because
 //       otherwise code using basic c division operators will require XIP flash access.
 
- _section(.data.aeabi_mem_funcs, `.data.aeabi_mem_funcs`, "a", CONST, 2)
+ _section(.data.aeabi_mem_funcs, `.data.aeabi_mem_funcs`, "aw", DATA, 2)
  _global aeabi_mem_funcs, aeabi_mem_funcs_end
 
  _align 2

@@ -19,7 +19,7 @@ _macro_3args(bits_section, name, ram_name, flash_name)
 #endif
  _endm(endm)
 
- _section(.data.aeabi_bits_funcs, `.data.aeabi_bits_funcs`, "a", CONST, 4)
+ _section(.data.aeabi_bits_funcs, `.data.aeabi_bits_funcs`, "aw", DATA, 4)
  _global aeabi_bits_funcs, aeabi_bits_funcs_end
  _equ BITS_FUNC_COUNT, 4
  _align 4
