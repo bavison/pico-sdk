@@ -59,6 +59,8 @@ define block DATA_INITIALIZERS with fixed order {
   readonly section .jcr_init,
 };
 
+define exported symbol __StackLimit = end(RAM) + 1;
+
 define block SCRATCH_X_INITIALIZERS with fixed order {
   readonly section .scratch_x.*_init,
 };
