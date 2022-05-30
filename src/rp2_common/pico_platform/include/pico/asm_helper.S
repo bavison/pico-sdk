@@ -32,8 +32,8 @@
 #define _macro_9args(x,a,b,c,d,e,f,g,h,i)  .macro x a,b,c,d,e,f,g,h,i
 #define _org        .org
 #define rept        .rept
-#define _section(name, backquoted_name, flags, cd, align) .section name, flags
-#define _root_section(name, backquoted_name, flags, cd, align) .section name, flags
+#define _section(name, flags, cd, align)   .section name, flags
+#define _root_section(name, flags, cd, align) .section name, flags
 #define _set        .set
 #define _space      .space
 #define _word       .word
@@ -133,8 +133,8 @@ _set                            macro           x, y
 x                               set             y
                                 endm
 
-#define _section(name, backquoted_name, flags, cd, align) section backquoted_name:cd:NOROOT(align)
-#define _root_section(name, backquoted_name, flags, cd, align) section backquoted_name:cd:ROOT(align)
+#define _section(name, flags, cd, align)        section BACKTICK_QUOTED(name):cd:NOROOT(align)
+#define _root_section(name, flags, cd, align)   section BACKTICK_QUOTED(name):cd:ROOT(align)
 #define _space                  ds
 #define _word                   dc32
 
