@@ -8,15 +8,16 @@
 #include <stdio.h>
 #include "pico.h"
 #include "pico/malloc.h"
+#include "pico/platform.h"
 
 #if PICO_USE_MALLOC_MUTEX
 #include "pico/mutex.h"
 auto_init_mutex(malloc_mutex);
 #endif
 
-extern void *__real_malloc(size_t size);
-extern void *__real_calloc(size_t count, size_t size);
-extern void __real_free(void *mem);
+extern void *REAL_FUNC(malloc)(size_t size);
+extern void *REAL_FUNC(calloc)(size_t count, size_t size);
+extern void REAL_FUNC(free)(void *mem);
 
 extern char __StackLimit; /* Set by linker.  */
 
@@ -28,11 +29,11 @@ static inline void check_alloc(__unused void *mem, __unused uint size) {
 #endif
 }
 
-void *__wrap_malloc(size_t size) {
+void *WRAPPER_FUNC(malloc)(size_t size) {
 #if PICO_USE_MALLOC_MUTEX
     mutex_enter_blocking(&malloc_mutex);
 #endif
-    void *rc = __real_malloc(size);
+    void *rc = REAL_FUNC(malloc)(size);
 #if PICO_USE_MALLOC_MUTEX
     mutex_exit(&malloc_mutex);
 #endif
@@ -45,11 +46,11 @@ void *__wrap_malloc(size_t size) {
     return rc;
 }
 
-void *__wrap_calloc(size_t count, size_t size) {
+void *WRAPPER_FUNC(calloc)(size_t count, size_t size) {
 #if PICO_USE_MALLOC_MUTEX
     mutex_enter_blocking(&malloc_mutex);
 #endif
-    void *rc = __real_calloc(count, size);
+    void *rc = REAL_FUNC(calloc)(count, size);
 #if PICO_USE_MALLOC_MUTEX
     mutex_exit(&malloc_mutex);
 #endif
@@ -62,11 +63,11 @@ void *__wrap_calloc(size_t count, size_t size) {
     return rc;
 }
 
-void __wrap_free(void *mem) {
+void WRAPPER_FUNC(free)(void *mem) {
 #if PICO_USE_MALLOC_MUTEX
     mutex_enter_blocking(&malloc_mutex);
 #endif
-    __real_free(mem);
+    REAL_FUNC(free)(mem);
 #if PICO_USE_MALLOC_MUTEX
     mutex_exit(&malloc_mutex);
 #endif
