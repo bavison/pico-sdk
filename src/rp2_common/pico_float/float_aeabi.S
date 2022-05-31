@@ -50,7 +50,7 @@ _macro_1arg(_float_wrapper_func, x)
  _endm(endm)
 
 _macro_1arg(wrapper_func_f1, x)
-   _float_wrapper_func MA(x)
+   _float_wrapper_func MA2(x)
 #if PICO_FLOAT_PROPAGATE_NANS
     mov r12, lr
     bl __check_nan_f1
@@ -59,7 +59,7 @@ _macro_1arg(wrapper_func_f1, x)
  _endm(endm)
 
 _macro_1arg(wrapper_func_f2, x)
-   _float_wrapper_func MA(x)
+   _float_wrapper_func MA2(x)
 #if PICO_FLOAT_PROPAGATE_NANS
     mov r12, lr
     bl __check_nan_f2

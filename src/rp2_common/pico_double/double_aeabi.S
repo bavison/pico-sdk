@@ -59,7 +59,7 @@ _macro_1arg(_double_wrapper_func, x)
  _endm(endm)
 
 _macro_1arg(wrapper_func_d1, x)
-   _double_wrapper_func MA(x)
+   _double_wrapper_func MA2(x)
 #if PICO_DOUBLE_PROPAGATE_NANS
     mov r12, lr
     bl __check_nan_d1
@@ -68,7 +68,7 @@ _macro_1arg(wrapper_func_d1, x)
  _endm(endm)
 
 _macro_1arg(wrapper_func_d2, x)
-    _double_wrapper_func MA(x)
+    _double_wrapper_func MA2(x)
 #if PICO_DOUBLE_PROPAGATE_NANS
     mov r12, lr
     bl __check_nan_d2

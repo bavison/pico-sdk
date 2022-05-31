@@ -39,7 +39,8 @@
 #define _word       .word
 
 // Expand a macro argument
-#define MA(x) \##x
+#define MA(x)  \##x
+#define MA2(x) \##x
 
 .altmacro
 .syntax unified
@@ -94,6 +95,12 @@
 #define __ASSEMBLER__
 #include "pico.h"
 
+// Note the blank line after this is important!
+#define BACKTICK `
+
+#define QUOTED(string,quote) quote ## string ## quote
+#define BACKTICK_QUOTED(string) QUOTED(string,BACKTICK)
+
                                 section         `.text`:CODE:NOROOT(2)
                                 aapcs           base, interwork
                                 preserve8
@@ -132,7 +139,10 @@ x                               set             y
 #define _word                   dc32
 
 // Expand a macro argument
-#define MA(x) x
+// Two identical deinitions of the preprocessor macros are required to work
+// around a bug in the IAR assembler where we use nested assembly macros
+#define MA(x)  x
+#define MA2(x) x
 
 // do not put align in here as it is used mid function sometimes
 regular_func                    macro           x
@@ -148,7 +158,7 @@ regular_func_with_section       macro           x
 
 // do not put align in here as it is used mid function sometimes
 wrapper_func                    macro           x
-                                regular_func    WRAPPER_FUNC_NAME(\1)
+                                regular_func    BACKTICK_QUOTED(WRAPPER_FUNC_NAME(\1))
                                 endm
 
 __pre_init                      macro           func, priority_string

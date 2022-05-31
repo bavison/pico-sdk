@@ -427,8 +427,8 @@ __force_inline static int32_t __mul_instruction(int32_t a, int32_t b) {
 uint __get_current_exception(void);
 
 #ifdef __ICCARM__
-#define WRAPPER_FUNC(x) x
-// Let REAL_FUNC reoprt an error, since we're not using the toolchain's runtime libraries
+#define WRAPPER_FUNC(x) $Sub$$ ## x
+#define REAL_FUNC(x) $Super$$ ## x
 #else
 #define WRAPPER_FUNC(x) __wrap_ ## x
 #define REAL_FUNC(x) __real_ ## x
@@ -444,8 +444,8 @@ uint __get_current_exception(void);
 #define __CONCAT1(a, b) a ## b
 #endif
 
-#ifdef _IASMARM__
-#define WRAPPER_FUNC_NAME(x) x
+#ifdef __IASMARM__
+#define WRAPPER_FUNC_NAME(x) __CONCAT1($Sub$$,x)
 #else
 #define WRAPPER_FUNC_NAME(x) __CONCAT1(__wrap_,x)
 #endif
