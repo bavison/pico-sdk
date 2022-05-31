@@ -4,6 +4,8 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
+#ifndef PICO_MALLOC_INCLUDED_ONCE
+
 #include <stdlib.h>
 #include "pico.h"
 #include "pico/malloc.h"
@@ -17,10 +19,13 @@ auto_init_mutex(malloc_mutex);
 #include <stdio.h>
 #endif
 
-extern void *REAL_FUNC(malloc)(size_t size);
-extern void *REAL_FUNC(calloc)(size_t count, size_t size);
-extern void *REAL_FUNC(realloc)(void *mem, size_t size);
-extern void REAL_FUNC(free)(void *mem);
+/* We need function-wrapping macros that will expand their arguments before concatenating */
+#define REAL_FUNC_EXP(x)    REAL_FUNC(x)
+#define WRAPPER_FUNC_EXP(x) WRAPPER_FUNC(x)
+
+/* Define macros to add both function-wrapping and heap-type prefixes */
+#define REAL_HEAP_FUNC(x) REAL_FUNC_EXP(__CONCAT(PREFIX, x))
+#define WRAPPER_HEAP_FUNC(x) WRAPPER_FUNC_EXP(__CONCAT(PREFIX, x))
 
 extern char __StackLimit; /* Set by linker.  */
 
@@ -65,9 +70,17 @@ static inline void check_alloc(__unused void *mem, __unused uint size) {
 #endif
 }
 
-void *WRAPPER_FUNC(malloc)(size_t size) {
+#define PICO_MALLOC_INCLUDED_ONCE
+#endif // defined(PICO_MALLOC_INCLUDED_ONCE)
+
+extern void *REAL_HEAP_FUNC(malloc)(size_t size);
+extern void *REAL_HEAP_FUNC(calloc)(size_t count, size_t size);
+extern void *REAL_HEAP_FUNC(realloc)(void *mem, size_t size);
+extern void REAL_HEAP_FUNC(free)(void *mem);
+
+void *WRAPPER_HEAP_FUNC(malloc)(size_t size) {
     MALLOC_ENTER(false)
-    void *rc = REAL_FUNC(malloc)(size);
+    void *rc = REAL_HEAP_FUNC(malloc)(size);
     MALLOC_EXIT(false)
 #if PICO_DEBUG_MALLOC
     if (!rc) {
@@ -80,9 +93,9 @@ void *WRAPPER_FUNC(malloc)(size_t size) {
     return rc;
 }
 
-void *WRAPPER_FUNC(calloc)(size_t count, size_t size) {
+void *WRAPPER_HEAP_FUNC(calloc)(size_t count, size_t size) {
     MALLOC_ENTER(true)
-    void *rc = REAL_FUNC(calloc)(count, size);
+    void *rc = REAL_HEAP_FUNC(calloc)(count, size);
     MALLOC_EXIT(true)
 #if PICO_DEBUG_MALLOC
     if (!rc) {
@@ -95,9 +108,9 @@ void *WRAPPER_FUNC(calloc)(size_t count, size_t size) {
     return rc;
 }
 
-void *WRAPPER_FUNC(realloc)(void *mem, size_t size) {
+void *WRAPPER_HEAP_FUNC(realloc)(void *mem, size_t size) {
     MALLOC_ENTER(true)
-    void *rc = REAL_FUNC(realloc)(mem, size);
+    void *rc = REAL_HEAP_FUNC(realloc)(mem, size);
     MALLOC_EXIT(true)
 #if PICO_DEBUG_MALLOC
     if (!rc) {
@@ -110,8 +123,8 @@ void *WRAPPER_FUNC(realloc)(void *mem, size_t size) {
     return rc;
 }
 
-void WRAPPER_FUNC(free)(void *mem) {
+void WRAPPER_HEAP_FUNC(free)(void *mem) {
     MALLOC_ENTER(false)
-    REAL_FUNC(free)(mem);
+    REAL_HEAP_FUNC(free)(mem);
     MALLOC_EXIT(false)
 }
