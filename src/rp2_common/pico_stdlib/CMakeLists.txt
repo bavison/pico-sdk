@@ -10,6 +10,11 @@ if (NOT TARGET pico_stdlib)
     target_sources(pico_stdlib INTERFACE
             ${CMAKE_CURRENT_LIST_DIR}/stdlib.c
     )
+if ("${CMAKE_GENERATOR}" STREQUAL "IAR Embedded Workbench for Arm")
+    target_link_libraries(pico_stdlib INTERFACE
+        boot_stage2
+    )
+endif()
     target_link_libraries(pico_stdlib INTERFACE
         pico_stdlib_headers
         pico_platform

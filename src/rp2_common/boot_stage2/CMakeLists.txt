@@ -1,3 +1,23 @@
+if ("${CMAKE_GENERATOR}" STREQUAL "IAR Embedded Workbench for Arm")
+
+# For IAR builds, the stage 2 bootloader is treated as just another target,
+# since there is no need to build an intermediate binary just in order to
+# wrap it with a CRC (nor is the IDE capable of such a procedure).
+
+if (NOT TARGET boot_stage2)
+    pico_add_impl_library(boot_stage2)
+
+    target_sources(boot_stage2 INTERFACE
+            ${CMAKE_CURRENT_LIST_DIR}/compile_time_choice.S
+            )
+endif()
+
+add_library(boot_stage2_headers INTERFACE)
+target_include_directories(boot_stage2_headers INTERFACE ${CMAKE_CURRENT_LIST_DIR}/include ${CMAKE_CURRENT_LIST_DIR}/asminclude)
+
+else()
+# Indentation below retained for avoidance of any conflicts at merge time...
+
 # PICO_CMAKE_CONFIG: PICO_DEFAULT_BOOT_STAGE2_FILE, Default boot stage 2 file to use unless overridden by pico_set_boot_stage2 on the TARGET; this setting is useful when explicitly setting the default build from a per board CMake file, group=build
 # PICO_CMAKE_CONFIG: PICO_DEFAULT_BOOT_STAGE2, Simpler alternative to specifying PICO_DEFAULT_BOOT_STAGE2_FILE where the file is src/rp2_common/boot_stage2/{PICO_DEFAULT_BOOT_STAGE2}.S, default=compile_time_choice, group=build
 
@@ -105,3 +125,5 @@ function(pico_clone_default_boot_stage2 NAME)
 endfunction()
 
 pico_promote_common_scope_vars()
+
+endif()
