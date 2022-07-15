@@ -88,7 +88,7 @@ static inline void hw_divider_wait_ready(void) {
     __asm volatile (
     "hw_divider_result_loop_%=:"
     "ldr %0, [%1, %2]\n\t"
-    "lsr %0, #1\n\t"
+    "lsrs %0, %0, #1\n\t"
     "bcc hw_divider_result_loop_%=\n\t"
     : "=&l" (tmp)
     : "l" (sio_hw), "I" (SIO_DIV_CSR_OFFSET)
