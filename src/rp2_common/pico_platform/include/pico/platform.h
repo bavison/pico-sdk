@@ -457,9 +457,11 @@ __INLINE_PICO_PLATFORM uint __get_current_exception(void) {
 }
 
 #ifdef __ICCARM__
+#define GNU_FUNC(x) x
 #define WRAPPER_FUNC(x) $Sub$$ ## x
 #define REAL_FUNC(x) $Super$$ ## x
 #else
+#define GNU_FUNC(x) __wrap_ ## x
 #define WRAPPER_FUNC(x) __wrap_ ## x
 #define REAL_FUNC(x) __real_ ## x
 #endif
