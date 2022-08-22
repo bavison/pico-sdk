@@ -740,7 +740,7 @@ sincos_2:
     mov lr, r2
     b sincos_3 // continue with sincos
 
- wrapper_func sincos
+ gnu_func sincos
     push {r2-r5, lr}
     // rom version only works for -1024 < angle < 1024
     lsls r2, r1, #2
