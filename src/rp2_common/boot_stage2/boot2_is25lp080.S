@@ -134,12 +134,12 @@ program_sregs:
     ldr r1, [r3, #SSI_DR0_OFFSET]
 
     // Poll status register for write completion
-1:
+poll_for_write_completion:
     ldr r0, =CMD_READ_STATUS
     bl read_flash_sreg
     mov r1, #1
     tst r0, r1
-    bne 1b
+    bne poll_for_write_completion
 
 skip_sreg_programming:
 
