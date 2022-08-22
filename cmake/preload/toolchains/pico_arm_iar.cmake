@@ -31,7 +31,7 @@ option(PICO_DEOPTIMIZED_DEBUG "Build debug builds without optimisations" 0)
 
 # Specify variables required to configure the EWARM IDE
 set(CMAKE_IAR_CHIP_SELECT "RaspberryPi RP2040")
-set(CMAKE_IAR_C_DIAG_SUPPRESS "Pa039")
+set(CMAKE_IAR_C_DIAG_SUPPRESS "Pa039,Pe170")
 set(CMAKE_IAR_ASM_DIAG_SUPPRESS "12")
 set(CMAKE_IAR_ILINK_KEEP_SYMBOLS "__checksum")
 # CMAKE_IAR_ILINK_ICF_FILE is set in pico_standard_link/CMakeLists.txt

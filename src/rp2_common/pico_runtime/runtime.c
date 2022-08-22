@@ -180,8 +180,13 @@ void runtime_init(void) {
 
 #if PICO_USE_STACK_GUARDS
     // install core0 stack guard
+#ifdef __ICCARM__
+    extern uint8_t __StackTop;
+    runtime_install_stack_guard(&__StackOneTop - PICO_STACK_SIZE);
+#else
     extern char __StackBottom;
     runtime_install_stack_guard(&__StackBottom);
+#endif
 #endif
 
     spin_locks_reset();

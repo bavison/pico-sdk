@@ -60,6 +60,8 @@ define block DATA_INITIALIZERS with fixed order {
 };
 
 define exported symbol __StackLimit = end(RAM) + 1;
+define exported symbol __StackOneTop = end(SCRATCH_X) + 1;
+define exported symbol __StackTop = end(SCRATCH_Y) + 1;
 
 define block SCRATCH_X_INITIALIZERS with fixed order {
   readonly section .scratch_x.*_init,
