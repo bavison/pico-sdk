@@ -334,7 +334,7 @@ float WRAPPER_FUNC(atanhf)(float x) {
 
 float WRAPPER_FUNC(exp2f)(float x) { check_nan_f1(x); return (float)exp((double)x*LOG2); }
 float WRAPPER_FUNC(log2f)(float x) { check_nan_f1(x); return logf(x)*LOG2Ef;  }
-float WRAPPER_FUNC(exp10f)(float x) { check_nan_f1(x); return (float)exp((double)x*LOG10); }
+float GNU_FUNC(exp10f)(float x) { check_nan_f1(x); return (float)exp((double)x*LOG10); }
 float WRAPPER_FUNC(log10f)(float x) { check_nan_f1(x); return logf(x)*LOG10Ef; }
 
 float WRAPPER_FUNC(expm1f)(float x) { check_nan_f1(x); return (float)(exp((double)x)-1); }
@@ -384,7 +384,7 @@ static float fpowint_0(float x,int y) {
     return fpow_1(x,y);
 }
 
-float WRAPPER_FUNC(powintf)(float x,int y) {
+float GNU_FUNC(powintf)(float x,int y) {
 #ifdef __GNUC__
     _Pragma("GCC diagnostic push")
     _Pragma("GCC diagnostic ignored \"-Wfloat-equal\"")
@@ -591,7 +591,7 @@ float WRAPPER_FUNC(remquof)(float x,float y,int*quo) {
     return fix2float(mx,0x7f-ey+23);
 }
 
-float WRAPPER_FUNC(dremf)(float x,float y) { check_nan_f2(x,y); return remquof(x,y,0); }
+float GNU_FUNC(dremf)(float x,float y) { check_nan_f2(x,y); return remquof(x,y,0); }
 
 float WRAPPER_FUNC(remainderf)(float x,float y) { check_nan_f2(x,y); return remquof(x,y,0); }
 

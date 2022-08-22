@@ -44,7 +44,7 @@
  wrapper_func floorf
  wrapper_func ceilf
  wrapper_func roundf
- wrapper_func sincosf
+ gnu_func sincosf
  wrapper_func asinf
  wrapper_func acosf
  wrapper_func atanf
@@ -56,14 +56,14 @@
  wrapper_func atanhf
  wrapper_func exp2f
  wrapper_func log2f
- wrapper_func exp10f
+ gnu_func exp10f
  wrapper_func log10f
  wrapper_func powf
- wrapper_func powintf
+ gnu_func powintf
  wrapper_func hypotf
  wrapper_func cbrtf
  wrapper_func fmodf
- wrapper_func dremf
+ gnu_func dremf
  wrapper_func remainderf
  wrapper_func remquof
  wrapper_func expm1f
