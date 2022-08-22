@@ -385,9 +385,13 @@ __aeabi_fcmpun_1:
  wrapper_func __aeabi_ui2f
         subs r1, r1
         cmp r0, #0
-        bne __aeabi_i2f_main
+        bne __aeabi_ui2f_1
         mov r0, r1
         bx lr
+
+__aeabi_ui2f_1:
+        ldr r3, =__aeabi_i2f_main
+        bx r3
 
  float_wrapper_section __aeabi_i2f
 // float FUNC_NAME(__aeabi_i2f)(int)                     integer to float (single precision) conversion
@@ -468,7 +472,7 @@ __aeabi_f2iz_2:
     bx lr
 
     cmn r0, r0
-    bcc float2int
+    bcc __aeabi_f2iz_4
     push {lr}
     lsls r0, r0, #1
     lsrs r0, r0, #1
@@ -482,6 +486,10 @@ __aeabi_f2iz_3:
     movs r0, #128
     lsls r0, r0, #24
     pop {pc}
+
+__aeabi_f2iz_4:
+    ldr r3, =float2int
+    bx r3
 
  float_section float2int
  regular_func float2int
@@ -542,7 +550,7 @@ __aeabi_ul2f_1:
  wrapper_func __aeabi_f2lz
  regular_func float2int64_z
     cmn r0, r0
-    bcc float2int64
+    bcc __aeabi_f2lz_2
     push {lr}
     lsls r0, r0, #1
     lsrs r0, r0, #1
@@ -560,6 +568,10 @@ __aeabi_f2lz_1:
     lsls r1, r1, #24
     movs r0, #0
     pop {pc}
+
+__aeabi_f2lz_2:
+    ldr r3, =float2int64
+    bx r3
 
  float_section float2int64
  regular_func float2int64
