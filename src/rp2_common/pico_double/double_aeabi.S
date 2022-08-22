@@ -82,9 +82,9 @@ _macro_1arg(wrapper_func_d2, x)
    lsls r3, r3, #21
    lsls r2, r1, #1
    adds r2, r3
-   bhi 1f
+   bhi __check_nan_d1_1
    bx lr
-1:
+__check_nan_d1_1:
    bx r12
 
  local_func __check_nan_d2
@@ -93,18 +93,18 @@ _macro_1arg(wrapper_func_d2, x)
    lsls r2, r2, #21
    lsls r0, r1, #1
    adds r0, r2
-   bhi 1f
+   bhi __check_nan_d2_2
    lsls r0, r3, #1
    adds r0, r2
-   bhi 2f
+   bhi __check_nan_d2_1
    pop {r0, r2}
    bx lr
-2:
+__check_nan_d2_1:
    pop {r0, r2}
    mov r0, r2
    mov r1, r3
    bx r12
-1:
+__check_nan_d2_2:
    pop {r0, r2}
    bx r12
 #endif
@@ -186,14 +186,14 @@ _macro_1arg(double_wrapper_section, func)
     mov r12, r0
     mov r0, r1
     eors r0, r3
-    bmi 1f // different signs
+    bmi __aeabi_dsub_1 // different signs
     mov r0, r12
     push {r0-r3, lr}
-    bl 2f
+    bl __aeabi_dsub_2
     b ddiv_dsub_nan_helper
-1:
+__aeabi_dsub_1:
     mov r0, r12
-2:
+__aeabi_dsub_2:
 #endif
    shimmable_table_tail_call SF_TABLE_FSUB, dsub_shim
 
@@ -245,10 +245,10 @@ ddiv_dsub_nan_helper:
     lsls r2, r1, #1
     asrs r2, r2, #21
     adds r2, #1
-    beq 2f
+    beq ddiv_dsub_nan_helper_1
     add sp, #16
     pop {pc}
-2:
+ddiv_dsub_nan_helper_1:
     ldr r2, [sp, #4]
     ldr r3, [sp, #12]
     lsls r2, r2, #1
@@ -257,12 +257,12 @@ ddiv_dsub_nan_helper:
     asrs r3, r3, #24
     ands r2, r3
     adds r2, #1
-    bne 3f
+    bne ddiv_dsub_nan_helper_2
     // infinite to nan
     movs r2, #1
     lsls r2, r2, #19
     orrs r1, r2
-3:
+ddiv_dsub_nan_helper_2:
     add sp, #16
     pop {pc}
 #endif
@@ -271,29 +271,29 @@ ddiv_dsub_nan_helper:
  wrapper_func_d2 __aeabi_dmul
 #if PICO_DOUBLE_PROPAGATE_NANS
     push {r0-r3, lr}
-    bl 1f
+    bl __aeabi_dmul_3
 
     // check for multiplication of infinite by zero (or rather check for infinite result with either
     // operand 0)
     lsls r3, r1, #1
     asrs r3, r3, #21
     adds r3, #1
-    beq 2f
+    beq __aeabi_dmul_1
     add sp, #16
     pop {pc}
-2:
+__aeabi_dmul_1:
     ldr r2, [sp, #4]
     ldr r3, [sp, #12]
     ands r2, r3
-    bne 3f
+    bne __aeabi_dmul_2
     // infinite to nan
     movs r2, #1
     lsls r2, r2, #19
     orrs r1, r2
-3:
+__aeabi_dmul_2:
     add sp, #16
     pop {pc}
-1:
+__aeabi_dmul_3:
 #endif
    shimmable_table_tail_call SF_TABLE_FMUL, dmul_shim
 
