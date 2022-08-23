@@ -104,6 +104,13 @@ define_property(TARGET
 
 # Check pioasm is installed, or build it if not installed
 function(pico_init_pioasm)
+    if (CMAKE_GENERATOR STREQUAL "IAR Embedded Workbench for Arm")
+        # Don't attempt to build it for this generator, it won't work.
+        # Rely on it already being on PATH instead.
+        set(pioasm_FOUND 1 PARENT_SCOPE)
+        return()
+    endif()
+
     # Assemble the version string from components instead of using PICO_SDK_VERSION_STRING, because the version string
     # potentially has a PRE_RELEASE_ID suffix, which will trip up the find_package call.
     set(pioasm_VERSION_REQUIRED "${PICO_SDK_VERSION_MAJOR}.${PICO_SDK_VERSION_MINOR}.${PICO_SDK_VERSION_REVISION}")
@@ -131,6 +138,13 @@ endfunction()
 
 # Check picotool is installed, or download and build it if not installed
 function(pico_init_picotool)
+    if (CMAKE_GENERATOR STREQUAL "IAR Embedded Workbench for Arm")
+        # Don't attempt to build it for this generator, it won't work.
+        # Rely on it already being on PATH instead.
+        set(picotool_FOUND 1 PARENT_SCOPE)
+        return()
+    endif()
+
     set(picotool_VERSION_REQUIRED 2.1.1)
     if (NOT TARGET picotool AND NOT DEFINED picotool_FOUND)
         # Build path of local install dir
@@ -263,6 +277,10 @@ function(pico_generate_pio_header TARGET)
                 VERBATIM)
 
         add_dependencies(${TARGET} ${HEADER_GEN_TARGET})
+
+        if ("${CMAKE_GENERATOR}" STREQUAL "IAR Embedded Workbench for Arm")
+            target_sources(${TARGET} PRIVATE ${PIO})
+        endif()
     endforeach()
 
     get_target_property(target_type ${TARGET} TYPE)
