@@ -9,7 +9,7 @@ jobs:
       - name: Clean workspace
         run: |
           echo "Cleaning up previous run"
-          rmdir /s /q "${{github.workspace}}"
+          RemoveItem -Path "${{github.workspace}}" -Force -Recurse
           mkdir "${{github.workspace}}"
 
       - name: Checkout repo
