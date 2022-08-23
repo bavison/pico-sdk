@@ -11,3 +11,6 @@ jobs:
 
       - name: Generate project files
         run: cmake "-GVisual Studio 17 2022" -S tools/pioasm -B build
+
+      - name: Build
+        run: cmake --build build --config Release
