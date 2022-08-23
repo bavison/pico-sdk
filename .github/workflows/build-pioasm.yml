@@ -10,8 +10,9 @@ jobs:
         run: |
           echo "Cleaning up previous run"
           (Get-Host).Version
-          Remove-Item -Path "${{github.workspace}}" -Force -Recurse
-          mkdir "${{github.workspace}}"
+          pwd
+          Remove-Item -Path "${{github.workspace}}\*" -Force -Recurse
+          dir
 
       - name: Checkout repo
         uses: actions/checkout@v3
