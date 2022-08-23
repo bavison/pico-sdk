@@ -1,0 +1,22 @@
+name: BuildPioasm
+on: [push]
+
+jobs:
+  build-pioasm:
+    runs-on: windows-latest
+
+    steps:
+      - name: Clean workspace
+        run: |
+          echo "Cleaning up previous run"
+          rmdir /s /q "${{github.workspace}}"
+          mkdir "${{github.workspace}}"
+
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Generate project files
+        run: |
+          mkdir build
+          cd build
+          cmake "-GVisual Studio 17 2022" ../tools/pioasm
