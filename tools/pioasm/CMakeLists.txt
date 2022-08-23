@@ -39,5 +39,6 @@ target_include_directories(pioasm PRIVATE ${CMAKE_CURRENT_LIST_DIR} ${CMAKE_CURR
 if (MSVC)
     target_compile_definitions(pioasm PRIVATE YY_NO_UNISTD_H)
     target_compile_options(pioasm PRIVATE "/std:c++latest")
+    add_link_options("/Brepro")
 endif()
 
