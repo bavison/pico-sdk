@@ -1,0 +1,31 @@
+name: BuildPioasm
+on: [push]
+
+jobs:
+  build-pioasm:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Generate project files
+        run: cmake "-GVisual Studio 17 2022" -S tools/pioasm -B build
+
+      - name: Build
+        run: |
+          cmake --build build --config Release
+          curl -OLs https://github.com/jasonwhite/ducible/releases/download/v1.2.2/ducible-windows-x64-Release.zip
+          tar -xf ducible-windows-x64-Release.zip ducible.exe
+          .\ducible build\Release\pioasm.exe
+
+      - name: Install
+        run: copy build\Release\pioasm.exe tools\pioasm
+
+      - name: Create PR
+        uses: peter-evans/create-pull-request@v4.1.4
+        with:
+          add-paths: tools/pioasm/pioasm.exe
+          commit-message: Update Windows pioasm binary
+          title: Update Windows pioasm binary
+          branch: update-pioasm
