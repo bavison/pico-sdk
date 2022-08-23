@@ -6,19 +6,8 @@ jobs:
     runs-on: windows-latest
 
     steps:
-      - name: Clean workspace
-        run: |
-          echo "Cleaning up previous run"
-          #(Get-Host).Version
-          #pwd
-          #Remove-Item -Path "${{github.workspace}}\*" -Force -Recurse
-          dir
-
       - name: Checkout repo
         uses: actions/checkout@v3
 
       - name: Generate project files
-        run: |
-          mkdir build
-          cd build
-          cmake "-GVisual Studio 17 2022" ../tools/pioasm
+        run: cmake "-GVisual Studio 17 2022" -S tools/pioasm -B build
