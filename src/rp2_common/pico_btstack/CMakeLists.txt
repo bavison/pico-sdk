@@ -336,7 +336,8 @@ if (EXISTS ${PICO_BTSTACK_PATH}/${BTSTACK_TEST_PATH})
             add_custom_target(${TARGET_GATT} DEPENDS ${GATT_HEADER})
             add_custom_command(
                     OUTPUT ${GATT_HEADER}
-                    DEPENDS ${GATT_FILE}
+                    MAIN_DEPENDENCY ${GATT_FILE}
+                    DEPENDS ${PICO_SDK_PATH}/lib/btstack/tool/compile_gatt.py
                     WORKING_DIRECTORY ${GATT_PATH}
                     COMMAND ${CMAKE_COMMAND} -E make_directory ${GATT_BINARY_DIR} &&
                             ${Python3_EXECUTABLE} ${PICO_SDK_PATH}/lib/btstack/tool/compile_gatt.py ${GATT_FILE} ${GATT_HEADER} ${ARGN}
@@ -347,6 +348,9 @@ if (EXISTS ${PICO_BTSTACK_PATH}/${BTSTACK_TEST_PATH})
             target_include_directories(${TARGET_LIB} ${TARGET_TYPE}
                     ${GATT_BINARY_DIR}
                     )
+            if ("${CMAKE_GENERATOR}" STREQUAL "IAR Embedded Workbench for Arm")
+                target_sources(${TARGET_LIB} ${TARGET_TYPE} ${GATT_FILE})
+            endif()
     endfunction()
 
     function(suppress_btstack_warnings)
