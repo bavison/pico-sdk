@@ -9,6 +9,7 @@ jobs:
       - name: Clean workspace
         run: |
           echo "Cleaning up previous run"
+          (Get-Host).Version
           RemoveItem -Path "${{github.workspace}}" -Force -Recurse
           mkdir "${{github.workspace}}"
 
