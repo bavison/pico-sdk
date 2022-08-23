@@ -72,7 +72,11 @@ endfunction()
 # Perform picotool processing and add disassembly, hex, bin, map, and uf2 outputs for the target
 function(pico_add_extra_outputs TARGET)
     if ("${CMAKE_GENERATOR}" STREQUAL "IAR Embedded Workbench for Arm")
-        # For IAR, hook in here to translate the linker script to ICF format
+        # For IAR, add the project directory to the include path, just in case
+        # there are any .pio.h there that we won't find otherwise
+        target_include_directories(${TARGET} PUBLIC $<TARGET_FILE_DIR:${TARGET}>)
+
+        # For IAR, also hook in here to translate the linker script to ICF format
         # using the ldtrans tool, which must already be built and installed on
         # PATH. The result is placed where CMAKE_IAR_ILINK_ICF_FILE expects it.
         find_program(_ldtrans_executable ldtrans)
