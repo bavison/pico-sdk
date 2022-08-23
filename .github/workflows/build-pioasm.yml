@@ -14,3 +14,14 @@ jobs:
 
       - name: Build
         run: cmake --build build --config Release
+
+      - name: Install
+        run: copy build\Release\pioasm.exe tools\pioasm
+
+      - name: Create PR
+        uses: peter-evans/create-pull-request@v4.0.0
+        with:
+          add-paths: tools/pioasm/pioasm.exe
+          commit-message: Update Windows pioasm binary
+          title: Update Windows pioasm binary
+          branch: update-pioasm
