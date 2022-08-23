@@ -17,7 +17,8 @@ function(pico_set_lwip_httpd_content TARGET_LIB TARGET_TYPE)
     add_custom_target(${HTTPD_CONTENT_TARGET} DEPENDS ${HTTPD_CONTENT_BINARY_DIR}/${HTTPD_CONTENT_OUTPUT_NAME})
     add_custom_command(
         OUTPUT ${HTTPD_CONTENT_BINARY_DIR}/${HTTPD_CONTENT_OUTPUT_NAME}
-        DEPENDS ${HTTPD_CONTENT_TOOL} ${ARGN}
+        MAIN_DEPENDENCY ${HTTPD_CONTENT_TOOL}
+        DEPENDS ${ARGN}
         COMMAND ${CMAKE_COMMAND} -E make_directory ${HTTPD_CONTENT_BINARY_DIR} &&
             ${Python3_EXECUTABLE} ${HTTPD_CONTENT_TOOL} -i ${ARGN} -o ${HTTPD_CONTENT_BINARY_DIR}/${HTTPD_CONTENT_OUTPUT_NAME}
         VERBATIM)
@@ -25,4 +26,7 @@ function(pico_set_lwip_httpd_content TARGET_LIB TARGET_TYPE)
         ${HTTPD_CONTENT_BINARY_DIR}
         )
     add_dependencies(${TARGET_LIB} ${HTTPD_CONTENT_TARGET})
+    if ("${CMAKE_GENERATOR}" STREQUAL "IAR Embedded Workbench for Arm")
+        target_sources(${TARGET_LIB} ${TARGET_TYPE} ${HTTPD_CONTENT_TOOL})
+    endif()
 endfunction()
