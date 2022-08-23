@@ -25,3 +25,4 @@ jobs:
           commit-message: Update Windows pioasm binary
           title: Update Windows pioasm binary
           branch: update-pioasm
+
