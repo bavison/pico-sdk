@@ -71,6 +71,12 @@ endfunction()
 #
 # Perform picotool processing and add disassembly, hex, bin, map, and uf2 outputs for the target
 function(pico_add_extra_outputs TARGET)
+    # For IAR, add the project directory to the include path, just in case there
+    # are any .pio.h there that we won't find otherwise
+    if ("${CMAKE_GENERATOR}" STREQUAL "IAR Embedded Workbench for Arm")
+        target_include_directories(${TARGET} PUBLIC $<TARGET_FILE_DIR:${TARGET}>)
+    endif()
+
     # Disassembly will be nonsense for encrypted binaries,
     # so disassemble before picotool processing
     pico_add_dis_output(${TARGET})
