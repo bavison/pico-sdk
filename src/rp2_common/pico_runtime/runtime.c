@@ -215,7 +215,15 @@ void runtime_init(void) {
 
 }
 
+#ifdef __ICCARM__
+// The IAR runtime libraries define a _exit symbol, so use symbol patching
+// (IAR's equivalent of wrapper functions) to ensure ours is the one that
+// gets used
+void __attribute__((noreturn)) _exit(__unused int status);
+void __attribute__((noreturn)) WRAPPER_FUNC(_exit)(__unused int status) {
+#else
 void __attribute__((noreturn)) _exit(__unused int status) {
+#endif
 #if PICO_ENTER_USB_BOOT_ON_EXIT
     reset_usb_boot(0,0);
 #else
