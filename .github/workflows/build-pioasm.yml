@@ -15,8 +15,10 @@ jobs:
       - name: Build
         run: |
           cmake --build build --config Release
-          curl -OLs https://github.com/jasonwhite/ducible/releases/download/v1.2.2/ducible-windows-x64-Release.zip
-          tar -xf ducible-windows-x64-Release.zip ducible.exe
+          curl -OLv https://github.com/jasonwhite/ducible/releases/download/v1.2.2/ducible-windows-x64-Release.zip
+          dir
+          tar -xvf ducible-windows-x64-Release.zip ducible.exe
+          dir
           ducible build\Release\pioasm.exe
 
       - name: Install
