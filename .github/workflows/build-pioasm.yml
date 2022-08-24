@@ -19,7 +19,7 @@ jobs:
           dir
           tar -xvf ducible-windows-x64-Release.zip ducible.exe
           dir
-          ducible build\Release\pioasm.exe
+          .\ducible build\Release\pioasm.exe
 
       - name: Install
         run: copy build\Release\pioasm.exe tools\pioasm
