@@ -87,13 +87,13 @@
 
 // We are primarily interested in setting up Flash for DSPI XIP w/ continuous read
 
-    mov r1, #0
+    movs r1, #0
     str r1, [r3, #SSI_SSIENR_OFFSET] // Disable SSI to allow further config
 
 // The Boot ROM sets a very conservative SPI clock frequency to be sure it can
 // read the initial 256 bytes from any device.  Here we can be more aggressive.
 
-    mov r1, #PICO_FLASH_SPI_CLKDIV
+    movs r1, #PICO_FLASH_SPI_CLKDIV
     str r1, [r3, #SSI_BAUDR_OFFSET]  // Set SSI Clock
 
 // First we need to send the initial command to get us in to Fast Read Dual I/O
@@ -116,7 +116,7 @@
     ldr r1, =(CTRLR0_ENTER_XIP)
     str r1, [r3, #SSI_CTRLR0_OFFSET]
 
-    mov r1, #0x0                    // NDF=0 (single 32b read)
+    movs r1, #0x0                   // NDF=0 (single 32b read)
     str r1, [r3, #SSI_CTRLR1_OFFSET]
 
 #define SPI_CTRLR0_ENTER_XIP \
@@ -131,18 +131,18 @@
     ldr r0, =(XIP_SSI_BASE + SSI_SPI_CTRLR0_OFFSET)  // SPI_CTRL0 Register
     str r1, [r0]
 
-    mov r1, #1                      // Re-enable SSI
+    movs r1, #1                     // Re-enable SSI
     str r1, [r3, #SSI_SSIENR_OFFSET]
 
-    mov r1, #W25X10CL_CMD_READ_DATA_FAST_DUAL_IO    // 8b command = 0xBB
+    movs r1, #W25X10CL_CMD_READ_DATA_FAST_DUAL_IO   // 8b command = 0xBB
     str r1, [r3, #SSI_DR0_OFFSET]   // Push SPI command into TX FIFO
-    mov r1, #0x0000002              // 28-bit Address for dummy read = 0x000000 + 0x2 Mode bits to set M[5:4]=10
+    movs r1, #0x0000002             // 28-bit Address for dummy read = 0x000000 + 0x2 Mode bits to set M[5:4]=10
     str r1, [r3, #SSI_DR0_OFFSET]   // Push Address into TX FIFO - this will trigger the transaction
 
 // Now we wait for the read transaction to complete by monitoring the SSI
 // status register and checking for the "RX FIFO Not Empty" flag to assert.
 
-    mov r1, #SSI_SR_RFNE_BITS
+    movs r1, #SSI_SR_RFNE_BITS
 poll_for_read_completion:
     ldr r0, [r3, #SSI_SR_OFFSET]    // Read status register
     tst r0, r1                      // RFNE status flag set?
@@ -158,7 +158,7 @@ poll_for_read_completion:
 // to APM mode and generate a 28-bit address phase with the extra nibble set
 // to 4'b0000).
 
-    mov r1, #0
+    movs r1, #0
     str r1, [r3, #SSI_SSIENR_OFFSET]   // Disable SSI (and clear FIFO) to allow further config
 
 // Note that the INST_L field is used to select what XIP data gets pushed into
@@ -180,7 +180,7 @@ poll_for_read_completion:
     ldr r0, =(XIP_SSI_BASE + SSI_SPI_CTRLR0_OFFSET)
     str r1, [r0]
 
-    mov r1, #1
+    movs r1, #1
     str r1, [r3, #SSI_SSIENR_OFFSET]   // Re-enable SSI
 
 // We are now in XIP mode, with all transactions using Dual I/O and only

@@ -67,11 +67,11 @@
     ldr r3, =XIP_SSI_BASE                // Use as base address where possible
 
     // Disable SSI to allow further config
-    mov r1, #0
+    movs r1, #0
     str r1, [r3, #SSI_SSIENR_OFFSET]
 
     // Set baud rate
-    mov r1, #PICO_FLASH_SPI_CLKDIV
+    movs r1, #PICO_FLASH_SPI_CLKDIV
     str r1, [r3, #SSI_BAUDR_OFFSET]
 
     ldr r1, =(CTRLR0_XIP)
@@ -82,11 +82,11 @@
     str r1, [r0]
 
     // NDF=0 (single 32b read)
-    mov r1, #0x0
+    movs r1, #0x0
     str r1, [r3, #SSI_CTRLR1_OFFSET]
 
     // Re-enable SSI
-    mov r1, #1
+    movs r1, #1
     str r1, [r3, #SSI_SSIENR_OFFSET]
 
 // We are now in XIP mode. Any bus accesses to the XIP address window will be
