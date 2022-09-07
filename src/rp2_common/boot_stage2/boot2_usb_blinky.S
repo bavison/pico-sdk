@@ -30,7 +30,7 @@
 #endif
 
  regular_func _stage2_boot
-    mov r7, #0x14               // Pointer to _well_known pointer table in ROM
+    movs r7, #0x14              // Pointer to _well_known pointer table in ROM
     ldrh r0, [r7, #0]           // Offset 0 is 16 bit pointer to function table
     ldrh r7, [r7, #4]           // Offset 4 is 16 bit pointer to table lookup routine
     ldr r1, =('U' | ('B' << 8)) // Symbol for USB Boot
@@ -40,7 +40,7 @@
 
     mov r7, r0
     ldr r0, =(1u << ACTIVITY_LED) // Mask of which GPIO (or GPIOs) to use
-    mov r1, #BOOT_MODE
+    movs r1, #BOOT_MODE
     blx r7
 
 dead:
