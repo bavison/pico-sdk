@@ -29,8 +29,7 @@ aeabi_bits_funcs:
 aeabi_bits_funcs_end:
 
 .section .text
-.thumb_func
-__aeabi_bits_init:
+ local_func __aeabi_bits_init
     ldr r0, =aeabi_bits_funcs
     movs r1, #BITS_FUNC_COUNT
     ldr r3, =rom_funcs_lookup
