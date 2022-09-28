@@ -52,7 +52,12 @@ function(pico_add_uf2_output TARGET)
         find_package(ELF2UF2)
     endif()
     if (ELF2UF2_FOUND)
-        add_custom_command(TARGET ${TARGET} POST_BUILD
-                COMMAND ELF2UF2 $<TARGET_FILE:${TARGET}> $<IF:$<BOOL:$<TARGET_PROPERTY:${TARGET},OUTPUT_NAME>>,$<TARGET_PROPERTY:${TARGET},OUTPUT_NAME>,$<TARGET_PROPERTY:${TARGET},NAME>>.uf2)
+        if (CMAKE_HOST_WIN32)
+            add_custom_command(TARGET ${TARGET} POST_BUILD
+                    COMMAND ${ELF2UF2_EXECUTABLE} $<TARGET_FILE:${TARGET}> $<IF:$<BOOL:$<TARGET_PROPERTY:${TARGET},OUTPUT_NAME>>,$<TARGET_PROPERTY:${TARGET},OUTPUT_NAME>,$<TARGET_PROPERTY:${TARGET},NAME>>.uf2)
+        else()
+            add_custom_command(TARGET ${TARGET} POST_BUILD
+                    COMMAND ELF2UF2 $<TARGET_FILE:${TARGET}> $<IF:$<BOOL:$<TARGET_PROPERTY:${TARGET},OUTPUT_NAME>>,$<TARGET_PROPERTY:${TARGET},OUTPUT_NAME>,$<TARGET_PROPERTY:${TARGET},NAME>>.uf2)
+        endif()
     endif()
 endfunction()
