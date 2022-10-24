@@ -59,6 +59,46 @@
 
 #include "pico/memmap.h"
 
+ _extern Load$$BINARY_INFO$$Base
+ _set __binary_info_start, Load$$BINARY_INFO$$Base
+ _extern Load$$BINARY_INFO$$Limit
+ _set __binary_info_end, Load$$BINARY_INFO$$Limit
+
+ _extern Image$$BSS$$ZI$$Base
+ _set __bss_start__, Image$$BSS$$ZI$$Base
+ _extern Image$$BSS$$ZI$$Limit
+ _set __bss_end__, Image$$BSS$$ZI$$Limit
+
+#if PICO_COPY_TO_RAM
+ _extern Load$$RAM_TEXT$$Base
+ _set __ram_text_source__, Load$$RAM_TEXT$$Base
+ _extern Image$$RAM_TEXT$$Base
+ _set __ram_text_start__, Image$$RAM_TEXT$$Base
+ _extern Image$$RAM_TEXT$$Limit
+ _set  __ram_text_end__, Image$$RAM_TEXT$$Limit
+#endif
+
+ _extern Load$$DATA_1$$Base
+ _set __etext, Load$$DATA_1$$Base
+ _extern Image$$DATA_1$$Base
+ _set __data_start__, Image$$DATA_1$$Base
+ _extern Image$$DATA_2$$Limit
+ _set __data_end__, Image$$DATA_2$$Limit
+
+ _extern Load$$SCRATCH_X$$Base
+ _set __scratch_x_source__, Load$$SCRATCH_X$$Base
+ _extern Image$$SCRATCH_X$$Base
+ _set __scratch_x_start__, Image$$SCRATCH_X$$Base
+ _extern Image$$SCRATCH_X$$Limit
+ _set __scratch_x_end__, Image$$SCRATCH_X$$Limit
+
+ _extern Load$$SCRATCH_Y$$Base
+ _set __scratch_y_source__, Load$$SCRATCH_Y$$Base
+ _extern Image$$SCRATCH_Y$$Base
+ _set __scratch_y_start__, Image$$SCRATCH_Y$$Base
+ _extern Image$$SCRATCH_Y$$Limit
+ _set __scratch_y_end__, Image$$SCRATCH_Y$$Limit
+
  _set __StackTop, PICO_SCRATCH_Y_LIMIT
 
  #else
