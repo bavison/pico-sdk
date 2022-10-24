@@ -9,6 +9,8 @@
 
 #include "pico.h"
 
+.eabi_attribute Tag_ABI_align_preserved, 1
+
 #define _align      .align
 #define _asciz      .asciz
 #define _byte       .byte
