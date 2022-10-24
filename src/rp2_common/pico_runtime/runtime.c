@@ -33,7 +33,13 @@
 #include "pico/bootrom.h"
 #endif
 
+#ifdef __ARMCOMPILER_VERSION
+#include "pico/memmap.h"
+#define STACK_LIMIT ((char *) PICO_RAM_LIMIT)
+#else
 extern char __StackLimit; /* Set by linker.  */
+#define STACK_LIMIT &__StackLimit
+#endif
 
 uint32_t __attribute__((section(".ram_vector_table"))) ram_vector_table[48];
 
@@ -180,7 +186,9 @@ void runtime_init(void) {
 
 #if PICO_USE_STACK_GUARDS
     // install core0 stack guard
-#ifdef __ICCARM__
+#ifdef __ARMCOMPILER_VERSION
+    runtime_install_stack_guard((void *)(PICO_SCRATCH_Y_LIMIT - PICO_STACK_SIZE));
+#elif defined(__ICCARM__)
     extern uint8_t __StackTop;
     runtime_install_stack_guard(&__StackTop - PICO_STACK_SIZE);
 #else
@@ -254,17 +262,17 @@ void *_sbrk(int incr) {
 #ifdef __GNUC__
         __builtin_expect(
 #endif
-        next_heap_end > (&__StackLimit)
+        next_heap_end > (STACK_LIMIT)
 #ifdef __GNUC__
         , false)
 #endif
         ) {
 #if PICO_USE_OPTIMISTIC_SBRK
-        if (heap_end == &__StackLimit) {
+        if (heap_end == STACK_LIMIT) {
 //        errno = ENOMEM;
             return (char *) -1;
         }
-        next_heap_end = &__StackLimit;
+        next_heap_end = STACK_LIMIT;
 #else
         return (char *) -1;
 #endif

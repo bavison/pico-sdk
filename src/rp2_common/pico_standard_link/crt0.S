@@ -55,6 +55,12 @@
  _extern `SCRATCH_Y$$Limit`
  _set __StackTop, `SCRATCH_Y$$Limit`
 
+#elif defined(__ARMCOMPILER_VERSION)
+
+#include "pico/memmap.h"
+
+ _set __StackTop, PICO_SCRATCH_Y_LIMIT
+
  #else
 
  _extern __binary_info_start
