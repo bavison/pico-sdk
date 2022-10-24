@@ -53,6 +53,8 @@ irq_handler_chain_slots:
     .set next_slot_number, next_slot_number + 1
 .endr
 
+.text
+
 irq_handler_chain_first_slot:
     push {r0, lr}     // Save EXC_RETURN token, so `pop {r0, pc}` will return from interrupt
                       // Note that r0 does not NEED to be saved, however we must maintain
