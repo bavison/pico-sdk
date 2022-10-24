@@ -68,9 +68,7 @@
 
 #ifndef __ASSEMBLER__
 
-#if defined __GNUC__
-#include <sys/cdefs.h>
-#elif defined __ICCARM__
+#if defined __ARMCOMPILER_VERSION || defined __ICCARM__
 #ifndef __aligned
 #define __aligned(x)	__attribute__((__aligned__(x)))
 #endif
@@ -101,6 +99,8 @@
 #ifndef __STRING
 #define __STRING(a)     #a
 #endif
+#elif defined __GNUC__
+#include <sys/cdefs.h>
 #else
 #error Unsupported toolchain
 #endif
