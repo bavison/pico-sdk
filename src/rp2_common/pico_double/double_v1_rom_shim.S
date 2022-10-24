@@ -107,7 +107,8 @@ _macro_1arg(mdump, k)
 // sign in rs
 // trashes rt
 _macro_5args(mdunpack, ra, rb, re, rs, rt)
- local not_inf_or_nan, done
+ DECLARE_LOCAL_LABEL(not_inf_or_nan)
+ DECLARE_LOCAL_LABEL(done)
  lsrs MA(re),MA(rb),#20        // extract sign and exponent
  subs MA(rs),MA(re),#1
  lsls MA(rs),MA(rs),#20
@@ -115,17 +116,17 @@ _macro_5args(mdunpack, ra, rb, re, rs, rt)
  lsrs MA(rs),MA(re),#11        // sign
  lsls MA(re),MA(re),#21
  lsrs MA(re),MA(re),#21        // exponent
- beq not_inf_or_nan            // zero exponent?
+ beq LOCAL_LABEL(not_inf_or_nan) // zero exponent?
  adds MA(rt),MA(re),#1
  lsrs MA(rt),MA(rt),#11
- beq done                      // exponent != 0x7ff? then done
-not_inf_or_nan:
+ beq LOCAL_LABEL(done)         // exponent != 0x7ff? then done
+LOCAL_LABEL(not_inf_or_nan):
  movs MA(ra),#0
  movs MA(rb),#1
  lsls MA(rb),MA(rb),#20
  subs MA(re),#128
  lsls MA(re),MA(re),#12
-done:
+LOCAL_LABEL(done):
  _endm(endm)
 
 // IEEE double in ra:rb ->
@@ -137,26 +138,28 @@ done:
 // +Inf, +NaN -> exponent=+0x77f000
 // -Inf, -NaN -> exponent=+0x77e000
 _macro_5args(mdunpacks, ra, rb, re, rt0, rt1)
- local mantissa_signed, not_inf_or_nan, done
+ DECLARE_LOCAL_LABEL(mantissa_signed)
+ DECLARE_LOCAL_LABEL(not_inf_or_nan)
+ DECLARE_LOCAL_LABEL(done)
  lsrs MA(re),MA(rb),#20        // extract sign and exponent
  lsrs MA(rt1),MA(rb),#31       // sign only
  subs MA(rt0),MA(re),#1
  lsls MA(rt0),MA(rt0),#20
  subs MA(rb),MA(rt0)           // clear sign and exponent in mantissa; insert implied 1
  lsls MA(re),MA(re),#21
- bcc mantissa_signed           // skip on positive
+ bcc LOCAL_LABEL(mantissa_signed) // skip on positive
  mvns MA(rb),MA(rb)            // negate mantissa
  negs MA(ra),MA(ra)
- bcc mantissa_signed
+ bcc LOCAL_LABEL(mantissa_signed)
  adds MA(rb),#1
-mantissa_signed:
+LOCAL_LABEL(mantissa_signed):
  lsrs MA(re),MA(re),#21
- beq not_inf_or_nan            // zero exponent?
+ beq LOCAL_LABEL(not_inf_or_nan) // zero exponent?
  adds MA(rt0),MA(re),#1
  lsrs MA(rt0),MA(rt0),#11
- beq done                      // exponent != 0x7ff? then done
+ beq LOCAL_LABEL(done)         // exponent != 0x7ff? then done
  subs MA(re),MA(rt1)
-not_inf_or_nan:
+LOCAL_LABEL(not_inf_or_nan):
  movs MA(ra),#0
  lsls MA(rt1),MA(rt1),#1       // +ve: 0  -ve: 2
  adds MA(rb),MA(rt1),#1        // +ve: 1  -ve: 3
@@ -164,7 +167,7 @@ not_inf_or_nan:
  asrs MA(rb),MA(rb),#10
  subs MA(re),#128
  lsls MA(re),MA(re),#12
-done:
+LOCAL_LABEL(done):
  _endm(endm)
 
  double_section WRAPPER_FUNC_NAME(__aeabi_dsub)
@@ -367,7 +370,7 @@ da_xmgty:                      // result is just x
 // can have rzh==ry
 // can have rzl,rzh==rt3,rt4
 _macro_9args(mul32_32_64, rx, ry, rzl, rzh, rt0, rt1, rt2, rt3, rt4)
- local overflow_handled
+ DECLARE_LOCAL_LABEL(overflow_handled)
                                //   t0   t1   t2   t3   t4
                                //                  (x)  (y)
  uxth MA(rt0),MA(rx)           //   xl
@@ -380,11 +383,11 @@ _macro_9args(mul32_32_64, rx, ry, rzl, rzh, rt0, rt1, rt2, rt3, rt4)
  uxth MA(rt3),MA(rx)           //                   xl
  muls MA(rt3),MA(rt4)          //                  xlyh=M1
  adds MA(rt1),MA(rt3)          //      M0+M1=M
- bcc overflow_handled          // addition of the two cross terms can overflow, so add carry into H
+ bcc LOCAL_LABEL(overflow_handled) // addition of the two cross terms can overflow, so add carry into H
  movs MA(rt3),#1               //                   1
  lsls MA(rt3),MA(rt3),#16      //                0x10000
  adds MA(rt2),MA(rt3)          //             H'
-overflow_handled:
+LOCAL_LABEL(overflow_handled):
                                //   t0   t1   t2   t3   t4
                                //                 (zl) (zh)
  lsls MA(rzl),MA(rt1),#16      //                  ML
@@ -437,7 +440,7 @@ _macro_9args(muls32_32_64, rx, ry, rzl, rzh, rt0, rt1, rt2, rt3, rt4)
 // can have rzh==ry
 // can have rzl,rzh==rt3,rt4
 _macro_9args(muls32_s32_64, rx, ry, rzl, rzh, rt0, rt1, rt2, rt3, rt4)
- local overflow_handled
+ DECLARE_LOCAL_LABEL(overflow_handled)
                                //   t0   t1   t2   t3   t4
                                //                 ¯(x)  (y)
  uxth MA(rt0),MA(rx)           //   xl
@@ -451,9 +454,9 @@ _macro_9args(muls32_s32_64, rx, ry, rzl, rzh, rt0, rt1, rt2, rt3, rt4)
  muls MA(rt3),MA(rt4)          //                ¯xlyh=M1
  adds MA(rt1),MA(rt3)          //     ¯M0+M1=M
  asrs MA(rt3),MA(rt1),#31      //                  Msx
- bvc overflow_handled          //
+ bvc LOCAL_LABEL(overflow_handled) //
  mvns MA(rt3),MA(rt3)          //                 ¯Msx        flip sign extension bits if overflow
-overflow_handled:
+LOCAL_LABEL(overflow_handled):
  lsls MA(rt3),MA(rt3),#16      //                    ¯Msx<<16
  adds MA(rt2),MA(rt3)          //             H'
 

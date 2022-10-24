@@ -34,9 +34,26 @@ _macro_1arg(div_section, name)
 
 // wait 8-n cycles for the hardware divider
 _macro_1arg(wait_div, n)
- rept (8-MA(n)) / 2
-  b .+2
- endr
+ DECLARE_LOCAL_LABEL(1)
+ DECLARE_LOCAL_LABEL(2)
+ DECLARE_LOCAL_LABEL(3)
+ DECLARE_LOCAL_LABEL(4)
+ if (8-MA(n) >= 8)
+ b LOCAL_LABEL(1)
+ endif
+LOCAL_LABEL(1):
+ if (8-MA(n) >= 6)
+ b LOCAL_LABEL(2)
+ endif
+LOCAL_LABEL(2):
+ if (8-MA(n) >= 4)
+ b LOCAL_LABEL(3)
+ endif
+LOCAL_LABEL(3):
+ if (8-MA(n) >= 2)
+ b LOCAL_LABEL(4)
+ endif
+LOCAL_LABEL(4):
  if (8-MA(n)) % 2
  nop
  endif
@@ -48,14 +65,14 @@ _macro_1arg(wait_div, n)
 
 #if !PICO_DIVIDER_DISABLE_INTERRUPTS
 _macro(save_div_state_and_lr_64)
- local wait
+ DECLARE_LOCAL_LABEL(wait)
     push {r4, r5, r6, r7, lr}
     ldr r6, =SIO_BASE
-wait:
+LOCAL_LABEL(wait):
     ldr r5, [r6, #SIO_DIV_CSR_OFFSET]
     // wait for results as we can't save signed-ness of operation
     lsrs r5, r5, #SIO_DIV_CSR_READY_SHIFT_FOR_CARRY
-    bcc wait
+    bcc LOCAL_LABEL(wait)
     // note we must read quotient last, and since it isn't the last reg, we'll not use ldmia!
     ldr r4, [r6, #SIO_DIV_UDIVIDEND_OFFSET]
     ldr r5, [r6, #SIO_DIV_UDIVISOR_OFFSET]
@@ -275,12 +292,12 @@ divmod_s64s64_savestate:
 #endif /* !PICO_DIVIDER_DISABLE_INTERRUPTS */
 
 _macro_2args(dneg, lo, hi)
- local skip
+ DECLARE_LOCAL_LABEL(skip)
  mvns MA(hi),MA(hi)
  negs MA(lo),MA(lo)
- bne skip
+ bne LOCAL_LABEL(skip)
  adds MA(hi),#1
-skip:
+LOCAL_LABEL(skip):
  _endm(endm)
 
  _align 2

@@ -198,3 +198,15 @@ x:
 
 
 #endif
+
+#ifdef __ARMCOMPILER_VERSION
+
+#define DECLARE_LOCAL_LABEL(l)
+#define LOCAL_LABEL(l) local_##l##_\@
+
+#else
+
+#define DECLARE_LOCAL_LABEL(l) local local_##l
+#define LOCAL_LABEL(l) local_##l
+
+#endif
