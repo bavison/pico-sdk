@@ -7,6 +7,9 @@
 #include "pico/asm_helper.S"
 
  _extern sf_table
+#if LIB_PICO_DOUBLE_PICO
+ _extern d2fix_a
+#endif
 
 #if PICO_FLOAT_SUPPORT_ROM_V1 && PICO_RP2040_B0_SUPPORTED
 #ifndef PICO_FLOAT_IN_RAM
@@ -252,7 +255,7 @@ ret_dzero:
  bx r14
 
  float_section d2fix_a_float
-
+#if !LIB_PICO_DOUBLE_PICO
  weak_func d2fix_a // weak because it exists in float shims too
 // here
 // r0:r1 two's complement mantissa
@@ -302,6 +305,8 @@ d2fix_a_4:
  movs r0,r3                    // result very near zero: use sign extension bits
  movs r1,r3
  pop {r4,r15}
+#endif
+
 d2f64_a:
  asrs r2,r1,#31
  cmp r2,r3
