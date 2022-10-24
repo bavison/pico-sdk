@@ -98,13 +98,22 @@ void runtime_init(void) {
 
     // Start and end points of the constructor list,
     // defined by the linker script.
+#if PICO_C_COMPILER_IS_ARMCLANG
+    extern void (*Load$$PREINIT_ARRAYS$$Base)(void);
+    extern void (*Load$$PREINIT_ARRAYS$$Limit)(void);
+    void (**p__preinit_array_start)(void) = &Load$$PREINIT_ARRAYS$$Base;
+    void (**p__preinit_array_end)(void) = &Load$$PREINIT_ARRAYS$$Limit;
+#else
     extern void (*__preinit_array_start)(void);
     extern void (*__preinit_array_end)(void);
+    void (**p__preinit_array_start)(void) = &__preinit_array_start;
+    void (**p__preinit_array_end)(void) = &__preinit_array_end;
+#endif
 
     // Call each function in the list.
     // We have to take the address of the symbols, as __preinit_array_start *is*
     // the first function pointer, not the address of it.
-    for (void (**p)(void) = &__preinit_array_start; p < &__preinit_array_end; ++p) {
+    for (void (**p)(void) = p__preinit_array_start; p < p__preinit_array_end; ++p) {
         (*p)();
     }
 
@@ -130,10 +139,19 @@ void runtime_init(void) {
     static_assert(!(sizeof(recursive_mutex_t)&3), "");
     static_assert(!offsetof(mutex_t, core), "");
     static_assert(!offsetof(recursive_mutex_t, core), "");
+#if PICO_C_COMPILER_IS_ARMCLANG
+    extern lock_core_t Load$$MUTEX_ARRAYS$$Base;
+    extern lock_core_t Load$$MUTEX_ARRAYS$$Limit;
+    lock_core_t *p__mutex_array_start = &Load$$MUTEX_ARRAYS$$Base;
+    lock_core_t *p__mutex_array_end = &Load$$MUTEX_ARRAYS$$Limit;
+#else
     extern lock_core_t __mutex_array_start;
     extern lock_core_t __mutex_array_end;
+    lock_core_t *p__mutex_array_start = &__mutex_array_start;
+    lock_core_t *p__mutex_array_end = &__mutex_array_end;
+#endif
 
-    for (lock_core_t *l = &__mutex_array_start; l < &__mutex_array_end; ) {
+    for (lock_core_t *l = p__mutex_array_start; l < p__mutex_array_end; ) {
         if (l->spin_lock) {
             assert(1 == (uintptr_t)l->spin_lock); // indicator for a recursive mutex
             recursive_mutex_t *rm = (recursive_mutex_t *)l;
@@ -147,7 +165,12 @@ void runtime_init(void) {
     }
 
 #if !(PICO_NO_RAM_VECTOR_TABLE || PICO_NO_FLASH)
+#if PICO_C_COMPILER_IS_ARMCLANG
+    extern uint32_t Load$$VECTORS$$Base[48];
+    __builtin_memcpy(ram_vector_table, Load$$VECTORS$$Base, sizeof(ram_vector_table));
+#else
     __builtin_memcpy(ram_vector_table, (uint32_t *) scb_hw->vtor, sizeof(ram_vector_table));
+#endif
     scb_hw->vtor = (uintptr_t) ram_vector_table;
 #endif
 
@@ -170,13 +193,22 @@ void runtime_init(void) {
 
     // Start and end points of the constructor list,
     // defined by the linker script.
+#if PICO_C_COMPILER_IS_ARMCLANG
+    extern void (*Load$$INIT_ARRAYS$$Base)(void);
+    extern void (*Load$$INIT_ARRAYS$$Limit)(void);
+    void (**p__init_array_start)(void) = &Load$$INIT_ARRAYS$$Base;
+    void (**p__init_array_end)(void) = &Load$$INIT_ARRAYS$$Limit;
+#else
     extern void (*__init_array_start)(void);
     extern void (*__init_array_end)(void);
+    void (**p__init_array_start)(void) = &__init_array_start;
+    void (**p__init_array_end)(void) = &__init_array_end;
+#endif
 
     // Call each function in the list.
     // We have to take the address of the symbols, as __init_array_start *is*
     // the first function pointer, not the address of it.
-    for (void (**p)(void) = &__init_array_start; p < &__init_array_end; ++p) {
+    for (void (**p)(void) = p__init_array_start; p < p__init_array_end; ++p) {
         (*p)();
     }
 
@@ -193,12 +225,18 @@ void __attribute__((noreturn)) __attribute__((weak)) _exit(__unused int status) 
 }
 
 __attribute__((weak)) void *_sbrk(int incr) {
+#if PICO_C_COMPILER_IS_ARMCLANG
+    extern char Image$$HEAP$$Base;
+    char *heap_start = &Image$$HEAP$$Base;
+#else
     extern char end; /* Set by linker.  */
+    char *heap_start = &end;
+#endif
     static char *heap_end;
     char *prev_heap_end;
 
     if (heap_end == 0)
-        heap_end = &end;
+        heap_end = heap_start;
 
     prev_heap_end = heap_end;
     char *next_heap_end = heap_end + incr;

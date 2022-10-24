@@ -18,7 +18,12 @@
 
 #if !PICO_NO_FLASH
 #ifndef PICO_NO_BI_BINARY_SIZE
+#if PICO_C_COMPILER_IS_ARMCLANG
+extern int Load$$FLASH_END$$Limit;
+#define __flash_binary_end Load$$FLASH_END$$Limit
+#else
 extern char __flash_binary_end;
+#endif
 bi_decl_with_attr(bi_binary_end((intptr_t)&__flash_binary_end), reset_section_attr)
 #endif
 #endif
