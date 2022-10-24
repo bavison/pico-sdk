@@ -58,9 +58,16 @@ if (NOT TARGET pico_standard_link)
 
     # LINKER script will be PICO_TARGET_LINKER_SCRIPT if set on target, or ${CMAKE_CURRENT_LIST_DIR}/memmap_foo.ld
     # if PICO_TARGET_BINARY_TYPE is set to foo on the target, otherwise ${CMAKE_CURRENT_LIST_DIR}/memmap_${PICO_DEFAULT_BINARY_TYPE).ld
-    target_link_options(pico_standard_link INTERFACE
-            "LINKER:--script=$<IF:$<BOOL:$<TARGET_PROPERTY:PICO_TARGET_LINKER_SCRIPT>>,$<TARGET_PROPERTY:PICO_TARGET_LINKER_SCRIPT>,${CMAKE_CURRENT_LIST_DIR}/memmap_$<IF:$<STREQUAL:$<TARGET_PROPERTY:PICO_TARGET_BINARY_TYPE>,>,${PICO_DEFAULT_BINARY_TYPE},$<TARGET_PROPERTY:PICO_TARGET_BINARY_TYPE>>.ld>"
-    )
+    if (CMAKE_C_COMPILER_ID STREQUAL "ARMClang")
+        target_link_options(pico_standard_link INTERFACE
+                "LINKER:--scatter=$<IF:$<BOOL:$<TARGET_PROPERTY:PICO_TARGET_LINKER_SCRIPT>>,$<TARGET_PROPERTY:PICO_TARGET_LINKER_SCRIPT>,${CMAKE_CURRENT_LIST_DIR}/memmap_$<IF:$<STREQUAL:$<TARGET_PROPERTY:PICO_TARGET_BINARY_TYPE>,>,${PICO_DEFAULT_BINARY_TYPE},$<TARGET_PROPERTY:PICO_TARGET_BINARY_TYPE>>.scat>"
+                "LINKER:--entry=_entry_point"
+        )
+    else ()
+        target_link_options(pico_standard_link INTERFACE
+                "LINKER:--script=$<IF:$<BOOL:$<TARGET_PROPERTY:PICO_TARGET_LINKER_SCRIPT>>,$<TARGET_PROPERTY:PICO_TARGET_LINKER_SCRIPT>,${CMAKE_CURRENT_LIST_DIR}/memmap_$<IF:$<STREQUAL:$<TARGET_PROPERTY:PICO_TARGET_BINARY_TYPE>,>,${PICO_DEFAULT_BINARY_TYPE},$<TARGET_PROPERTY:PICO_TARGET_BINARY_TYPE>>.ld>"
+        )
+    endif ()
     if ("${CMAKE_GENERATOR}" STREQUAL "IAR Embedded Workbench for Arm")
         # Use a cache variable to provide global scope, but mark as
         # internal because it's not really intended for the user to edit
@@ -82,15 +89,21 @@ if (NOT TARGET pico_standard_link)
         target_compile_definitions(pico_standard_link INTERFACE PICO_DEOPTIMIZED_DEBUG=1)
     endif()
 
-    # todo revisit/recall reasoning for why not -nostartfiles always?
-    # -nostartfiles will be added if PICO_NO_FLASH would be defined to 1
-    target_link_options(pico_standard_link INTERFACE $<$<IF:$<STREQUAL:$<TARGET_PROPERTY:PICO_TARGET_BINARY_TYPE>,no_flash>,1,$<AND:$<BOOL:${PICO_NO_FLASH}>,$<STREQUAL:,$<TARGET_PROPERTY:PICO_TARGET_BINARY_TYPE>>>>:-nostartfiles>)
+    if (NOT CMAKE_C_COMPILER_ID STREQUAL "ARMClang")
+        # todo revisit/recall reasoning for why not -nostartfiles always?
+        # -nostartfiles will be added if PICO_NO_FLASH would be defined to 1
+        target_link_options(pico_standard_link INTERFACE $<$<IF:$<STREQUAL:$<TARGET_PROPERTY:PICO_TARGET_BINARY_TYPE>,no_flash>,1,$<AND:$<BOOL:${PICO_NO_FLASH}>,$<STREQUAL:,$<TARGET_PROPERTY:PICO_TARGET_BINARY_TYPE>>>>:-nostartfiles>)
+    endif()
     # boot_stage2 will be linked if PICO_NO_FLASH would be defined to 0
     target_link_libraries(pico_standard_link INTERFACE $<$<NOT:$<IF:$<STREQUAL:$<TARGET_PROPERTY:PICO_TARGET_BINARY_TYPE>,no_flash>,1,$<AND:$<BOOL:${PICO_NO_FLASH}>,$<STREQUAL:,$<TARGET_PROPERTY:PICO_TARGET_BINARY_TYPE>>>>>:$<IF:$<BOOL:$<TARGET_PROPERTY:PICO_TARGET_BOOT_STAGE2>>,$<TARGET_PROPERTY:PICO_TARGET_BOOT_STAGE2>,bs2_default>_library>)
 
     # PICO_CMAKE_CONFIG: PICO_USE_DEFAULT_MAX_PAGE_SIZE, Don't shrink linker max page to 4096, type=bool, default=0, advanced=true, group=pico_standard_link
     if (NOT PICO_USE_DEFAULT_MAX_PAGE_SIZE)
-        target_link_options(pico_standard_link INTERFACE "LINKER:-z,max-page-size=4096")
+        if (CMAKE_C_COMPILER_ID STREQUAL "ARMClang")
+            target_link_options(pico_standard_link INTERFACE "LINKER:--pagesize=4096,--diag_suppress=6314,--diag_suppress=6329")
+         else ()
+            target_link_options(pico_standard_link INTERFACE "LINKER:-z,max-page-size=4096")
+         endif ()
     endif()
     # done in compiler now
     #target_link_options(pico_standard_link INTERFACE "LINKER:--build-id=none")
@@ -101,6 +114,8 @@ if (NOT TARGET pico_standard_link)
     # PICO_CMAKE_CONFIG: PICO_NO_GC_SECTIONS, Disable -ffunction-sections -fdata-sections and --gc-sections, type=bool, default=0, advanced=true, group=pico_standard_link
     if (NOT PICO_NO_GC_SECTIONS)
         target_compile_options(pico_standard_link INTERFACE -ffunction-sections -fdata-sections)
-        target_link_options(pico_standard_link INTERFACE "LINKER:--gc-sections")
+        if (NOT CMAKE_C_COMPILER_ID STREQUAL "ARMClang")
+            target_link_options(pico_standard_link INTERFACE "LINKER:--gc-sections")
+        endif ()
     endif()
 endif()
