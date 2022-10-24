@@ -103,6 +103,11 @@ void runtime_init(void) {
 #pragma section = "PREINIT_ARRAYS"
     void (**p__preinit_array_start)(void) = (void (**)(void)) __section_begin("PREINIT_ARRAYS");
     void (**p__preinit_array_end)(void) = (void (**)(void)) __section_end("PREINIT_ARRAYS");
+#elif defined(__ARMCOMPILER_VERSION)
+    extern void (*Load$$PREINIT_ARRAYS$$Base)(void);
+    extern void (*Load$$PREINIT_ARRAYS$$Limit)(void);
+    void (**p__preinit_array_start)(void) = &Load$$PREINIT_ARRAYS$$Base;
+    void (**p__preinit_array_end)(void) = &Load$$PREINIT_ARRAYS$$Limit;
 #else
     extern void (*__preinit_array_start)(void);
     extern void (*__preinit_array_end)(void);
@@ -143,6 +148,11 @@ void runtime_init(void) {
 #pragma section = "MUTEX_ARRAYS"
     lock_core_t *p__mutex_array_start = __section_begin("MUTEX_ARRAYS");
     lock_core_t *p__mutex_array_end = __section_end("MUTEX_ARRAYS");
+#elif defined(__ARMCOMPILER_VERSION)
+    extern lock_core_t Load$$MUTEX_ARRAYS$$Base;
+    extern lock_core_t Load$$MUTEX_ARRAYS$$Limit;
+    lock_core_t *p__mutex_array_start = &Load$$MUTEX_ARRAYS$$Base;
+    lock_core_t *p__mutex_array_end = &Load$$MUTEX_ARRAYS$$Limit;
 #else
     extern lock_core_t __mutex_array_start;
     extern lock_core_t __mutex_array_end;
@@ -171,6 +181,9 @@ void runtime_init(void) {
     /* Ensure we copy from the flash vector table, as vtor may already be pointing at RAM if launched from debugger */
     #pragma section = ".vectors"
     __builtin_memcpy(ram_vector_table, __section_begin(".vectors"), sizeof(ram_vector_table));
+#elif defined(__ARMCOMPILER_VERSION)
+    extern uint32_t Load$$VECTORS$$Base[48];
+    __builtin_memcpy(ram_vector_table, Load$$VECTORS$$Base, sizeof(ram_vector_table));
 #else
     __builtin_memcpy(ram_vector_table, (uint32_t *) scb_hw->vtor, sizeof(ram_vector_table));
 #endif
@@ -207,6 +220,11 @@ void runtime_init(void) {
 #pragma section = "INIT_ARRAYS"
     void (**p__init_array_start)(void) = (void (**)(void)) __section_begin("INIT_ARRAYS");
     void (**p__init_array_end)(void)   = (void (**)(void)) __section_end("INIT_ARRAYS");
+#elif defined(__ARMCOMPILER_VERSION)
+    extern void (*Load$$INIT_ARRAYS$$Base)(void);
+    extern void (*Load$$INIT_ARRAYS$$Limit)(void);
+    void (**p__init_array_start)(void) = &Load$$INIT_ARRAYS$$Base;
+    void (**p__init_array_end)(void) = &Load$$INIT_ARRAYS$$Limit;
 #else
     extern void (*__init_array_start)(void);
     extern void (*__init_array_end)(void);
@@ -245,6 +263,9 @@ void *_sbrk(int incr) {
 #ifdef __ICCARM__
 #pragma section = ".heap"
     char *heap_start = __section_begin(".heap");
+#elif defined(__ARMCOMPILER_VERSION)
+    extern char Image$$HEAP$$Base;
+    char *heap_start = &Image$$HEAP$$Base;
 #else
     extern char end; /* Set by linker.  */
     char *heap_start = &end;

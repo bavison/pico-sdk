@@ -24,6 +24,9 @@
 // Technically this allocates one byte beyond the end of the flash image,
 // but I think it's the best I can do?
 const char __attribute((section(".flash_end"))) __flash_binary_end = 0;
+#elif defined(__ARMCOMPILER_VERSION)
+extern int Load$$FLASH_END$$Limit;
+#define __flash_binary_end Load$$FLASH_END$$Limit
 #else
 extern char __flash_binary_end;
 #endif
