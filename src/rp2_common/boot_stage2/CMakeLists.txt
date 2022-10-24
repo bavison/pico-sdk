@@ -62,6 +62,8 @@ function(pico_define_boot_stage2 NAME SOURCES)
     # todo bit of an abstraction failure - revisit for Clang support anyway
     if (CMAKE_C_COMPILER_ID STREQUAL "Clang")
         target_link_options(${NAME} PRIVATE "-nostdlib")
+    elseif (CMAKE_C_COMPILER_ID STREQUAL "ARMClang")
+        # no options to add
     else ()
         target_link_options(${NAME} PRIVATE "--specs=nosys.specs")
         target_link_options(${NAME} PRIVATE "-nostartfiles")
@@ -71,8 +73,12 @@ function(pico_define_boot_stage2 NAME SOURCES)
     target_include_directories(${NAME} PRIVATE ${PICO_BOOT_STAGE2_DIR}/asminclude)
 
     target_link_libraries(${NAME} hardware_regs boot_stage2_headers)
-    target_link_options(${NAME} PRIVATE "LINKER:--script=${PICO_BOOT_STAGE2_DIR}/boot_stage2.ld")
-    set_target_properties(${NAME} PROPERTIES LINK_DEPENDS ${PICO_BOOT_STAGE2_DIR}/boot_stage2.ld)
+    if (CMAKE_C_COMPILER_ID STREQUAL "ARMClang")
+        target_link_options(${NAME} PRIVATE "LINKER:--ro_base=0x20041f00" "LINKER:--entry=_stage2_boot")
+    else ()
+        target_link_options(${NAME} PRIVATE "LINKER:--script=${PICO_BOOT_STAGE2_DIR}/boot_stage2.ld")
+        set_target_properties(${NAME} PROPERTIES LINK_DEPENDS ${PICO_BOOT_STAGE2_DIR}/boot_stage2.ld)
+    endif ()
 
     pico_add_dis_output(${NAME})
     pico_add_map_output(${NAME})
@@ -83,7 +89,11 @@ function(pico_define_boot_stage2 NAME SOURCES)
     find_package (Python3 REQUIRED COMPONENTS Interpreter)
 
     add_custom_target(${NAME}_bin DEPENDS ${ORIGINAL_BIN})
-    add_custom_command(OUTPUT ${ORIGINAL_BIN} DEPENDS ${NAME} COMMAND ${CMAKE_OBJCOPY} -Obinary $<TARGET_FILE:${NAME}> ${ORIGINAL_BIN})
+    if (CMAKE_C_COMPILER_ID STREQUAL "ARMClang")
+        add_custom_command(OUTPUT ${ORIGINAL_BIN} DEPENDS ${NAME} COMMAND ${CMAKE_OBJCOPY} --bin $<TARGET_FILE:${NAME}> --output ${ORIGINAL_BIN})
+    else ()
+        add_custom_command(OUTPUT ${ORIGINAL_BIN} DEPENDS ${NAME} COMMAND ${CMAKE_OBJCOPY} -Obinary $<TARGET_FILE:${NAME}> ${ORIGINAL_BIN})
+    endif ()
 
     add_custom_target(${NAME}_padded_checksummed_asm DEPENDS ${PADDED_CHECKSUMMED_ASM})
     add_custom_command(OUTPUT ${PADDED_CHECKSUMMED_ASM} DEPENDS ${ORIGINAL_BIN}
@@ -91,9 +101,22 @@ function(pico_define_boot_stage2 NAME SOURCES)
             )
 
     add_library(${NAME}_library INTERFACE)
-    add_dependencies(${NAME}_library ${NAME}_padded_checksummed_asm)
-    # not strictly (or indeed actually) a link library, but this avoids dependency cycle
-    target_link_libraries(${NAME}_library INTERFACE ${PADDED_CHECKSUMMED_ASM})
+    if (CMAKE_C_COMPILER_ID STREQUAL "ARMClang")
+        set(PADDED_CHECKSUMMED_OBJ ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_padded_checksummed.o)
+        add_custom_target(${NAME}_padded_checksummed_obj DEPENDS ${PADDED_CHECKSUMMED_OBJ})
+        separate_arguments(C_FLAGS_LIST NATIVE_COMMAND ${CMAKE_C_FLAGS})
+        add_custom_command(OUTPUT ${PADDED_CHECKSUMMED_OBJ} DEPENDS ${PADDED_CHECKSUMMED_ASM}
+                COMMAND ${CMAKE_C_COMPILER} ${C_FLAGS_LIST} -c -o ${PADDED_CHECKSUMMED_OBJ} ${PADDED_CHECKSUMMED_ASM}
+                )
+        add_dependencies(${NAME}_padded_checksummed_obj ${NAME}_padded_checksummed_asm)
+        add_dependencies(${NAME}_library ${NAME}_padded_checksummed_obj)
+        # not a link library either, but armlink can't launch an assembler subprocess so an object file is next best thing
+        target_link_libraries(${NAME}_library INTERFACE ${PADDED_CHECKSUMMED_OBJ})
+    else ()
+        add_dependencies(${NAME}_library ${NAME}_padded_checksummed_asm)
+        # not strictly (or indeed actually) a link library, but this avoids dependency cycle
+        target_link_libraries(${NAME}_library INTERFACE ${PADDED_CHECKSUMMED_ASM})
+    endif ()
     target_link_libraries(${NAME}_library INTERFACE boot_stage2_headers)
 
     list(GET SOURCES 0 FIRST_SOURCE)
