@@ -589,9 +589,9 @@ static size_t _etoa(out_fct_type out, char *buffer, size_t idx, size_t maxlen, d
 #endif  // PICO_PRINTF_SUPPORT_FLOAT
 
 // internal vsnprintf
-static int _vsnprintf(out_fct_type out, char *buffer, const size_t maxlen, const char *format, va_list va) {
+static int _pico_vsnprintf(out_fct_type out, char *buffer, const size_t maxlen, const char *format, va_list va) {
 #if !PICO_PRINTF_ALWAYS_INCLUDED
-    lazy_vsnprintf = _vsnprintf;
+    lazy_vsnprintf = _pico_vsnprintf;
 #endif
     unsigned int flags, width, precision, n;
     size_t idx = 0U;
@@ -907,7 +907,7 @@ static int _vsnprintf(out_fct_type out, char *buffer, const size_t maxlen, const
 int WRAPPER_FUNC(sprintf)(char *buffer, const char *format, ...) {
     va_list va;
     va_start(va, format);
-    const int ret = _vsnprintf(_out_buffer, buffer, (size_t) -1, format, va);
+    const int ret = _pico_vsnprintf(_out_buffer, buffer, (size_t) -1, format, va);
     va_end(va);
     return ret;
 }
@@ -915,18 +915,18 @@ int WRAPPER_FUNC(sprintf)(char *buffer, const char *format, ...) {
 int WRAPPER_FUNC(snprintf)(char *buffer, size_t count, const char *format, ...) {
     va_list va;
     va_start(va, format);
-    const int ret = _vsnprintf(_out_buffer, buffer, count, format, va);
+    const int ret = _pico_vsnprintf(_out_buffer, buffer, count, format, va);
     va_end(va);
     return ret;
 }
 
 int WRAPPER_FUNC(vsnprintf)(char *buffer, size_t count, const char *format, va_list va) {
-    return _vsnprintf(_out_buffer, buffer, count, format, va);
+    return _pico_vsnprintf(_out_buffer, buffer, count, format, va);
 }
 
 int vfctprintf(void (*out)(char character, void *arg), void *arg, const char *format, va_list va) {
     const out_fct_wrap_type out_fct_wrap = {out, arg};
-    return _vsnprintf(_out_fct, (char *) (uintptr_t) &out_fct_wrap, (size_t) -1, format, va);
+    return _pico_vsnprintf(_out_fct, (char *) (uintptr_t) &out_fct_wrap, (size_t) -1, format, va);
 }
 
 #if LIB_PICO_PRINTF_PICO
