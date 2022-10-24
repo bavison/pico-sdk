@@ -17,7 +17,7 @@ void sem_init(semaphore_t *sem, int16_t initial_permits, int16_t max_permits) {
 int __time_critical_func(sem_available)(semaphore_t *sem) {
 #ifdef __GNUC__
     #define IS_INT16(x) _Generic((x), int16_t: 1, default: 0)
-	static_assert(IS_INT16((typeof(sem->permits))0));
+	static_assert(IS_INT16((typeof(sem->permits))0), "permits must be an int16_t");
 #endif
     return *(volatile int16_t *) &sem->permits;
 }
