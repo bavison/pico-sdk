@@ -5,11 +5,19 @@
 // tag::hw_div_s32[]
 
 _macro(__divider_delay)
+ DECLARE_LOCAL_LABEL(1)
+ DECLARE_LOCAL_LABEL(2)
+ DECLARE_LOCAL_LABEL(3)
+ DECLARE_LOCAL_LABEL(4)
     // delay 8 cycles
-    b .+2
-    b .+2
-    b .+2
-    b .+2
+    b LOCAL_LABEL(1)
+LOCAL_LABEL(1):
+    b LOCAL_LABEL(2)
+LOCAL_LABEL(2):
+    b LOCAL_LABEL(3)
+LOCAL_LABEL(3):
+    b LOCAL_LABEL(4)
+LOCAL_LABEL(4):
  _endm(endm)
 
  _align 2
