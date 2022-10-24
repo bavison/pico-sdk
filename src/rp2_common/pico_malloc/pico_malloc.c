@@ -19,11 +19,17 @@ auto_init_mutex(malloc_mutex);
 #define REAL_FUNC_EXP(x)    REAL_FUNC(x)
 #define WRAPPER_FUNC_EXP(x) WRAPPER_FUNC(x)
 
+#ifdef __ARMCOMPILER_VERSION
+#include "pico/memmap.h"
+#define STACK_LIMIT ((char *) PICO_RAM_LIMIT)
+#else
 extern char __StackLimit; /* Set by linker.  */
+#define STACK_LIMIT &__StackLimit
+#endif
 
 static inline void check_alloc(__unused void *mem, __unused uint size) {
 #if PICO_MALLOC_PANIC
-    if (!mem || (((char *)mem) + size) > &__StackLimit) {
+    if (!mem || (((char *)mem) + size) > STACK_LIMIT) {
         panic("Out of memory");
     }
 #endif

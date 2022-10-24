@@ -7,6 +7,10 @@ if (NOT TARGET pico_standard_link)
         ${CMAKE_CURRENT_LIST_DIR}/binary_info.c
     )
 
+    if (CMAKE_C_COMPILER_ID STREQUAL "ARMClang")
+        target_include_directories(pico_standard_link INTERFACE ${CMAKE_CURRENT_LIST_DIR}/include)
+    endif ()
+
     pico_add_map_output(pico_standard_link)
 
     # todo revisit when we do Clang
