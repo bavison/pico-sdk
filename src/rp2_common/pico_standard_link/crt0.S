@@ -86,7 +86,11 @@
 #endif
 
  _extern exit
+#ifdef __ARMCOMPILER_VERSION
+ _extern __rt_entry
+#else
  _extern main
+#endif
  _extern rom_func_lookup
 
 #ifdef NDEBUG
@@ -338,7 +342,11 @@ platform_entry: // symbol for stack traces
     // (e.g. if main is in SRAM and crt0 in flash)
     ldr r1, =runtime_init
     blx r1
+#ifdef __ARMCOMPILER_VERSION
+    ldr r1, =__rt_entry
+#else
     ldr r1, =main
+#endif
     blx r1
     ldr r1, =exit
     blx r1
@@ -403,6 +411,23 @@ hold_non_core0_in_bootrom:
     ldr r0, = 'W' | ('V' << 8)
     bl rom_func_lookup
     bx r0
+
+// ----------------------------------------------------------------------------
+
+#ifdef __ARMCOMPILER_VERSION
+
+ _extern Image$$SCRATCH_Y_STACK$$Limit
+ _extern Image$$HEAP$$Base
+ _extern Image$$HEAP$$Limit
+
+ regular_func __user_setup_stackheap
+    ldr     r0, =Image$$HEAP$$Base
+    ldr     r1, =Image$$SCRATCH_Y_STACK$$Limit
+    mov     sp, r1
+    ldr     r2, =Image$$HEAP$$Limit
+    bx      lr
+
+#endif
 
 // ----------------------------------------------------------------------------
 // Stack/heap dummies to set size
