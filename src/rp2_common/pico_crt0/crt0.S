@@ -15,6 +15,54 @@
 #include "boot/picobin.h"
 #include "pico/bootrom.h"
 
+#if PICO_C_COMPILER_IS_ARMCLANG
+
+#include "pico/memmap.h"
+
+ .extern Load$$BINARY_INFO$$Base
+ .set __binary_info_start, Load$$BINARY_INFO$$Base
+ .extern Load$$BINARY_INFO$$Limit
+ .set __binary_info_end, Load$$BINARY_INFO$$Limit
+
+ .extern Image$$BSS$$ZI$$Base
+ .set __bss_start__, Image$$BSS$$ZI$$Base
+ .extern Image$$BSS$$ZI$$Limit
+ .set __bss_end__, Image$$BSS$$ZI$$Limit
+
+#if PICO_COPY_TO_RAM
+ .extern Load$$RAM_TEXT$$Base
+ .set __ram_text_source__, Load$$RAM_TEXT$$Base
+ .extern Image$$RAM_TEXT$$Base
+ .set __ram_text_start__, Image$$RAM_TEXT$$Base
+ .extern Image$$RAM_TEXT$$Limit
+ .set  __ram_text_end__, Image$$RAM_TEXT$$Limit
+#endif
+
+ .extern Load$$DATA_1$$Base
+ .set __etext, Load$$DATA_1$$Base
+ .extern Image$$DATA_1$$Base
+ .set __data_start__, Image$$DATA_1$$Base
+ .extern Image$$DATA_2$$Limit
+ .set __data_end__, Image$$DATA_2$$Limit
+
+ .extern Load$$SCRATCH_X$$Base
+ .set __scratch_x_source__, Load$$SCRATCH_X$$Base
+ .extern Image$$SCRATCH_X$$Base
+ .set __scratch_x_start__, Image$$SCRATCH_X$$Base
+ .extern Image$$SCRATCH_X$$Limit
+ .set __scratch_x_end__, Image$$SCRATCH_X$$Limit
+
+ .extern Load$$SCRATCH_Y$$Base
+ .set __scratch_y_source__, Load$$SCRATCH_Y$$Base
+ .extern Image$$SCRATCH_Y$$Base
+ .set __scratch_y_start__, Image$$SCRATCH_Y$$Base
+ .extern Image$$SCRATCH_Y$$Limit
+ .set __scratch_y_end__, Image$$SCRATCH_Y$$Limit
+
+ .set __StackTop, PICO_SCRATCH_Y_LIMIT
+
+#endif
+
 // PICO_CONFIG: PICO_CRT0_NEAR_CALLS, Whether calls from crt0 into the binary are near (<16M away) - ignored for PICO_COPY_TO_RAM, default=0, type=bool, group=pico_crt0
 #ifndef PICO_CRT0_NEAR_CALLS
 #define PICO_CRT0_NEAR_CALLS 0

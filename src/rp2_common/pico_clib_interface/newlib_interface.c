@@ -51,12 +51,18 @@ void __attribute__((noreturn)) __weak _exit(__unused int status) {
 }
 
 __weak void *_sbrk(int incr) {
+#if PICO_C_COMPILER_IS_ARMCLANG
+    extern char Image$$HEAP$$Base;
+    char *heap_start = &Image$$HEAP$$Base;
+#else
     extern char end; /* Set by linker.  */
+    char *heap_start = &end;
+#endif
     static char *heap_end;
     char *prev_heap_end;
 
     if (heap_end == 0)
-        heap_end = &end;
+        heap_end = heap_start;
 
     prev_heap_end = heap_end;
     char *next_heap_end = heap_end + incr;
@@ -203,9 +209,18 @@ void runtime_init(void) {
     // ... so instead just do the __preinit_array
     runtime_run_initializers();
     // ... and the __init_array
+#if PICO_C_COMPILER_IS_ARMCLANG
+    extern void (*Load$$INIT_ARRAYS$$Base)(void);
+    extern void (*Load$$INIT_ARRAYS$$Limit)(void);
+    void (**p__init_array_start)(void) = &Load$$INIT_ARRAYS$$Base;
+    void (**p__init_array_end)(void) = &Load$$INIT_ARRAYS$$Limit;
+#else
     extern void (*__init_array_start)(void);
     extern void (*__init_array_end)(void);
-    for (void (**p)(void) = &__init_array_start; p < &__init_array_end; ++p) {
+    void (**p__init_array_start)(void) = &__init_array_start;
+    void (**p__init_array_end)(void) = &__init_array_end;
+#endif
+    for (void (**p)(void) = p__init_array_start; p < p__init_array_end; ++p) {
         (*p)();
     }
 }

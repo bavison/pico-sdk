@@ -214,13 +214,23 @@ uint32_t __attribute__((section(".ram_vector_table"))) ram_vector_table[PICO_RAM
 void runtime_init_install_ram_vector_table(void) {
     // Note on RISC-V the RAM vector table is initialised during crt0
 #if !(PICO_NO_RAM_VECTOR_TABLE || PICO_NO_FLASH)
+#if PICO_C_COMPILER_IS_ARMCLANG
+    extern uint32_t Load$$VECTORS$$Base;
+    extern uint32_t Load$$VECTORS$$Limit;
+    uint32_t *p__vectors = &Load$$VECTORS$$Base;
+    uint32_t *p__vectors_end = &Load$$VECTORS$$Limit;
+#else
     extern uint32_t __vectors;
     extern uint32_t __vectors_end;
-    uint32_t stored_words = (uint32_t)(&__vectors_end - &__vectors);
-    __builtin_memcpy(ram_vector_table, &__vectors, 4 * MIN(stored_words, PICO_RAM_VECTOR_TABLE_SIZE));
+    uint32_t *p__vectors = &__vectors;
+    uint32_t *p__vectors_end = &__vectors_end;
+#endif
+    uint32_t stored_words = (uint32_t)(p__vectors_end - p__vectors);
+    __builtin_memcpy(ram_vector_table, p__vectors, 4 * MIN(stored_words, PICO_RAM_VECTOR_TABLE_SIZE));
     for(uint i = stored_words; i<count_of(ram_vector_table); i++) {
         ram_vector_table[i] = (uintptr_t)__unhandled_user_irq;
     }
+#endif
     scb_hw->vtor = (uintptr_t) ram_vector_table;
 #endif
 }

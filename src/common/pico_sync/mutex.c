@@ -18,10 +18,19 @@ void __weak runtime_init_mutex(void) {
     static_assert(!(sizeof(recursive_mutex_t)&3), "");
     static_assert(!offsetof(mutex_t, core), "");
     static_assert(!offsetof(recursive_mutex_t, core), "");
-    extern lock_core_t __mutex_array_start[];
+#if PICO_C_COMPILER_IS_ARMCLANG
+    extern lock_core_t Load$$MUTEX_ARRAYS$$Base;
+    extern lock_core_t Load$$MUTEX_ARRAYS$$Limit;
+    lock_core_t *p__mutex_array_start = &Load$$MUTEX_ARRAYS$$Base;
+    lock_core_t *p__mutex_array_end = &Load$$MUTEX_ARRAYS$$Limit;
+#else
+    extern lock_core_t __mutex_array_start;
     extern lock_core_t __mutex_array_end;
+    lock_core_t *p__mutex_array_start = &__mutex_array_start;
+    lock_core_t *p__mutex_array_end = &__mutex_array_end;
+#endif
 
-    for (lock_core_t *l = &__mutex_array_start[0]; l < &__mutex_array_end; ) {
+    for (lock_core_t *l = p__mutex_array_start; l < p__mutex_array_end; ) {
         if (l->spin_lock) {
             assert(1 == (uintptr_t)l->spin_lock); // indicator for a recursive mutex
             recursive_mutex_t *rm = (recursive_mutex_t *)l;

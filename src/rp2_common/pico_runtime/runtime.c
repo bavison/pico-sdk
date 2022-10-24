@@ -25,20 +25,32 @@ static void runtime_run_initializers_from(uintptr_t *from) {
 
     // Start and end points of the constructor list,
     // defined by the linker script.
+#if PICO_C_COMPILER_IS_ARMCLANG
+    extern uintptr_t Load$$PREINIT_ARRAYS$$Limit;
+    uintptr_t *p__preinit_array_end = &Load$$PREINIT_ARRAYS$$Limit;
+#else
     extern uintptr_t __preinit_array_end;
+    uintptr_t *p__preinit_array_end = &__preinit_array_end;
+#endif
 
     // Call each function in the list, based on the mask
     // We have to take the address of the symbols, as __preinit_array_start *is*
     // the first function value, not the address of it.
-    for (uintptr_t *p = from; p < &__preinit_array_end; p++) {
+    for (uintptr_t *p = from; p < p__preinit_array_end; p++) {
         uintptr_t val = *p;
         ((void (*)(void))val)();
     }
 }
 
 void runtime_run_initializers(void) {
+#if PICO_C_COMPILER_IS_ARMCLANG
+    extern uintptr_t Load$$PREINIT_ARRAYS$$Base;
+    uintptr_t *p__preinit_array_start = &Load$$PREINIT_ARRAYS$$Base;
+#else
     extern uintptr_t __preinit_array_start;
-    runtime_run_initializers_from(&__preinit_array_start);
+    uintptr_t *p__preinit_array_start = &__preinit_array_start;
+#endif
+    runtime_run_initializers_from(p__preinit_array_start);
 }
 
 // We keep the per-core initializers in the standard __preinit_array so a standard C library
