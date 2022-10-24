@@ -456,7 +456,7 @@ __INLINE_PICO_PLATFORM uint __get_current_exception(void) {
     return exception;
 }
 
-#ifdef __ICCARM__
+#if defined(__ARMCOMPILER_VERSION) || defined(__ICCARM__)
 #define GNU_FUNC(x) x
 #define WRAPPER_FUNC(x) $Sub$$ ## x
 #define REAL_FUNC(x) $Super$$ ## x
