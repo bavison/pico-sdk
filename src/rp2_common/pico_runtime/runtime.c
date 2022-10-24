@@ -279,7 +279,7 @@ void exit(int status) {
     _exit(status);
 }
 
-#ifdef __GNUC__
+#if defined(__GNUC__) && !defined __ARMCOMPILER_VERSION
 // incorrect warning from GCC 6
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wsuggest-attribute=format"
@@ -292,7 +292,7 @@ void __assert_func(const char *file, int line, const char *func, const char *fai
     _exit(1);
 }
 
-#ifdef __GNUC__
+#if defined(__GNUC__) && !defined __ARMCOMPILER_VERSION
 #pragma GCC diagnostic pop
 #endif
 
