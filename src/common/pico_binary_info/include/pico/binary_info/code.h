@@ -39,10 +39,10 @@
  * binary information declared this way will also be stripped
  * \ingroup pico_binary_info
  */
-#define bi_decl_if_func_used(_decl) ({__bi_mark_enclosure _decl; __bi_decl(__bi_ptr_lineno_var_name, &__bi_lineno_var_name.core, ".binary_info.", ); *(volatile uint8_t *)&__bi_ptr_lineno_var_name;});
+#define bi_decl_if_func_used(_decl) ({__bi_mark_enclosure _decl; __bi_decl(__bi_ptr_lineno_var_name, &__bi_lineno_var_name.core, ".binary_info.", ); *(volatile const uint8_t *)&__bi_ptr_lineno_var_name;});
 
 #define bi_decl_with_attr(_decl, _attr) __bi_mark_enclosure _attr _decl; __bi_decl(__bi_ptr_lineno_var_name, &__bi_lineno_var_name.core, ".binary_info.keep.", __used);
-#define bi_decl_if_func_used_with_attr(_decl, _attr) ({__bi_mark_enclosure _attr _decl; __bi_decl(__bi_ptr_lineno_var_name, &__bi_lineno_var_name.core, ".binary_info.", ); *(volatile uint8_t *)&__bi_ptr_lineno_var_name;});
+#define bi_decl_if_func_used_with_attr(_decl, _attr) ({__bi_mark_enclosure _attr _decl; __bi_decl(__bi_ptr_lineno_var_name, &__bi_lineno_var_name.core, ".binary_info.", ); *(volatile const uint8_t *)&__bi_ptr_lineno_var_name;});
 #else
 #define __bi_decl(bi, name, attr)
 #define bi_decl_with_attr(_decl, _attr)
