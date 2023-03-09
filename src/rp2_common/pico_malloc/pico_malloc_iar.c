@@ -21,6 +21,9 @@
 
 #else
 
-#error Unsupported toolchain
+/* On the iar/develop branch, if you're using any other compiler, assume the
+ * runtime library only contains one heap implementation, so just include
+ * pico_malloc.c with PREFIX left unset */
+#include "pico_malloc.c"
 
 #endif
