@@ -469,10 +469,12 @@ __INLINE_PICO_PLATFORM uint __get_current_exception(void) {
 #ifdef __ICCARM__
 /* Compatible definitions of GCC builtins */
 
+#if __VER__ < 9032002
 static inline uint __builtin_ctz(uint x) {
   extern uint32_t __ctzsi2(uint32_t);
   return __ctzsi2(x);
 }
+#endif
 
 #endif
 
