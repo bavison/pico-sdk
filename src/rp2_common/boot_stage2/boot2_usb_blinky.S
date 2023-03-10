@@ -29,11 +29,7 @@
  section `.boot2`:CODE:ROOT(2)
 #endif
 
-.global _stage2_boot
-.type _stage2_boot,%function
-
-.thumb_func
-_stage2_boot:
+ regular_func _stage2_boot
     mov r7, #0x14               // Pointer to _well_known pointer table in ROM
     ldrh r0, [r7, #0]           // Offset 0 is 16 bit pointer to function table
     ldrh r7, [r7, #4]           // Offset 4 is 16 bit pointer to table lookup routine

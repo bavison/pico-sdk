@@ -88,10 +88,7 @@
  section `.boot2`:CODE:ROOT(2)
 #endif
 
-.global _stage2_boot
-.type _stage2_boot,%function
-.thumb_func
-_stage2_boot:
+ regular_func _stage2_boot
     push {lr}
 
     ldr r3, =XIP_SSI_BASE                // Use as base address where possible
