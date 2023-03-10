@@ -211,6 +211,18 @@ PICO_RUNTIME_INIT_FUNC_RUNTIME(runtime_init_spin_locks_reset, PICO_RUNTIME_INIT_
 
 uint32_t __attribute__((section(".ram_vector_table"))) ram_vector_table[PICO_RAM_VECTOR_TABLE_SIZE];
 
+#ifdef PICO_C_COMPILER_IS_IAR
+// We use inline definitions to avoid libc dependency.
+static inline void* my_memcpy(void* dest, const void* src, size_t count) {
+    unsigned char *d = dest;
+    const unsigned char *s = src;
+    while (count--)
+        *d++ = *s++;
+    return dest;
+}
+#define __builtin_memcpy my_memcpy
+#endif
+
 void runtime_init_install_ram_vector_table(void) {
     // Note on RISC-V the RAM vector table is initialised during crt0
 #if !(PICO_NO_RAM_VECTOR_TABLE || PICO_NO_FLASH)
