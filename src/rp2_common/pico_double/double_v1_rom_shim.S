@@ -1266,8 +1266,7 @@ dq_5:
 // convert double in r0:r1 to signed fixed point in r0:r1:r3, r2 places after point, rounding towards -Inf
 // result clamped so that r3 can only be 0 or -1
 // trashes r12
-.thumb_func
-d2fix:
+ local_func d2fix
  push {r4,r14}
  mov r12,r2
  bl dunpacks
@@ -1285,9 +1284,7 @@ ret_dzero:
  movs r1,#0
  bx r14
  
-.weak d2fix_a // weak because it exists in float code too
-.thumb_func
-d2fix_a:
+ weak_func d2fix_a // weak because it exists in float code too
 // here
 // r0:r1 two's complement mantissa
 // r2    unbaised exponent
@@ -1652,8 +1649,7 @@ uf2d:
 // r8:r9   cos α Q62
 // r10:r11 sin α Q62
 .align 2
-.thumb_func
-dsincos_internal:
+ local_func dsincos_internal
  push {r14}
  bl dunpacks
  adr r4,dreddata0
