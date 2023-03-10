@@ -6,6 +6,7 @@
 
 #include "pico.h"
 
+#define _align      .align
 #define _asciz      .asciz
 #define dc8         .byte
 #define dc16        .hword

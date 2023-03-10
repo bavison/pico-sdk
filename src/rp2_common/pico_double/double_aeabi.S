@@ -134,7 +134,7 @@
 // double FUNC_NAME(__aeabi_drsub)(double x, double y)    double-precision reverse subtraction, y - x
 
 // frsub first because it is the only one that needs alignment
-.align 2
+ _align 2
  wrapper_func __aeabi_drsub
     eors r0, r1
     eors r1, r0
@@ -277,7 +277,7 @@ ddiv_dsub_nan_helper:
 // void FUNC_NAME(__aeabi_cdcmpeq)(double, double)         non-excepting equality comparison [1], result in PSR ZC flags
 // compare r0:r1 against r2:r3, returning -1/0/1 for <, =, >
 // also set flags accordingly
-.align 2
+ _align 2
  wrapper_func __aeabi_cdcmple
  wrapper_func __aeabi_cdcmpeq
  push {r0-r7,r14}
@@ -337,7 +337,7 @@ __aeabi_dfcmple_guts:
 
 // int FUNC_NAME(__aeabi_dcmpeq)(double, double)         result (1, 0) denotes (=, ?<>) [2], use for C == and !=
  double_wrapper_section __aeabi_dcmpeq
-.align 2
+ _align 2
  wrapper_func __aeabi_dcmpeq
     push {lr}
     bl __aeabi_cdcmpeq
@@ -350,7 +350,7 @@ __aeabi_dfcmple_guts:
 
 // int FUNC_NAME(__aeabi_dcmplt)(double, double)         result (1, 0) denotes (<, ?>=) [2], use for C <
  double_wrapper_section __aeabi_dcmplt
-.align 2
+ _align 2
  wrapper_func __aeabi_dcmplt
     push {lr}
     bl __aeabi_cdcmple
@@ -359,7 +359,7 @@ __aeabi_dfcmple_guts:
 
 // int FUNC_NAME(__aeabi_dcmple)(double, double)         result (1, 0) denotes (<=, ?>) [2], use for C <=
  double_wrapper_section __aeabi_dcmple
-.align 2
+ _align 2
  wrapper_func __aeabi_dcmple
     push {lr}
     bl __aeabi_cdcmple
@@ -372,7 +372,7 @@ __aeabi_dfcmple_guts:
 
 // int FUNC_NAME(__aeabi_dcmpge)(double, double)         result (1, 0) denotes (>=, ?<) [2], use for C >=
  double_wrapper_section __aeabi_dcmpge
-.align 2
+ _align 2
  wrapper_func __aeabi_dcmpge
     push {lr}
     // because of NaNs it is better to reverse the args than the result
