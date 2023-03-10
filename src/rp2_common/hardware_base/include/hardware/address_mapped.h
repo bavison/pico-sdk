@@ -104,13 +104,16 @@ __force_inline static uint32_t xip_alias_check_addr(const void *addr) {
 #define xip_nocache_alias_untyped(addr) ((void *)(XIP_NOCACHE_BASE | xip_alias_check_addr(addr)))
 #define xip_nocache_noalloc_alias_untyped(addr) ((void *)(XIP_NOCACHE_NOALLOC_BASE | xip_alias_check_addr(addr)))
 
-// Typed conversion alias pointer generation macros
+#if 0
+// Typed conversion alias pointer generation macros have been retired
+// because they are not compatible with all toolchains
 #define hw_set_alias(p) ((typeof(p))hw_set_alias_untyped(p))
 #define hw_clear_alias(p) ((typeof(p))hw_clear_alias_untyped(p))
 #define hw_xor_alias(p) ((typeof(p))hw_xor_alias_untyped(p))
 #define xip_noalloc_alias(p) ((typeof(p))xip_noalloc_alias_untyped(p))
 #define xip_nocache_alias(p) ((typeof(p))xip_nocache_alias_untyped(p))
 #define xip_nocache_noalloc_alias(p) ((typeof(p))xip_nocache_noalloc_alias_untyped(p))
+#endif
 
 /*! \brief Atomically set the specified bits to 1 in a HW register
  *  \ingroup hardware_base
