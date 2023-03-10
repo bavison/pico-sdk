@@ -101,12 +101,12 @@ int core1_wrapper(int (*entry)(void), void *stack_base) {
 void multicore_reset_core1(void) {
     // Use atomic aliases just in case core 1 is also manipulating some PSM state
     io_rw_32 *power_off = (io_rw_32 *) (PSM_BASE + PSM_FRCE_OFF_OFFSET);
-#ifdef __STRICT_ANSI__
-    io_rw_32 *power_off_set = hw_set_alias_untyped(power_off);
-    io_rw_32 *power_off_clr = hw_clear_alias_untyped(power_off);
-#else
+#if !defined(__STRICT_ANSI__) && (!PICO_C_COMPILER_IS_IAR || __VER__ >= 9030001)
     io_rw_32 *power_off_set = hw_set_alias(power_off);
     io_rw_32 *power_off_clr = hw_clear_alias(power_off);
+#else
+    io_rw_32 *power_off_set = hw_set_alias_untyped(power_off);
+    io_rw_32 *power_off_clr = hw_clear_alias_untyped(power_off);
 #endif
 
     // Hard-reset core 1.
