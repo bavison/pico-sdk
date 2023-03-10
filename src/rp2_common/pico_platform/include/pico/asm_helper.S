@@ -12,6 +12,7 @@
 
 #include "pico.h"
 
+#define alignrom    .align
 #define _asciz      .asciz
 #define dc8         .byte
 #define dc16        .hword

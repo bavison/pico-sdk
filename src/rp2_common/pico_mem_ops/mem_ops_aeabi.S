@@ -31,7 +31,7 @@
 .section .data.aeabi_mem_funcs
 .global aeabi_mem_funcs, aeabi_mem_funcs_end
 
-.align 2
+ alignrom 2
 aeabi_mem_funcs:
     dc32 ROM_FUNC_MEMSET
     dc32 ROM_FUNC_MEMCPY
