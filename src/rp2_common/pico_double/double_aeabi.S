@@ -41,8 +41,7 @@
 .endm
 
 #if PICO_DOUBLE_PROPAGATE_NANS
-.thumb_func
-__check_nan_d1:
+ local_func __check_nan_d1
    movs r3, #1
    lsls r3, #21
    lsls r2, r1, #1
@@ -52,8 +51,7 @@ __check_nan_d1:
 1:
    bx ip
 
-.thumb_func
-__check_nan_d2:
+ local_func __check_nan_d2
    push {r0, r2}
    movs r2, #1
    lsls r2, #21
@@ -722,8 +720,7 @@ __aeabi_dfcmple_guts:
 2:
     shimmable_table_tail_call SF_TABLE_V3_FSINCOS sincos_shim_bootstrap
 
-.thumb_func
-sincos_shim_bootstrap:
+ local_func sincos_shim_bootstrap
     push {r2, r3, r4}
     movs r3, #0x13
     ldrb r3, [r3]
@@ -740,8 +737,7 @@ sincos_shim_bootstrap:
     str r3, [r2, #SF_TABLE_V3_FSINCOS]
     str r3, [sp, #8]
     pop {r2, r3, pc}
-.thumb_func
-dsincos_shim_v2:
+ local_func dsincos_shim_v2
      push {r4-r7,r14}
      bl push_r8_r11
      bl v2_rom_dsincos_internal
@@ -753,20 +749,17 @@ dsincos_shim_v2:
      pop {r2,r3}
      bl pop_r8_r11
      pop {r4-r7,r15}
-.thumb_func
-v2_rom_dsincos_internal:
+ local_func v2_rom_dsincos_internal
     push {r0, lr}
     ldr r0, =0x3855
     str r0, [sp, #4]
     pop {r0, pc}
-.thumb_func
-v2_rom_dcos_finish:
+ local_func v2_rom_dcos_finish
     push {r0, r1}
     ldr r0, =0x389d
     str r0, [sp, #4]
     pop {r0, pc}
-.thumb_func
-v2_rom_dsin_finish:
+ local_func v2_rom_dsin_finish
     push {r0, r1}
     ldr r0, =0x38d9
     str r0, [sp, #4]

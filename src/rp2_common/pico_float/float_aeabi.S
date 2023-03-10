@@ -45,8 +45,7 @@
 .endm
 
 #if PICO_FLOAT_PROPAGATE_NANS
-.thumb_func
-__check_nan_f1:
+ local_func __check_nan_f1
    movs r3, #1
    lsls r3, #24
    lsls r2, r0, #1
@@ -56,8 +55,7 @@ __check_nan_f1:
 1:
    bx ip
 
-.thumb_func
-__check_nan_f2:
+ local_func __check_nan_f2
    movs r3, #1
    lsls r3, #24
    lsls r2, r0, #1
