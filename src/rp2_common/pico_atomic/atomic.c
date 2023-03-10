@@ -7,9 +7,31 @@
 #include <stdatomic.h>
 #include "pico/sync.h"
 
+#ifdef PICO_C_COMPILER_IS_IAR
+// We use inline definitions to avoid libc dependency.
+static inline void* my_memcpy(void* dest, const void* src, size_t count) {
+    unsigned char *d = dest;
+    const unsigned char *s = src;
+    while (count--)
+        *d++ = *s++;
+    return dest;
+}
+static inline int my_memcmp(const void *lhs, const void *rhs, size_t count) {
+    const unsigned char *p1 = lhs;
+    const unsigned char *p2 = rhs;
+    for (; count--; ++p1, ++p2) {
+        if (*p1 != *p2)
+            return *p1 - *p2;
+    }
+    return 0;
+}
+#define memcpy my_memcpy
+#define memcmp my_memcmp
+#else
 // We use __builtin_mem* to avoid libc dependency.
 #define memcpy __builtin_memcpy
 #define memcmp __builtin_memcmp
+#endif
 
 static inline uint32_t atomic_lock(__unused const volatile void *ptr) {
     return spin_lock_blocking(spin_lock_instance(PICO_SPINLOCK_ID_ATOMIC));
