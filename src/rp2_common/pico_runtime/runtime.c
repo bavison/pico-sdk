@@ -6,6 +6,7 @@
 
 #include <stdio.h>
 #include <stdarg.h>
+#include <string.h>
 #include <sys/time.h>
 #include <sys/times.h>
 #include <unistd.h>
@@ -144,6 +145,9 @@ void runtime_init(void) {
     }
 
 #if !(PICO_NO_RAM_VECTOR_TABLE || PICO_NO_FLASH)
+#ifndef __GNUC__
+#define __builtin_memcpy memcpy
+#endif
     __builtin_memcpy(ram_vector_table, (uint32_t *) scb_hw->vtor, sizeof(ram_vector_table));
     scb_hw->vtor = (uintptr_t) ram_vector_table;
 #endif
