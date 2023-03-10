@@ -13,7 +13,7 @@
 
  .extern rom_funcs_lookup
 
-__pre_init __aeabi_bits_init, 00010
+ __pre_init __aeabi_bits_init, 00010
 
 .macro bits_section name
 #if PICO_BITS_IN_RAM
@@ -47,7 +47,7 @@ __aeabi_bits_init:
 .equ CTZ32, 8
 .equ REVERSE32, 12
 
-bits_section clzsi
+ bits_section clzsi
  gnu_func __clz
  gnu_func __clzl
  gnu_func __clzsi2
@@ -55,19 +55,19 @@ bits_section clzsi
     ldr r3, [r3, #CLZ32]
     bx r3
 
-bits_section ctzsi
+ bits_section ctzsi
  gnu_func __ctzsi2
     ldr r3, =aeabi_bits_funcs
     ldr r3, [r3, #CTZ32]
     bx r3
 
-bits_section popcountsi
+ bits_section popcountsi
  gnu_func __popcountsi2
     ldr r3, =aeabi_bits_funcs
     ldr r3, [r3, #POPCOUNT32]
     bx r3
 
-bits_section clzdi
+ bits_section clzdi
  gnu_func __clzll
  gnu_func __clzdi2
     ldr r3, =aeabi_bits_funcs
@@ -82,7 +82,7 @@ bits_section clzdi
     mov r0, r1
     bx r3
 
-bits_section ctzdi
+ bits_section ctzdi
  gnu_func __ctzdi2
     ldr r3, =aeabi_bits_funcs
     ldr r3, [r3, #CTZ32]
@@ -96,7 +96,7 @@ bits_section ctzdi
     adds r0, #32
     pop {pc}
 
-bits_section popcountdi
+ bits_section popcountdi
  gnu_func __popcountdi2
     ldr r3, =aeabi_bits_funcs
     ldr r3, [r3, #POPCOUNT32]
@@ -109,21 +109,21 @@ bits_section popcountdi
     add r0, r1
     pop {pc}
 
-bits_section reverse32
-regular_func reverse32
+ bits_section reverse32
+ regular_func reverse32
     ldr r3, =aeabi_bits_funcs
     ldr r3, [r3, #REVERSE32]
     bx r3
 
-bits_section __rev
-regular_func __rev
-regular_func __revl
+ bits_section __rev
+ regular_func __rev
+ regular_func __revl
     ldr r3, =aeabi_bits_funcs
     ldr r3, [r3, #REVERSE32]
     bx r3
 
-bits_section __revll
-regular_func __revll
+ bits_section __revll
+ regular_func __revll
     push {lr}
     ldr r3, =aeabi_bits_funcs
     ldr r3, [r3, #REVERSE32]

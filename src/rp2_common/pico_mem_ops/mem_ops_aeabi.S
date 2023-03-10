@@ -13,7 +13,7 @@
 
  .extern rom_funcs_lookup
 
-__pre_init __aeabi_mem_init, 00001
+ __pre_init __aeabi_mem_init, 00001
 
 .macro mem_section name
 #if PICO_MEM_IN_RAM
@@ -44,7 +44,7 @@ aeabi_mem_funcs:
 aeabi_mem_funcs_end:
 
 .section .text
-regular_func __aeabi_mem_init
+ regular_func __aeabi_mem_init
     ldr r0, =aeabi_mem_funcs
     movs r1, #MEM_FUNC_COUNT
     ldr r3, =rom_funcs_lookup
@@ -58,9 +58,9 @@ regular_func __aeabi_mem_init
 // (such as a DMA engine), its device supplement specifies whether it may be used in
 // implementations of these functions and what effect such use has on the device’s state.
 
-mem_section aeabi_memset_memcpy
+ mem_section aeabi_memset_memcpy
 
-wrapper_func __aeabi_memset
+ wrapper_func __aeabi_memset
     // 2nd/3rd args are reversed
     eors r2, r1
     eors r1, r2
@@ -69,8 +69,8 @@ wrapper_func __aeabi_memset
     ldr r3, [r3, #MEMSET]
     bx r3
 
-wrapper_func __aeabi_memset4
-wrapper_func __aeabi_memset8
+ wrapper_func __aeabi_memset4
+ wrapper_func __aeabi_memset8
     // 2nd/3rd args are reversed
     eors r2, r1
     eors r1, r2
@@ -79,22 +79,22 @@ wrapper_func __aeabi_memset8
     ldr r3, [r3, #MEMSET4]
     bx r3
 
-wrapper_func __aeabi_memcpy4
-wrapper_func __aeabi_memcpy8
+ wrapper_func __aeabi_memcpy4
+ wrapper_func __aeabi_memcpy8
     ldr r3, =aeabi_mem_funcs
     ldr r3, [r3, #MEMCPY4]
     bx r3
 
-mem_section memset
+ mem_section memset
 
-wrapper_func memset
+ wrapper_func memset
     ldr r3, =aeabi_mem_funcs
     ldr r3, [r3, #MEMSET]
     bx r3
 
-mem_section memcpy
-wrapper_func __aeabi_memcpy
-wrapper_func memcpy
+ mem_section memcpy
+ wrapper_func __aeabi_memcpy
+ wrapper_func memcpy
     ldr r3, =aeabi_mem_funcs
     ldr r3, [r3, #MEMCPY]
     bx r3

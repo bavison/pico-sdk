@@ -18,9 +18,9 @@
 #endif
 .endm
 
-int64_section __aeabi_lmul
+ int64_section __aeabi_lmul
 
-wrapper_func __aeabi_lmul
+ wrapper_func __aeabi_lmul
     muls   r1, r2
     muls   r3, r0
     adds   r1, r3

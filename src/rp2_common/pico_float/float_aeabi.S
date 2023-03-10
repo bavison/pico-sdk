@@ -31,7 +31,7 @@
  .extern ufix642float_shim
  .extern uint642float_shim
 
-__pre_init __aeabi_float_init, 00020
+ __pre_init __aeabi_float_init, 00020
 
 .syntax unified
 .cpu cortex-m0plus
@@ -46,11 +46,11 @@ __pre_init __aeabi_float_init, 00020
 .endm
 
 .macro float_wrapper_section func
-float_section WRAPPER_FUNC_NAME(\func)
+ float_section WRAPPER_FUNC_NAME(\func)
 .endm
 
 .macro _float_wrapper_func x
-    wrapper_func \x
+ wrapper_func \x
 .endm
 
 .macro wrapper_func_f1 x
@@ -136,19 +136,19 @@ __check_nan_f2:
 // note functions are word aligned except where they are an odd number of linear instructions
 
 // float FUNC_NAME(__aeabi_fadd)(float, float)         single-precision addition
-float_wrapper_section __aeabi_farithmetic
+ float_wrapper_section __aeabi_farithmetic
 // float FUNC_NAME(__aeabi_frsub)(float x, float y)    single-precision reverse subtraction, y - x
 
 // frsub first because it is the only one that needs alignment
 .align 2
-wrapper_func __aeabi_frsub
+ wrapper_func __aeabi_frsub
     eors r0, r1
     eors r1, r0
     eors r0, r1
     // fall thru
 
 // float FUNC_NAME(__aeabi_fsub)(float x, float y)     single-precision subtraction, x - y
-wrapper_func_f2 __aeabi_fsub
+ wrapper_func_f2 __aeabi_fsub
 #if PICO_FLOAT_PROPAGATE_NANS
     // we want to return nan for inf-inf or -inf - -inf, but without too much upfront cost
     mov r2, r0
@@ -161,11 +161,11 @@ wrapper_func_f2 __aeabi_fsub
 #endif
     table_tail_call SF_TABLE_FSUB
 
-wrapper_func_f2 __aeabi_fadd
+ wrapper_func_f2 __aeabi_fadd
     table_tail_call SF_TABLE_FADD
 
 // float FUNC_NAME(__aeabi_fdiv)(float n, float d)     single-precision division, n / d
-wrapper_func_f2 __aeabi_fdiv
+ wrapper_func_f2 __aeabi_fdiv
 #if PICO_FLOAT_PROPAGATE_NANS
     push {r0, r1, lr}
     bl 1f
@@ -225,7 +225,7 @@ fdiv_fsub_nan_helper:
 #endif
 
 // float FUNC_NAME(__aeabi_fmul)(float, float)         single-precision multiplication
-wrapper_func_f2 __aeabi_fmul
+ wrapper_func_f2 __aeabi_fmul
 #if PICO_FLOAT_PROPAGATE_NANS
     push {r0, r1, lr}
     bl 1f
@@ -252,9 +252,9 @@ wrapper_func_f2 __aeabi_fmul
     table_tail_call SF_TABLE_FMUL
 
 // void FUNC_NAME(__aeabi_cfrcmple)(float, float)         reversed 3-way (<, =, ?>) compare [1], result in PSR ZC flags
-float_wrapper_section __aeabi_cfcmple
+ float_wrapper_section __aeabi_cfcmple
 .align 2
-wrapper_func __aeabi_cfrcmple
+ wrapper_func __aeabi_cfrcmple
     push {r0-r2, lr}
     eors r0, r1
     eors r1, r0
@@ -265,8 +265,8 @@ wrapper_func __aeabi_cfrcmple
 // void FUNC_NAME(__aeabi_cfcmple)(float, float)         3-way (<, =, ?>) compare [1], result in PSR ZC flags
 // void FUNC_NAME(__aeabi_cfcmpeq)(float, float)         non-excepting equality comparison [1], result in PSR ZC flags
 .align 2
-wrapper_func __aeabi_cfcmple
-wrapper_func __aeabi_cfcmpeq
+ wrapper_func __aeabi_cfcmple
+ wrapper_func __aeabi_cfcmpeq
     push {r0-r2, lr}
 
 __aeabi_cfcmple_guts:
@@ -313,9 +313,9 @@ __aeabi_cfcmple_guts:
 
 
 // int FUNC_NAME(__aeabi_fcmpeq)(float, float)         result (1, 0) denotes (=, ?<>) [2], use for C == and !=
-float_wrapper_section __aeabi_fcmpeq
+ float_wrapper_section __aeabi_fcmpeq
 .align 2
-wrapper_func __aeabi_fcmpeq
+ wrapper_func __aeabi_fcmpeq
     push {lr}
     bl __aeabi_cfcmpeq
     beq 1f
@@ -326,18 +326,18 @@ wrapper_func __aeabi_fcmpeq
     pop {pc}
 
 // int FUNC_NAME(__aeabi_fcmplt)(float, float)         result (1, 0) denotes (<, ?>=) [2], use for C <
-float_wrapper_section __aeabi_fcmplt
+ float_wrapper_section __aeabi_fcmplt
 .align 2
-wrapper_func __aeabi_fcmplt
+ wrapper_func __aeabi_fcmplt
     push {lr}
     bl __aeabi_cfcmple
     sbcs r0, r0
     pop {pc}
 
 // int FUNC_NAME(__aeabi_fcmple)(float, float)         result (1, 0) denotes (<=, ?>) [2], use for C <=
-float_wrapper_section __aeabi_fcmple
+ float_wrapper_section __aeabi_fcmple
 .align 2
-wrapper_func __aeabi_fcmple
+ wrapper_func __aeabi_fcmple
     push {lr}
     bl __aeabi_cfcmple
     bls 1f
@@ -348,9 +348,9 @@ wrapper_func __aeabi_fcmple
     pop {pc}
 
 // int FUNC_NAME(__aeabi_fcmpge)(float, float)         result (1, 0) denotes (>=, ?<) [2], use for C >=
-float_wrapper_section __aeabi_fcmpge
+ float_wrapper_section __aeabi_fcmpge
 .align 2
-wrapper_func __aeabi_fcmpge
+ wrapper_func __aeabi_fcmpge
     push {lr}
     // because of NaNs it is better to reverse the args than the result
     bl __aeabi_cfrcmple
@@ -362,8 +362,8 @@ wrapper_func __aeabi_fcmpge
     pop {pc}
 
 // int FUNC_NAME(__aeabi_fcmpgt)(float, float)         result (1, 0) denotes (>, ?<=) [2], use for C >
-float_wrapper_section __aeabi_fcmpgt
-wrapper_func __aeabi_fcmpgt
+ float_wrapper_section __aeabi_fcmpgt
+ wrapper_func __aeabi_fcmpgt
     push {lr}
     // because of NaNs it is better to reverse the args than the result
     bl __aeabi_cfrcmple
@@ -371,8 +371,8 @@ wrapper_func __aeabi_fcmpgt
     pop {pc}
 
 // int FUNC_NAME(__aeabi_fcmpun)(float, float)         result (1, 0) denotes (?, <=>) [2], use for C99 isunordered()
-float_wrapper_section __aeabi_fcmpun
-wrapper_func __aeabi_fcmpun
+ float_wrapper_section __aeabi_fcmpun
+ wrapper_func __aeabi_fcmpun
    movs r3, #1
    lsls r3, #24
    lsls r2, r0, #1
@@ -389,8 +389,8 @@ wrapper_func __aeabi_fcmpun
 
 
 // float FUNC_NAME(__aeabi_ui2f)(unsigned)             unsigned to float (single precision) conversion
-float_wrapper_section __aeabi_ui2f
-wrapper_func __aeabi_ui2f
+ float_wrapper_section __aeabi_ui2f
+ wrapper_func __aeabi_ui2f
         subs r1, r1
         cmp r0, #0
         bne __aeabi_ui2f_1
@@ -401,9 +401,9 @@ __aeabi_ui2f_1:
         ldr r3, =__aeabi_i2f_main
         bx r3
 
-float_wrapper_section __aeabi_i2f
+ float_wrapper_section __aeabi_i2f
 // float FUNC_NAME(__aeabi_i2f)(int)                     integer to float (single precision) conversion
-wrapper_func __aeabi_i2f
+ wrapper_func __aeabi_i2f
         lsrs r1, r0, #31
         lsls r1, #31
         bpl 1f
@@ -449,9 +449,9 @@ __aeabi_i2f_main:
 
 
 // int FUNC_NAME(__aeabi_f2iz)(float)                     float (single precision) to integer C-style conversion [3]
-float_wrapper_section __aeabi_f2iz
-wrapper_func __aeabi_f2iz
-regular_func float2int_z
+ float_wrapper_section __aeabi_f2iz
+ wrapper_func __aeabi_f2iz
+ regular_func float2int_z
     lsls r1, r0, #1
     lsrs r2, r1, #24
     movs r3, #0x80
@@ -499,64 +499,64 @@ __aeabi_f2iz_4:
     ldr r3, =float2int
     bx r3
 
-float_section float2int
-regular_func float2int
+ float_section float2int
+ regular_func float2int
     shimmable_table_tail_call SF_TABLE_FLOAT2INT float2int_shim
 
-float_section float2fix
-regular_func float2fix
+ float_section float2fix
+ regular_func float2fix
     shimmable_table_tail_call SF_TABLE_FLOAT2FIX float2fix_shim
 
-float_section float2ufix
-regular_func float2ufix
+ float_section float2ufix
+ regular_func float2ufix
     table_tail_call SF_TABLE_FLOAT2UFIX
 
 // unsigned FUNC_NAME(__aeabi_f2uiz)(float)             float (single precision) to unsigned C-style conversion [3]
-float_wrapper_section __aeabi_f2uiz
-wrapper_func __aeabi_f2uiz
+ float_wrapper_section __aeabi_f2uiz
+ wrapper_func __aeabi_f2uiz
     table_tail_call SF_TABLE_FLOAT2UINT
 
-float_section fix2float
-regular_func fix2float
+ float_section fix2float
+ regular_func fix2float
     table_tail_call SF_TABLE_FIX2FLOAT
 
-float_section ufix2float
-regular_func ufix2float
+ float_section ufix2float
+ regular_func ufix2float
     table_tail_call SF_TABLE_UFIX2FLOAT
 
-float_section fix642float
-regular_func fix642float
+ float_section fix642float
+ regular_func fix642float
     shimmable_table_tail_call SF_TABLE_FIX642FLOAT fix642float_shim
 
-float_section ufix642float
-regular_func ufix642float
+ float_section ufix642float
+ regular_func ufix642float
     shimmable_table_tail_call SF_TABLE_UFIX642FLOAT ufix642float_shim
 
 // float FUNC_NAME(__aeabi_l2f)(long long)             long long to float (single precision) conversion
-float_wrapper_section __aeabi_l2f
+ float_wrapper_section __aeabi_l2f
 1:
     ldr r2, =__aeabi_i2f
     bx r2
-wrapper_func __aeabi_l2f
+ wrapper_func __aeabi_l2f
     asrs r2, r0, #31
     cmp r1, r2
     beq 1b
     shimmable_table_tail_call SF_TABLE_INT642FLOAT int642float_shim
 
 // float FUNC_NAME(__aeabi_l2f)(long long)             long long to float (single precision) conversion
-float_wrapper_section __aeabi_ul2f
+ float_wrapper_section __aeabi_ul2f
 1:
     ldr r2, =__aeabi_ui2f
     bx r2
-wrapper_func __aeabi_ul2f
+ wrapper_func __aeabi_ul2f
     cmp r1, #0
     beq 1b
     shimmable_table_tail_call SF_TABLE_UINT642FLOAT uint642float_shim
 
 // long long FUNC_NAME(__aeabi_f2lz)(float)             float (single precision) to long long C-style conversion [3]
-float_wrapper_section __aeabi_f2lz
-wrapper_func __aeabi_f2lz
-regular_func float2int64_z
+ float_wrapper_section __aeabi_f2lz
+ wrapper_func __aeabi_f2lz
+ regular_func float2int64_z
     cmn r0, r0
     bcc __aeabi_f2lz_2
     push {lr}
@@ -581,24 +581,24 @@ __aeabi_f2lz_2:
     ldr r3, =float2int64
     bx r3
 
-float_section float2int64
-regular_func float2int64
+ float_section float2int64
+ regular_func float2int64
     shimmable_table_tail_call SF_TABLE_FLOAT2INT64 float2int64_shim
 
-float_section float2fix64
-regular_func float2fix64
+ float_section float2fix64
+ regular_func float2fix64
     shimmable_table_tail_call SF_TABLE_FLOAT2FIX64 float2fix64_shim
 
 // unsigned long long FUNC_NAME(__aeabi_f2ulz)(float)     float to unsigned long long C-style conversion [3]
-float_wrapper_section __aeabi_f2ulz
-wrapper_func __aeabi_f2ulz
+ float_wrapper_section __aeabi_f2ulz
+ wrapper_func __aeabi_f2ulz
     shimmable_table_tail_call SF_TABLE_FLOAT2UINT64 float2uint64_shim
 
-float_section float2ufix64
-regular_func float2ufix64
+ float_section float2ufix64
+ regular_func float2ufix64
     shimmable_table_tail_call SF_TABLE_FLOAT2UFIX64 float2ufix64_shim
 
-float_wrapper_section __aeabi_f2d
+ float_wrapper_section __aeabi_f2d
 1:
 #if PICO_FLOAT_PROPAGATE_NANS
     // copy sign bit and 25 NAN id bits into sign bit and significant ID bits, also setting the high id bit
@@ -609,7 +609,7 @@ float_wrapper_section __aeabi_f2d
     lsls r0, #25
     bx lr
 #endif
-wrapper_func __aeabi_f2d
+ wrapper_func __aeabi_f2d
 #if PICO_FLOAT_PROPAGATE_NANS
     movs r3, #1
     lsls r3, #24
@@ -619,8 +619,8 @@ wrapper_func __aeabi_f2d
 #endif
     shimmable_table_tail_call SF_TABLE_FLOAT2DOUBLE float2double_shim
 
-float_wrapper_section sqrtf
-wrapper_func_f1 sqrtf
+ float_wrapper_section sqrtf
+ wrapper_func_f1 sqrtf
 #if PICO_FLOAT_SUPPORT_ROM_V1 && PICO_RP2040_B0_SUPPORTED
     // check for negative
     asrs r1, r0, #23
@@ -642,9 +642,9 @@ wrapper_func_f1 sqrtf
     bx lr
 #endif
 
-float_wrapper_section cosf
+ float_wrapper_section cosf
 // note we don't use _f1 since we do an infinity/nan check for outside of range
-wrapper_func cosf
+ wrapper_func cosf
     // rom version only works for -128 < angle < 128
     lsls r1, r0, #1
     lsrs r1, #24
@@ -671,9 +671,9 @@ wrapper_func cosf
     mov lr, r1
     b 2b
 
-float_wrapper_section sinf
+ float_wrapper_section sinf
 // note we don't use _f1 since we do an infinity/nan check for outside of range
-wrapper_func sinf
+ wrapper_func sinf
     // rom version only works for -128 < angle < 128
     lsls r1, r0, #1
     lsrs r1, #24
@@ -700,7 +700,7 @@ wrapper_func sinf
     mov lr, r1
     b 2b
 
-float_wrapper_section sincosf
+ float_wrapper_section sincosf
 // note we don't use _f1 since we do an infinity/nan check for outside of range
  gnu_func sincosf
     push {r1, r2, lr}
@@ -743,9 +743,9 @@ float_wrapper_section sincosf
     mov lr, r1
     b 2b
 
-float_wrapper_section tanf
+ float_wrapper_section tanf
 // note we don't use _f1 since we do an infinity/nan check for outside of range
-wrapper_func tanf
+ wrapper_func tanf
     // rom version only works for -128 < angle < 128
     lsls r1, r0, #1
     lsrs r1, #24
@@ -795,14 +795,14 @@ ftan_out_of_range:
     mov lr, r1
     b ftan_in_range
 
-float_wrapper_section atan2f
-wrapper_func_f2 atan2f
+ float_wrapper_section atan2f
+ wrapper_func_f2 atan2f
     shimmable_table_tail_call SF_TABLE_FATAN2 fatan2_shim
 
-float_wrapper_section expf
-wrapper_func_f1 expf
+ float_wrapper_section expf
+ wrapper_func_f1 expf
     table_tail_call SF_TABLE_FEXP
 
-float_wrapper_section logf
-wrapper_func_f1 logf
+ float_wrapper_section logf
+ wrapper_func_f1 logf
     table_tail_call SF_TABLE_FLN
