@@ -30,13 +30,13 @@ need to change SHIFT above
 //    //     lsrs r3, #SIO_DIV_CSR_READY_SHIFT_FOR_CARRY
 //    //     bcc 1b
 
-// 6 cycle push + 2 ldr ensures the 8 cycle delay before remainder and quotient are ready
-push {r4, r5, r6, r7, lr}
-// note we must read quotient last, and since it isn't the last reg, we'll not use ldmia!
-ldr r4, [r2, #SIO_DIV_UDIVIDEND_OFFSET]
-ldr r5, [r2, #SIO_DIV_UDIVISOR_OFFSET]
-ldr r7, [r2, #SIO_DIV_REMAINDER_OFFSET]
-ldr r6, [r2, #SIO_DIV_QUOTIENT_OFFSET]
+    // 6 cycle push + 2 ldr ensures the 8 cycle delay before remainder and quotient are ready
+    push {r4, r5, r6, r7, lr}
+    // note we must read quotient last, and since it isn't the last reg, we'll not use ldmia!
+    ldr r4, [r2, #SIO_DIV_UDIVIDEND_OFFSET]
+    ldr r5, [r2, #SIO_DIV_UDIVISOR_OFFSET]
+    ldr r7, [r2, #SIO_DIV_REMAINDER_OFFSET]
+    ldr r6, [r2, #SIO_DIV_QUOTIENT_OFFSET]
 .endm
 
 // restores divider state from r4-r7, then pops them and pc
@@ -59,9 +59,9 @@ ldr r6, [r2, #SIO_DIV_QUOTIENT_OFFSET]
 //      and so 4 reads is cheaper (and we don't have to adjust r2)
 // note also, that we must restore via UDIVI* rather than SDIVI* to prevent the quotient/remainder being negated on read based
 //      on the signs of the inputs
-str r4, [r2, #SIO_DIV_UDIVIDEND_OFFSET]
-str r5, [r2, #SIO_DIV_UDIVISOR_OFFSET]
-str r7, [r2, #SIO_DIV_REMAINDER_OFFSET]
-str r6, [r2, #SIO_DIV_QUOTIENT_OFFSET]
-pop {r4, r5, r6, r7, pc}
+    str r4, [r2, #SIO_DIV_UDIVIDEND_OFFSET]
+    str r5, [r2, #SIO_DIV_UDIVISOR_OFFSET]
+    str r7, [r2, #SIO_DIV_REMAINDER_OFFSET]
+    str r6, [r2, #SIO_DIV_QUOTIENT_OFFSET]
+    pop {r4, r5, r6, r7, pc}
 .endm
