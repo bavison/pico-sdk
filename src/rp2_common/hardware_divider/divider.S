@@ -7,7 +7,7 @@
 .thumb
 
 // tag::hw_div_s32[]
-regular_func_with_section hw_divider_divmod_s32
+ regular_func_with_section hw_divider_divmod_s32
     ldr r3, =(SIO_BASE)
     str r0, [r3, #SIO_DIV_SDIVIDEND_OFFSET]
     str r1, [r3, #SIO_DIV_SDIVISOR_OFFSET]
@@ -15,7 +15,7 @@ regular_func_with_section hw_divider_divmod_s32
 // end::hw_div_s32[]
 
 // tag::hw_div_u32[]
-regular_func_with_section hw_divider_divmod_u32
+ regular_func_with_section hw_divider_divmod_u32
     ldr r3, =(SIO_BASE)
     str r0, [r3, #SIO_DIV_UDIVIDEND_OFFSET]
     str r1, [r3, #SIO_DIV_UDIVISOR_OFFSET]
@@ -34,7 +34,7 @@ hw_divider_divmod_return:
     ldr r0, [r3, #SIO_DIV_QUOTIENT_OFFSET]
     bx lr
 
-regular_func_with_section hw_divider_save_state
+ regular_func_with_section hw_divider_save_state
     ldr r3, =SIO_BASE
     ldr r1, [r3, #SIO_DIV_UDIVIDEND_OFFSET]
     ldr r2, [r3, #SIO_DIV_UDIVISOR_OFFSET]
@@ -46,7 +46,7 @@ regular_func_with_section hw_divider_save_state
     stmia r0!, {r1-r2}
     bx lr
 
-regular_func_with_section hw_divider_restore_state
+ regular_func_with_section hw_divider_restore_state
     ldr r3, =SIO_BASE
     ldmia r0!, {r1-r2}
     str r1, [r3, #SIO_DIV_UDIVIDEND_OFFSET]

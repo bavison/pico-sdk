@@ -91,24 +91,24 @@
 #endif /* !PICO_DIVIDER_DISABLE_INTERRUPTS */
 
 // since idiv and idivmod only differ by a cycle, we'll make them the same!
-div_section WRAPPER_FUNC_NAME(__aeabi_idiv)
+ div_section WRAPPER_FUNC_NAME(__aeabi_idiv)
 .align 2
-wrapper_func __aeabi_idiv
-wrapper_func __aeabi_idivmod
-regular_func div_s32s32
-regular_func divmod_s32s32
+ wrapper_func __aeabi_idiv
+ wrapper_func __aeabi_idivmod
+ regular_func div_s32s32
+ regular_func divmod_s32s32
 #if !PICO_DIVIDER_DISABLE_INTERRUPTS
     // to support IRQ usage (or context switch) we must save/restore divider state around call if state is dirty
     ldr r2, =SIO_BASE
     ldr r3, [r2, #SIO_DIV_CSR_OFFSET]
     lsrs r3, #SIO_DIV_CSR_DIRTY_SHIFT_FOR_CARRY
     bcs divmod_s32s32_savestate
-regular_func divmod_s32s32_unsafe
+ regular_func divmod_s32s32_unsafe
 #else
 // to avoid too much source code spaghetti with restoring interrupts, we make this the same as the other funcs
 // in the PICO_DIVIDER_DISABLE_INTERRUPTS case; i.e. it is not a faster function; this seems reasonable as there
 // are the hardware_divider functions that can be used instead anyway
-regular_func divmod_s32s32_unsafe
+ regular_func divmod_s32s32_unsafe
     // to avoid worrying about IRQs (or context switches), simply disable interrupts around call
     ldr r2, =SIO_BASE
     mrs r3, PRIMASK
@@ -147,30 +147,30 @@ regular_func divmod_s32s32_unsafe
     pop {r2, pc}
 #if !PICO_DIVIDER_DISABLE_INTERRUPTS
 .align 2
-regular_func divmod_s32s32_savestate
+ regular_func divmod_s32s32_savestate
     save_div_state_and_lr
     bl divmod_s32s32_unsafe
     restore_div_state_and_return
 #endif /* !PICO_DIVIDER_DISABLE_INTERRUPTS */
 
 // since uidiv and uidivmod only differ by a cycle, we'll make them the same!
-div_section WRAPPER_FUNC_NAME(__aeabi_uidiv)
-regular_func div_u32u32
-regular_func divmod_u32u32
-wrapper_func __aeabi_uidiv
-wrapper_func __aeabi_uidivmod
+ div_section WRAPPER_FUNC_NAME(__aeabi_uidiv)
+ regular_func div_u32u32
+ regular_func divmod_u32u32
+ wrapper_func __aeabi_uidiv
+ wrapper_func __aeabi_uidivmod
 #if !PICO_DIVIDER_DISABLE_INTERRUPTS
     // to support IRQ usage (or context switch) we must save/restore divider state around call if state is dirty
     ldr r2, =SIO_BASE
     ldr r3, [r2, #SIO_DIV_CSR_OFFSET]
     lsrs r3, #SIO_DIV_CSR_DIRTY_SHIFT_FOR_CARRY
     bcs divmod_u32u32_savestate
-regular_func divmod_u32u32_unsafe
+ regular_func divmod_u32u32_unsafe
 #else
 // to avoid too much source code spaghetti with restoring interrupts, we make this the same as the other funcs
 // in the PICO_DIVIDER_DISABLE_INTERRUPTS case; i.e. it is not a faster function; this seems reasonable as there
 // are the hardware_divider functions that can be used instead anyway
-regular_func divmod_u32u32_unsafe
+ regular_func divmod_u32u32_unsafe
     // to avoid worrying about IRQs (or context switches), simply disable interrupts around call
     ldr r2, =SIO_BASE
     mrs r3, PRIMASK
@@ -206,18 +206,18 @@ regular_func divmod_u32u32_unsafe
     pop {r2, pc}
 #if !PICO_DIVIDER_DISABLE_INTERRUPTS
 .align 2
-regular_func divmod_u32u32_savestate
+ regular_func divmod_u32u32_savestate
     save_div_state_and_lr
     bl divmod_u32u32_unsafe
     restore_div_state_and_return
 #endif /* !PICO_DIVIDER_DISABLE_INTERRUPTS */
 
-div_section WRAPPER_FUNC_NAME(__aeabi_ldiv)
+ div_section WRAPPER_FUNC_NAME(__aeabi_ldiv)
 
 .align 2
-wrapper_func __aeabi_ldivmod
-regular_func div_s64s64
-regular_func divmod_s64s64
+ wrapper_func __aeabi_ldivmod
+ regular_func div_s64s64
+ regular_func divmod_s64s64
 #if !PICO_DIVIDER_DISABLE_INTERRUPTS
     // to support IRQ usage (or context switch) we must save/restore divider state around call if state is dirty
     mov ip, r2
@@ -243,9 +243,9 @@ divmod_s64s64_savestate:
 #endif /* !PICO_DIVIDER_DISABLE_INTERRUPTS */
 
 .align 2
-wrapper_func __aeabi_uldivmod
-regular_func div_u64u64
-regular_func divmod_u64u64
+ wrapper_func __aeabi_uldivmod
+ regular_func div_u64u64
+ regular_func divmod_u64u64
 #if !PICO_DIVIDER_DISABLE_INTERRUPTS
     // to support IRQ usage (or context switch) we must save/restore divider state around call if state is dirty
     mov ip, r2
@@ -256,7 +256,7 @@ regular_func divmod_u64u64
     bcs divmod_u64u64_savestate
     b divmod_u64u64_unsafe
 .align 2
-regular_func divmod_u64u64_savestate
+ regular_func divmod_u64u64_savestate
     save_div_state_and_lr_64
     bl divmod_u64u64_unsafe
     restore_div_state_and_return_64
@@ -279,7 +279,7 @@ l\@_1:
 .endm
 
 .align 2
-regular_func divmod_s64s64_unsafe
+ regular_func divmod_s64s64_unsafe
  cmp r3,#0
  blt 1f
 // here x +ve
@@ -338,7 +338,7 @@ regular_func divmod_s64s64_unsafe
  dneg r2,r3
  pop {r15}
 
-regular_func divmod_u64u64_unsafe
+ regular_func divmod_u64u64_unsafe
  cmp r1,#0
  bne y64                   // y fits in 32 bits?
  cmp r3,#0                 // yes; and x?
@@ -859,16 +859,16 @@ y64_x64:
  blo 3b
  b 1b
 
-div_section divmod_s64s64_rem
-regular_func divmod_s64s64_rem
+ div_section divmod_s64s64_rem
+ regular_func divmod_s64s64_rem
     push {r4, lr}
     bl divmod_s64s64
     ldr r4, [sp, #8]
     stmia r4!, {r2,r3}
     pop {r4, pc}
 
-div_section divmod_u64u64_rem
-regular_func divmod_u64u64_rem
+ div_section divmod_u64u64_rem
+ regular_func divmod_u64u64_rem
     push {r4, lr}
     bl divmod_u64u64
     ldr r4, [sp, #8]
