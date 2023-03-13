@@ -7,9 +7,11 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <string.h>
+#ifdef __GNUC__
 #include <sys/time.h>
 #include <sys/times.h>
 #include <unistd.h>
+#endif
 #include "pico.h"
 
 #include "hardware/regs/m0plus.h"
@@ -277,6 +279,8 @@ __attribute__((weak)) void *_sbrk(int incr) {
     return (void *) prev_heap_end;
 }
 
+#ifdef __GNUC__
+
 static int64_t epoch_time_us_since_boot;
 
 __attribute__((weak)) int _gettimeofday (struct timeval *__restrict tv, __unused void *__restrict tz) {
@@ -315,6 +319,8 @@ __attribute((weak)) pid_t _getpid(void) {
 __attribute((weak)) int _kill(__unused pid_t pid, __unused int sig) {
     return -1;
 }
+
+#endif
 
 // exit is not useful... no desire to pull in __call_exitprocs
 void exit(int status) {
