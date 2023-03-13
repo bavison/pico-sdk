@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#include "pico.h"
 #include "pico/asm_helper.S"
+#include "pico.h"
 
 #include "pico/platform/cpu_regs.h"
 
