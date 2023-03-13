@@ -4,6 +4,12 @@ if (NOT TARGET pico_stdlib)
             ${CMAKE_CURRENT_LIST_DIR}/stdlib.c
     )
 
+    if ("${CMAKE_GENERATOR}" STREQUAL "IAR Embedded Workbench for Arm")
+        target_link_libraries(pico_stdlib INTERFACE
+                "$<IF:$<STREQUAL:$<TARGET_PROPERTY:PICO_TARGET_BINARY_TYPE>,no_flash>,,boot_stage2>"
+        )
+    endif()
+
     set(PICO_STDLIB_LIBRARIES
             hardware_gpio
             hardware_uart
