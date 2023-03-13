@@ -6,9 +6,9 @@
 
 #include <stdio.h>
 #include <stdarg.h>
-#include <sys/stat.h>
 #include "pico/platform/compiler.h"
 #if !PICO_C_COMPILER_IS_ARMCLANG && !PICO_C_COMPILER_IS_IAR
+#include <sys/stat.h>
 #include <sys/time.h>
 #include <sys/times.h>
 #include <unistd.h>
@@ -118,8 +118,6 @@ __weak int _kill(__unused pid_t pid, __unused int sig) {
     return -1;
 }
 
-#endif
-
 int __attribute__((weak)) _read(int handle, char *buffer, int length) {
 #if LIB_PICO_STDIO
     if (handle == STDIO_HANDLE_STDIN) {
@@ -158,6 +156,8 @@ int __attribute__((weak)) _fstat(__unused int fd, __unused struct stat *buf) {
 int __attribute__((weak)) _isatty(int fd) {
     return fd == STDIO_HANDLE_STDIN || fd == STDIO_HANDLE_STDOUT || fd == STDIO_HANDLE_STDERR;
 }
+
+#endif
 
 int __attribute__((weak)) _getentropy (__unused void *buffer, __unused size_t length) {
     // note we don't hook this up as it isn't clear if/where it is used, and we don't particularly
