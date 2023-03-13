@@ -7,7 +7,9 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdarg.h>
+#ifdef __GNUC__
 #include <sys/stat.h>
+#endif
 
 #include "pico.h"
 #if LIB_PICO_PRINTF_PICO
@@ -162,6 +164,8 @@ int puts_raw(const char *s) {
     return len;
 }
 
+#ifdef __GNUC__
+
 int __attribute__((weak)) _read(int handle, char *buffer, int length) {
     if (handle == STDIO_HANDLE_STDIN) {
         return stdio_get_until(buffer, length, at_the_end_of_time);
@@ -196,6 +200,8 @@ int __attribute__((weak)) _fstat(__unused int fd, __unused struct stat *buf) {
 int __attribute__((weak)) _isatty(int fd) {
     return fd == STDIO_HANDLE_STDIN || fd == STDIO_HANDLE_STDOUT || fd == STDIO_HANDLE_STDERR;
 }
+
+#endif
 
 void stdio_set_driver_enabled(stdio_driver_t *driver, bool enable) {
     stdio_driver_t **prev = &drivers;
