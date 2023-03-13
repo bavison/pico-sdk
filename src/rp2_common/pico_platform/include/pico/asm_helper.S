@@ -4,6 +4,9 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
+#ifndef INCLUDED_ASM_HELPER_S
+#define INCLUDED_ASM_HELPER_S
+
 #if defined __GNUC__
 
 
@@ -191,3 +194,5 @@ x:
 
 
 #endif
+
+#endif // sentry INCLUDED_ASM_HELPER_S
