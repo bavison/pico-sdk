@@ -4,6 +4,9 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
+#ifndef INCLUDED_ASM_HELPER_S
+#define INCLUDED_ASM_HELPER_S
+
 #if defined __GNUC__
 
 
@@ -150,3 +153,5 @@ __pre_init                      macro           func, priority_string
 
 
 #endif
+
+#endif // sentry INCLUDED_ASM_HELPER_S
