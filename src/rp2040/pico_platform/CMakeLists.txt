@@ -34,6 +34,9 @@ if (NOT TARGET pico_platform)
     endif()
 
     pico_register_common_scope_var(PICO_LINKER_SCRIPT_INCLUDE_DIRS)
+    if ("${CMAKE_GENERATOR}" STREQUAL "IAR Embedded Workbench for Arm")
+        list(APPEND PICO_LINKER_SCRIPT_INCLUDE_DIRS ${CMAKE_CURRENT_LIST_DIR}/script_include/iar)
+    endif()
     list(APPEND PICO_LINKER_SCRIPT_INCLUDE_DIRS ${CMAKE_CURRENT_LIST_DIR}/script_include)
 
     pico_promote_common_scope_vars()
