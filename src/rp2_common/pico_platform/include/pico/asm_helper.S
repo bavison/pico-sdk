@@ -4,6 +4,9 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
+#ifndef INCLUDED_ASM_HELPER_S
+#define INCLUDED_ASM_HELPER_S
+
 #if defined __GNUC__
 
 
@@ -203,3 +206,5 @@ x:
 #define LOCAL_LABEL(l) local_##l
 
 #endif
+
+#endif // sentry INCLUDED_ASM_HELPER_S
