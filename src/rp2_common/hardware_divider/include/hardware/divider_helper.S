@@ -27,7 +27,7 @@ _macro(save_div_state_and_lr)
 //    // ldr r3, [r2, #SIO_DIV_CSR_OFFSET]
 //    // // wait for results as we can't save signed-ness of operation
 //    // 1:
-//    //     lsrs r3, #SIO_DIV_CSR_READY_SHIFT_FOR_CARRY
+//    //     lsrs r3, r3, #SIO_DIV_CSR_READY_SHIFT_FOR_CARRY
 //    //     bcc 1b
 
     // 6 cycle push + 2 ldr ensures the 8 cycle delay before remainder and quotient are ready
