@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
+#include "pico/asm_helper.S"
 #include "pico.h"
 #include "hardware/irq.h"
 #include "pico/asm_helper.S"
