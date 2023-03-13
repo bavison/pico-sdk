@@ -44,7 +44,7 @@ _macro_1arg(float_section, name)
     // unaligned
     ldrh r2, [r0, #0]
     ldrh r0, [r0, #2]
-    lsls r0, #16
+    lsls r0, r0, #16
     orrs r0, r2
     b 2f
 1:
@@ -88,10 +88,10 @@ _macro_1arg(float_section, name)
  asrs r4,r1,#24  // try shifting 7 bits at a time
  cmp r4,r5
  bne 1f          // next shift will overflow?
- lsls r1,#7
+ lsls r1,r1,#7
  lsrs r4,r0,#25
  orrs r1,r4
- lsls r0,#7
+ lsls r0,r0,#7
  adds r2,#7
  b 2b
 1:
@@ -125,19 +125,19 @@ ret_pop45:
  lsls r0,r0,#5  // Q28
  lsls r1,r1,#5  // Q28
  adds r4,r2,r3  // this is -760 if both arguments are 0 and at least -380-126=-506 otherwise
- asrs r4,#9
+ asrs r4,r4,#9
  adds r4,#1
  bmi 2f         // force y to 0 proper, so result will be zero
  subs r4,r2,r3  // calculate shift
  bge 1f         // ex>=ey?
  negs r4,r4     // make shift positive
- asrs r0,r4
+ asrs r0,r0,r4
  cmp r4,#28
  blo 3f
- asrs r0,#31
+ asrs r0,r0,#31
  b 3f
 1:
- asrs r1,r4
+ asrs r1,r1,r4
  cmp r4,#28
  blo 3f
 2:
@@ -146,7 +146,7 @@ ret_pop45:
  bge 4f         // x positive, return signed 0
  ldr r3, =0x2cfc         // &pi_q29, circular coefficients
  ldr r0,[r3]    // x negative, return +/- pi
- asrs r1,#31
+ asrs r1,r1,#31
  eors r0,r1
  b 7f
 4:
@@ -165,7 +165,7 @@ ret_pop45:
  ldr r5, =0x2b97         // cordic_vec
  blx r5                  // also produces magnitude (with scaling factor 1.646760119), which is discarded
  mov r0,r2               // result here is -pi/2..3pi/2 Q29
-// asrs r2,#29
+// asrs r2,r2,#29
 // subs r0,r2
  ldr r3, =0x2cfc         // &pi_q29, circular coefficients
  ldr r2,[r3]             // pi Q29
@@ -221,19 +221,19 @@ ret_pop45:
  push {r4,r14}
  mov r12,r1
  asrs r3,r0,#31
- lsls r0,#1
+ lsls r0,r0,#1
  lsrs r2,r0,#24
  beq 1f                        // zero?
  cmp r2,#0xff                  // Inf?
  beq 2f
  subs r1,r2,#1
  subs r2,#0x7f                 // remove exponent bias
- lsls r1,#24
+ lsls r1,r1,#24
  subs r0,r1                    // insert implied 1
  eors r0,r3
  subs r0,r3                    // top two's complement
  asrs r1,r0,#4                 // convert to double format
- lsls r0,#28
+ lsls r0,r0,#28
  ldr r4, =d2fix_a
  bx r4
 1:
@@ -265,11 +265,11 @@ ret_dzero:
  cmp r2,#12                    // will clamp?
  bge 2f
  movs r4,r0
- lsls r1,r2
- lsls r0,r2
+ lsls r1,r1,r2
+ lsls r0,r0,r2
  negs r2,r2
  adds r2,#32                   // complementary shift
- lsrs r4,r2
+ lsrs r4,r4,r2
  orrs r1,r4
  pop {r4,r15}
 2:
@@ -281,22 +281,22 @@ ret_dzero:
  adds r2,#32
  bmi 1f                        // long shift?
  mov r4,r1
- lsls r4,r2
+ lsls r4,r4,r2
  negs r2,r2
  adds r2,#32                   // complementary shift
- asrs r1,r2
- lsrs r0,r2
+ asrs r1,r1,r2
+ lsrs r0,r0,r2
  orrs r0,r4
  pop {r4,r15}
 1:
 // here a long shift down
  movs r0,r1
- asrs r1,#31                   // shift down 32 places
+ asrs r1,r1,#31                // shift down 32 places
  adds r2,#32
  bmi 1f                        // very long shift?
  negs r2,r2
  adds r2,#32
- asrs r0,r2
+ asrs r0,r0,r2
  pop {r4,r15}
 1:
  movs r0,r3                    // result very near zero: use sign extension bits
@@ -310,24 +310,24 @@ d2f64_a:
 1:
  mvns r0,r3
  movs r1,#1
- lsls r1,#31
+ lsls r1,r1,#31
  eors r1,r1,r0                 // generate extreme fixed-point values
  pop {r15}
 
  float_section float2double_shim
  regular_func float2double_shim
  lsrs r3,r0,#31                // sign bit
- lsls r3,#31
+ lsls r3,r3,#31
  lsls r1,r0,#1
  lsrs r2,r1,#24                // exponent
  beq 1f                        // zero?
  cmp r2,#0xff                  // Inf?
  beq 2f
- lsrs r1,#4                    // exponent and top 20 bits of mantissa
+ lsrs r1,r1,#4                 // exponent and top 20 bits of mantissa
  ldr r2,=(0x3ff-0x7f)<<20     // difference in exponent offsets
  adds r1,r2
  orrs r1,r3
- lsls r0,#29                   // bottom 3 bits of mantissa
+ lsls r0,r0,#29                // bottom 3 bits of mantissa
  bx r14
 1:
  movs r1,r3                    // return signed zero

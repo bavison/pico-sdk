@@ -32,12 +32,12 @@ _macro_1arg(int64_section, name)
     muls   r0, r2
     muls   r2, r4
     lsls   r4, r3, #16
-    lsrs   r3, #16
+    lsrs   r3, r3, #16
     adds   r0, r4
     pop    {r4}
     adcs   r1, r3
     lsls   r3, r2, #16
-    lsrs   r2, #16
+    lsrs   r2, r2, #16
     adds   r0, r3
     adcs   r1, r2
     add    r1, r12

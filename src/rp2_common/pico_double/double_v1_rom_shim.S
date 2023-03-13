@@ -52,7 +52,7 @@ _macro_1arg(double_section, name)
     // unaligned
     ldrh r2, [r0, #0]
     ldrh r0, [r0, #2]
-    lsls r0, #16
+    lsls r0, r0, #16
     orrs r0, r2
     b 2f
 1:
@@ -109,21 +109,21 @@ _macro_1arg(mdump, k)
 _macro_5args(mdunpack, ra, rb, re, rs, rt)
  lsrs MA(re),MA(rb),#20        // extract sign and exponent
  subs MA(rs),MA(re),#1
- lsls MA(rs),#20
+ lsls MA(rs),MA(rs),#20
  subs MA(rb),MA(rs)            // clear sign and exponent in mantissa; insert implied 1
  lsrs MA(rs),MA(re),#11        // sign
- lsls MA(re),#21
- lsrs MA(re),#21               // exponent
+ lsls MA(re),MA(re),#21
+ lsrs MA(re),MA(re),#21        // exponent
  beq l\@_1                     // zero exponent?
  adds MA(rt),MA(re),#1
- lsrs MA(rt),#11
+ lsrs MA(rt),MA(rt),#11
  beq l\@_2                     // exponent != 0x7ff? then done
 l\@_1:
  movs MA(ra),#0
  movs MA(rb),#1
- lsls MA(rb),#20
+ lsls MA(rb),MA(rb),#20
  subs MA(re),#128
- lsls MA(re),#12
+ lsls MA(re),MA(re),#12
 l\@_2:
  endm
 
@@ -139,29 +139,29 @@ _macro_5args(mdunpacks, ra, rb, re, rt0, rt1)
  lsrs MA(re),MA(rb),#20        // extract sign and exponent
  lsrs MA(rt1),MA(rb),#31       // sign only
  subs MA(rt0),MA(re),#1
- lsls MA(rt0),#20
+ lsls MA(rt0),MA(rt0),#20
  subs MA(rb),MA(rt0)           // clear sign and exponent in mantissa; insert implied 1
- lsls MA(re),#21
+ lsls MA(re),MA(re),#21
  bcc l\@_1                     // skip on positive
  mvns MA(rb),MA(rb)            // negate mantissa
  negs MA(ra),MA(ra)
  bcc l\@_1
  adds MA(rb),#1
 l\@_1:
- lsrs MA(re),#21
+ lsrs MA(re),MA(re),#21
  beq l\@_2                     // zero exponent?
  adds MA(rt0),MA(re),#1
- lsrs MA(rt0),#11
+ lsrs MA(rt0),MA(rt0),#11
  beq l\@_3                     // exponent != 0x7ff? then done
  subs MA(re),MA(rt1)
 l\@_2:
  movs MA(ra),#0
- lsls MA(rt1),#1               // +ve: 0  -ve: 2
+ lsls MA(rt1),MA(rt1),#1       // +ve: 0  -ve: 2
  adds MA(rb),MA(rt1),#1        // +ve: 1  -ve: 3
- lsls MA(rb),#30               // create +/-1 mantissa
- asrs MA(rb),#10
+ lsls MA(rb),MA(rb),#30        // create +/-1 mantissa
+ asrs MA(rb),MA(rb),#10
  subs MA(re),#128
- lsls MA(re),#12
+ lsls MA(re),MA(re),#12
 l\@_3:
  endm
 
@@ -177,7 +177,7 @@ l\@_3:
  regular_func dsub_shim
  push {r4-r7,r14}
  movs r4,#1
- lsls r4,#31
+ lsls r4,r4,#31
  eors r3,r4                    // flip sign on second argument
  b da_entry                    // continue in dadd
 
@@ -201,8 +201,8 @@ da_entry:
 da_xgty0:
  movs r5,r3
  lsls r5,r5,r7
- lsrs r2,r6
- asrs r3,r6
+ lsrs r2,r2,r6
+ asrs r3,r3,r6
  orrs r2,r5
 da_add:
  adds r0,r2
@@ -237,7 +237,7 @@ da_2:
  lsrs r5,r1,#20
  beq da_2
 da_1:
- lsls r4,#1                    // check rounding bit
+ lsls r4,r4,#1                 // check rounding bit
  bcc da_3
 da_4:
  adds r0,#1                    // round up
@@ -246,17 +246,17 @@ da_4:
 2:
  cmp r4,#0                     // sticky bits zero?
  bne da_3
- lsrs r0,#1                    // round to even
- lsls r0,#1
+ lsrs r0,r0,#1                 // round to even
+ lsls r0,r0,#1
 da_3:
  subs r2,#1
  bmi da_6
  adds r4,r2,#2                 // check if exponent is overflowing
- lsrs r4,#11
+ lsrs r4,r4,#11
  bne da_7
- lsls r2,#20                   // pack exponent and sign
+ lsls r2,r2,#20                // pack exponent and sign
  add r1,r2
- lsls r3,#31
+ lsls r3,r3,#31
  add r1,r3
  pop {r4-r7,r15}
 
@@ -286,10 +286,10 @@ da_0:
 // here a shift down by one place is required for normalisation
  adds r2,#1                    // adjust exponent
  lsls r6,r0,#31                // save rounding bit
- lsrs r0,#1
+ lsrs r0,r0,#1
  lsls r5,r1,#31
  orrs r0,r5
- lsrs r1,#1
+ lsrs r1,r1,#1
  cmp r6,#0
  beq da_3
  b da_4
@@ -324,8 +324,8 @@ da_ygtx:
 da_ygtx0:
  movs r5,r1
  lsls r5,r5,r6
- lsrs r0,r7
- asrs r1,r7
+ lsrs r0,r0,r7
+ asrs r1,r1,r7
  orrs r0,r5
  b da_add
 
@@ -379,7 +379,7 @@ _macro_9args(mul32_32_64, rx, ry, rzl, rzh, rt0, rt1, rt2, rt3, rt4)
  adds MA(rt1),MA(rt3)          //      M0+M1=M
  bcc l\@_1                     // addition of the two cross terms can overflow, so add carry into H
  movs MA(rt3),#1               //                   1
- lsls MA(rt3),#16              //                0x10000
+ lsls MA(rt3),MA(rt3),#16      //                0x10000
  adds MA(rt2),MA(rt3)          //             H'
 l\@_1:
                                //   t0   t1   t2   t3   t4
@@ -414,7 +414,7 @@ _macro_9args(muls32_32_64, rx, ry, rzl, rzh, rt0, rt1, rt2, rt3, rt4)
  adds MA(rt1),MA(rt3)          //      M0+M1=M
  movs MA(rt3),#0               //                    0
  adcs MA(rt4),MA(rt3)          //                      ¯Msx
- lsls MA(rt4),#16              //                    ¯Msx<<16
+ lsls MA(rt4),MA(rt4),#16      //                    ¯Msx<<16
  adds MA(rt2),MA(rt4)          //             H'
 
                                //   t0   t1   t2   t3   t4
@@ -450,7 +450,7 @@ _macro_9args(muls32_s32_64, rx, ry, rzl, rzh, rt0, rt1, rt2, rt3, rt4)
  bvc l\@_1                     //
  mvns MA(rt3),MA(rt3)          //                 ¯Msx        flip sign extension bits if overflow
 l\@_1:
- lsls MA(rt3),#16              //                    ¯Msx<<16
+ lsls MA(rt3),MA(rt3),#16      //                    ¯Msx<<16
  adds MA(rt2),MA(rt3)          //             H'
 
                                //   t0   t1   t2   t3   t4
@@ -516,7 +516,7 @@ _macro_6args(square32_64, rx, rzl, rzh, rt0, rt1, rt2)
  lsls r0,r6,#11
  lsrs r2,r5,#21
  orrs r0,r2
- lsls r5,#11                   // now r5:r0:r1 Q83=Q(51+32), extra LSBs in r12
+ lsls r5,r5,#11                // now r5:r0:r1 Q83=Q(51+32), extra LSBs in r12
  lsrs r2,r1,#20
  bne 1f                        // skip if in range [2..4)
  adds r5,r5                    // shift up so always [2..4) Q83, i.e. [1..2) Q84=Q(52+32)
@@ -526,10 +526,10 @@ _macro_6args(square32_64, rx, rzl, rzh, rt0, rt1, rt2)
 1:
  ldr r6,=0x3ff
  subs r3,r6                    // correct for exponent bias
- lsls r6,#1                    // 0x7fe
+ lsls r6,r6,#1                 // 0x7fe
  cmp r3,r6
  bhs dm_0                      // exponent over- or underflow
- lsls r5,#1                    // rounding bit to carry
+ lsls r5,r5,#1                 // rounding bit to carry
  bcc 1f                        // result is correctly rounded
  adds r0,#1
  movs r6,#0
@@ -537,13 +537,13 @@ _macro_6args(square32_64, rx, rzl, rzh, rt0, rt1, rt2)
  mov r6,r12                    // remaining sticky bits
  orrs r5,r6
  bne 1f                        // some sticky bits set?
- lsrs r0,#1
- lsls r0,#1                    // round to even
+ lsrs r0,r0,#1
+ lsls r0,r0,#1                 // round to even
 1:
- lsls r3,#20
+ lsls r3,r3,#20
  adds r1,r3
 dm_2:
- lsls r4,#31
+ lsls r4,r4,#31
  add r1,r4
  pop {r4-r7,r15}
 
@@ -557,7 +557,7 @@ dm_0:
  adds r1,#1
  lsrs r7,r1,#21
  beq 1f
- lsrs r1,#1
+ lsrs r1,r1,#1
  b dm_2
 1:
  lsls r1,r4,#31
@@ -640,7 +640,7 @@ ddiv0:                         // entry point from dtan
  if use_hw_div
 
  movs r5,#IOPORT>>24
- lsls r5,#24
+ lsls r5,r5,#24
  movs r6,#0
  mvns r6,r6
  str r6,[r5,#DIV_UDIVIDEND]
@@ -655,31 +655,31 @@ ddiv0:                         // entry point from dtan
  lsrs r6,r1,#31
  adds r6,r7
  mov r12,r6                    // result sign in r12b0; r12b1 trashed
- lsls r1,#1
+ lsls r1,r1,#1
  lsrs r7,r1,#21                // exponent
  beq 1f                        // zero exponent?
  adds r6,r7,#1
- lsrs r6,#11
+ lsrs r6,r6,#11
  beq 2f                        // exponent != 0x7ff? then done
 1:
  movs r0,#0
  movs r1,#0
  subs r7,#64                   // less drastic fiddling of exponents to get 0/0, Inf/Inf correct
- lsls r7,#12
+ lsls r7,r7,#12
 2:
  subs r6,r7,r4
- lsls r6,#2
+ lsls r6,r6,#2
  add r12,r12,r6                // (signed) exponent in r12[31..8]
  subs r7,#1                    // implied 1
- lsls r7,#21
+ lsls r7,r7,#21
  subs r1,r7
- lsrs r1,#1
+ lsrs r1,r1,#1
 
  if use_hw_div
 
  ldr r6,[r5,#DIV_QUOTIENT]
  adds r6,#1
- lsrs r6,#1
+ lsrs r6,r6,#1
 
  else
 
@@ -690,7 +690,7 @@ ddiv0:                         // entry point from dtan
  lsrs r1,r3,#4                 // x0=(q16)x
  bl __aeabi_uidiv              // !!! this could (but apparently does not) trash R12
  adds r6,r0,#1
- lsrs r6,#1
+ lsrs r6,r6,#1
  pop {r0-r3}
 
  endif
@@ -705,12 +705,12 @@ ddiv0:                         // entry point from dtan
  lsrs r5,r2,#22
  orrs r5,r4                    // x1=(q30)x
  muls r5,r6                    // u0*x1 Q45
- asrs r5,#15                   // v=u0*x1-1 Q30
+ asrs r5,r5,#15                // v=u0*x1-1 Q30
  muls r5,r6                    // u0*v Q45
- asrs r5,#14
+ asrs r5,r5,#14
  adds r5,#1
- asrs r5,#1                    // round u0*v to Q30
- lsls r6,#15
+ asrs r5,r5,#1                 // round u0*v to Q30
+ lsls r6,r6,#15
  subs r6,r5                    // u1 Q30
 
 // here
@@ -738,7 +738,7 @@ ddiv0:                         // entry point from dtan
  ldr r4,[r13,#4]               // xH
  muls r4,r5                    // xH*a0
  adds r3,r4                    // r2:r3 now x*a0 Q82
- lsrs r2,#25
+ lsrs r2,r2,#25
  lsls r1,r3,#7
  orrs r2,r1                    // r2 now x*a0 Q57; r7:r2 is x*a0 Q89
  lsls r4,r0,#5                 // y Q57
@@ -771,10 +771,10 @@ ddiv0:                         // entry point from dtan
 // here candidate quotient a1 is in range [0.5,1)
 // so 30 significant bits in r5
 
- lsls r4,#1                    // y now Q58
+ lsls r4,r4,#1                 // y now Q58
  lsrs r1,r5,#9                 // to Q52
  lsls r0,r5,#23
- lsrs r3,#9                    // 0.5ulp-significance bit in carry: if this is 1 we may need to correct result
+ lsrs r3,r3,#9                 // 0.5ulp-significance bit in carry: if this is 1 we may need to correct result
  orrs r0,r3
  bcs dd_1
  b dd_2
@@ -788,7 +788,7 @@ dd_0:
  adcs r5,r5,r6
  lsrs r1,r5,#10
  lsls r0,r5,#22
- lsrs r3,#10                   // 0.5ulp-significance bit in carry: if this is 1 we may need to correct result
+ lsrs r3,r3,#10                // 0.5ulp-significance bit in carry: if this is 1 we may need to correct result
  orrs r0,r3
  bcc dd_2
 dd_1:
@@ -801,7 +801,7 @@ dd_1:
 
  adcs r0,r0,r0
  adcs r1,r1,r1                 // z Q53 with 1 in LSB
- lsls r4,#16                   // Q105-32=Q73
+ lsls r4,r4,#16                // Q105-32=Q73
  ldr r2,[r13,#0]               // xL Q52
  ldr r3,[r13,#4]               // xH Q20
 
@@ -821,21 +821,21 @@ dd_1:
  adds r0,#1
  adcs r1,r2
 1:
- lsrs r0,#1                    // shift back down to Q52
+ lsrs r0,r0,#1                 // shift back down to Q52
  lsls r2,r1,#31
  orrs r0,r2
- lsrs r1,#1
+ lsrs r1,r1,#1
 dd_2:
  add r13,#8
  mov r2,r12
  lsls r7,r2,#31                // result sign
- asrs r2,#2                    // result exponent
+ asrs r2,r2,#2                 // result exponent
  ldr r3,=0x3fd
  adds r2,r3
  ldr r3,=0x7fe
  cmp r2,r3
  bhs dd_3                      // over- or underflow?
- lsls r2,#20
+ lsls r2,r2,#20
  adds r1,r2                    // pack exponent
 dd_5:
  adds r1,r7                    // pack sign
@@ -928,16 +928,16 @@ dq_2:
  b dq_4
 
 dq_0:
- lsrs r1,#31
- lsls r1,#31                   // preserve sign bit
- lsrs r2,#21                   // extract exponent
+ lsrs r1,r1,#31
+ lsls r1,r1,#31                // preserve sign bit
+ lsrs r2,r2,#21                // extract exponent
  beq dq_4                      // -0? return it
- asrs r1,#11                   // make -Inf
+ asrs r1,r1,#11                // make -Inf
  b dq_4
 
 dq_3:
  ldr r1,=0x7ff
- lsls r1,#20                   // return +Inf
+ lsls r1,r1,#20                // return +Inf
 dq_4:
  movs r0,#0
 dq_1:
@@ -947,7 +947,7 @@ dq_1:
  regular_func dsqrt_shim
  lsls r2,r1,#1
  bcs dq_0                      // negative?
- lsrs r2,#21                   // extract exponent
+ lsrs r2,r2,#21                // extract exponent
  subs r2,#1
  ldr r3,=0x7fe
  cmp r2,r3
@@ -955,14 +955,14 @@ dq_1:
  push {r4-r7,r14}
  lsls r4,r2,#20
  subs r1,r4                    // insert implied 1
- lsrs r2,#1
+ lsrs r2,r2,#1
  bcc 1f                        // even exponent? skip
  adds r0,r0,r0                 // odd exponent: shift up mantissa
  adcs r1,r1,r1
 1:
- lsrs r3,#2
+ lsrs r3,r3,#2
  adds r2,r3
- lsls r2,#20
+ lsls r2,r2,#20
  mov r12,r2                    // save result exponent
 
 // here
@@ -977,20 +977,20 @@ dq_1:
  muls r3,r2                    //  i32 p0=a0*a0*(y>>14);          // Q32
  asrs r3,r3,#12                //  i32 r0=p0>>12;                 // Q20
  muls r3,r2
- asrs r3,#13                   //  i32 dy0=(r0*a0)>>13;           // Q15
- lsls r2,#8
+ asrs r3,r3,#13                //  i32 dy0=(r0*a0)>>13;           // Q15
+ lsls r2,r2,#8
  subs r2,r3                    //  i32 a1=(a0<<8)-dy0;         // Q16
 
  movs r3,r2
  muls r3,r3
- lsrs r3,#13
+ lsrs r3,r3,#13
  lsrs r4,r1,#1
  muls r3,r4                    //  i32 p1=((a1*a1)>>11)*(y>>11);  // Q19*Q19=Q38
- asrs r3,#15                   //  i32 r1=p1>>15;                 // Q23
+ asrs r3,r3,#15                //  i32 r1=p1>>15;                 // Q23
  muls r3,r2
- asrs r3,#23
+ asrs r3,r3,#23
  adds r3,#1
- asrs r3,#1                    //  i32 dy1=(r1*a1+(1<<23))>>24;   // Q23*Q16=Q39; Q15
+ asrs r3,r3,#1                 //  i32 dy1=(r1*a1+(1<<23))>>24;   // Q23*Q16=Q39; Q15
  subs r2,r3                    //  i32 a2=a1-dy1;                 // Q16
  lsrs r3,r2,#16
  subs r2,r3                    //  if(a2>=0x10000) a2=0xffff; to prevent overflow of a2*a2
@@ -1002,22 +1002,22 @@ dq_1:
 
  movs r3,r2
  muls r3,r3
- lsls r1,#10
+ lsls r1,r1,#10
  lsrs r4,r0,#22
  orrs r1,r4                    // y Q30
  mul32_32_64 r1,r3, r4,r3, r5,r6,r7,r4,r3   //  i64 p2=(ui64)(a2*a2)*(ui64)y;  // Q62 r4:r3
  lsls r5,r3,#6
- lsrs r4,#26
+ lsrs r4,r4,#26
  orrs r4,r5
  adds r4,#0x20                 //  i32 r2=(p2>>26)+0x20;          // Q36 r4
  uxth r5,r4
  muls r5,r2
- asrs r4,#16
+ asrs r4,r4,#16
  muls r4,r2
- lsrs r5,#16
+ lsrs r5,r5,#16
  adds r4,r5
- asrs r4,#6                    // i32 dy2=((i64)r2*(i64)a2)>>22; // Q36*Q16=Q52; Q30
- lsls r2,#15
+ asrs r4,r4,#6                 // i32 dy2=((i64)r2*(i64)a2)>>22; // Q36*Q16=Q52; Q30
+ lsls r2,r2,#15
  subs r2,r4
 
 // here
@@ -1049,13 +1049,13 @@ dq_1:
 // by exhaustive testing, r4 = fffffffc0e134fdc .. 00000003c2bf539c Q60
 
  lsls r5,r7,#29
- lsrs r6,#3
+ lsrs r6,r6,#3
  adcs r6,r5                    // r4 Q57 with rounding
  muls32_32_64 r6,r2, r6,r2, r4,r5,r7,r6,r2    // d4=a3*r4/2 Q89
 // r4+d4 is correct to 1ULP at Q57, tested on ~9bn cases including all extreme values of r4 for each possible y Q30
 
  adds r2,#8
- asrs r2,#5                    // d4 Q52, rounded to Q53 with spare bit in carry
+ asrs r2,r2,#5                 // d4 Q52, rounded to Q53 with spare bit in carry
 
 // here
 // r0    y low bits
@@ -1101,7 +1101,7 @@ dq_5:
  square32_64 r4,r1,r2,r6,r2,r7
  adds r2,r3
  adds r2,r3                    // r1:r2 a5^2 Q106
- lsls r0,#22                   // y Q84
+ lsls r0,r0,#22                // y Q84
 
  negs r1,r1
  sbcs r0,r2                    // remainder y-a5^2
@@ -1112,7 +1112,7 @@ dq_5:
 1:
  lsrs r0,r4,#1
  lsrs r1,r5,#1
- lsls r5,#31
+ lsls r5,r5,#31
  orrs r0,r5
  add r1,r12
  pop {r4-r7,r15}
@@ -1160,11 +1160,11 @@ dq_5:
  adcs r1,r4
 
  mov r3,r11
- asrs r3,r7
+ asrs r3,r3,r7
  mov r4,r11
- lsls r4,r6
+ lsls r4,r4,r6
  mov r2,r10
- lsrs r2,r7
+ lsrs r2,r2,r7
  orrs r2,r4                    // r2:r3 y>>i, rounding in carry
  mov r4,r8
  mov r5,r9                     // r4:r5 x
@@ -1174,9 +1174,9 @@ dq_5:
  mov r9,r3
 
  mov r3,r5
- lsls r3,r6
- asrs r5,r7
- lsrs r4,r7
+ lsls r3,r3,r6
+ asrs r5,r5,r7
+ lsrs r4,r4,r7
  orrs r4,r3                    // r4:r5 x>>i, rounding in carry
  mov r2,r10
  mov r3,r11
@@ -1195,11 +1195,11 @@ dq_5:
  sbcs r1,r4
 
  mov r3,r9
- asrs r3,r7
+ asrs r3,r3,r7
  mov r4,r9
- lsls r4,r6
+ lsls r4,r4,r6
  mov r2,r8
- lsrs r2,r7
+ lsrs r2,r2,r7
  orrs r2,r4                    // r2:r3 x>>i, rounding in carry
  mov r4,r10
  mov r5,r11                    // r4:r5 y
@@ -1209,9 +1209,9 @@ dq_5:
  mov r11,r3
 
  mov r3,r5
- lsls r3,r6
- asrs r5,r7
- lsrs r4,r7
+ lsls r3,r3,r6
+ asrs r5,r5,r7
+ lsrs r4,r4,r7
  orrs r4,r3                    // r4:r5 y>>i, rounding in carry
  mov r2,r8
  mov r3,r9
@@ -1258,7 +1258,7 @@ dq_5:
 1:
  mvns r0,r3
  movs r1,#1
- lsls r1,#31
+ lsls r1,r1,#31
  eors r1,r1,r0                 // generate extreme fixed-point values
  pop {r15}
 
@@ -1303,11 +1303,11 @@ ret_dzero:
  cmp r2,#12                    // will clamp?
  bge 2f
  movs r4,r0
- lsls r1,r2
- lsls r0,r2
+ lsls r1,r1,r2
+ lsls r0,r0,r2
  negs r2,r2
  adds r2,#32                   // complementary shift
- lsrs r4,r2
+ lsrs r4,r4,r2
  orrs r1,r4
  pop {r4,r15}
 2:
@@ -1319,22 +1319,22 @@ ret_dzero:
  adds r2,#32
  bmi 1f                        // long shift?
  mov r4,r1
- lsls r4,r2
+ lsls r4,r4,r2
  negs r2,r2
  adds r2,#32                   // complementary shift
- asrs r1,r2
- lsrs r0,r2
+ asrs r1,r1,r2
+ lsrs r0,r0,r2
  orrs r0,r4
  pop {r4,r15}
 1:
 // here a long shift down
  movs r0,r1
- asrs r1,#31                   // shift down 32 places
+ asrs r1,r1,#31                // shift down 32 places
  adds r2,#32
  bmi 1f                        // very long shift?
  negs r2,r2
  adds r2,#32
- asrs r0,r2
+ asrs r0,r0,r2
  pop {r4,r15}
 1:
  movs r0,r3                    // result very near zero: use sign extension bits
@@ -1344,23 +1344,23 @@ ret_dzero:
  double_section double2float_shim
  regular_func double2float_shim
  lsls r2,r1,#1
- lsrs r2,#21                   // exponent
+ lsrs r2,r2,#21                // exponent
  ldr r3,=0x3ff-0x7f
  subs r2,r3                    // fix exponent bias
  ble 1f                        // underflow or zero
  cmp r2,#0xff
  bge 2f                        // overflow or infinity
- lsls r2,#23                   // position exponent of result
+ lsls r2,r2,#23                // position exponent of result
  lsrs r3,r1,#31
- lsls r3,#31
+ lsls r3,r3,#31
  orrs r2,r3                    // insert sign
  lsls r3,r0,#3                 // rounding bits
- lsrs r0,#29
- lsls r1,#12
- lsrs r1,#9
+ lsrs r0,r0,#29
+ lsls r1,r1,#12
+ lsrs r1,r1,#9
  orrs r0,r1                    // assemble mantissa
  orrs r0,r2                    // insert exponent and sign
- lsls r3,#1
+ lsls r3,r3,#1
  bcc 3f                        // no rounding
  beq 4f                        // all sticky bits 0?
 5:
@@ -1375,11 +1375,11 @@ ret_dzero:
  beq 6f                        // check case where value is just less than smallest normal
 7:
  lsrs r0,r1,#31
- lsls r0,#31
+ lsls r0,r0,#31
  bx r14
 6:
  lsls r2,r1,#12                // 20 1:s at top of mantissa?
- asrs r2,#12
+ asrs r2,r2,#12
  adds r2,#1
  bne 7b
  lsrs r2,r0,#29                // and 3 more 1:s?
@@ -1391,9 +1391,9 @@ ret_dzero:
  movs r2,#0xff
 8:
  lsrs r0,r1,#31                // return signed infinity
- lsls r0,#8
+ lsls r0,r0,#8
  adds r0,r2
- lsls r0,#23
+ lsls r0,r0,#23
  bx r14
 
  double_section x2double_shims
@@ -1460,15 +1460,15 @@ uf2d:
  cmp r2,r4
  bhs 6f                        // over/underflow? return signed zero/infinity
 7:
- lsls r2,#20                   // pack and return
+ lsls r2,r2,#20                // pack and return
  adds r1,r2
- lsls r3,#31
+ lsls r3,r3,#31
  adds r1,r3
 2:
  pop {r4,r5,r15}
 6:                             // return signed zero/infinity according to unclamped exponent in r2
  mvns r2,r2
- lsrs r2,#21
+ lsrs r2,r2,#21
  movs r0,#0
  movs r1,#0
  b 7b
@@ -1485,11 +1485,11 @@ uf2d:
 // here we have a 1 in b63 of r0:r1
  adds r2,#11                   // correct exponent for subsequent shift down
  lsls r4,r0,#21                // save bits for rounding
- lsrs r0,#11
+ lsrs r0,r0,#11
  lsls r5,r1,#21
  orrs r0,r5
- lsrs r1,#11
- lsls r4,#1
+ lsrs r1,r1,#11
+ lsls r4,r4,#1
  beq 1f                        // sticky bits are zero?
 8:
  movs r4,#0
@@ -1533,13 +1533,13 @@ uf2d:
  movs r5,#17
  subs r5,r2                    // 15-e
  movs r3,r1                    // Q20
- asrs r3,r5                    // x Q5
+ asrs r3,r3,r5                 // x Q5
  adds r2,#8                    // e+10
  adds r5,#7                    // 22-e = 32-(e+10)
  movs r6,r0
- lsrs r6,r5
- lsls r0,r2
- lsls r1,r2
+ lsrs r6,r6,r5
+ lsls r0,r0,r2
+ lsls r1,r1,r2
  orrs r1,r6                    // r0:r1 x Q62
  ldmia r4,{r4-r7}
  muls r3,r4                    // rx Q20
@@ -1549,12 +1549,12 @@ uf2d:
  muls r5,r2                    // qd in pieces: L Q62
  muls r6,r2                    //               M Q41
  muls r7,r2                    //               H Q20
- lsls r7,#10
+ lsls r7,r7,#10
  asrs r4,r6,#11
- lsls r6,#21
+ lsls r6,r6,#21
  adds r6,r5
  adcs r7,r4
- asrs r5,#31
+ asrs r5,r5,#31
  adds r7,r5                    // r6:r7 qd Q62
  subs r0,r6
  sbcs r1,r7                    // remainder Q62
@@ -1562,25 +1562,25 @@ uf2d:
 4:
  movs r2,#12                   // overflow: clamp to +/-1024
  movs r0,#0
- asrs r1,#31
- lsls r1,#1
+ asrs r1,r1,#31
+ lsls r1,r1,#1
  adds r1,#1
- lsls r1,#20
+ lsls r1,r1,#20
  b 2b
 
 1:
- lsls r1,#8
+ lsls r1,r1,#8
  lsrs r3,r0,#24
  orrs r1,r3
- lsls r0,#8                    // r0:r1 Q60, to be shifted down -r2 places
+ lsls r0,r0,#8                 // r0:r1 Q60, to be shifted down -r2 places
  negs r3,r2
  adds r2,#32                   // shift down in r3, complementary shift in r2
  bmi 1f                        // long shift?
 2:
  movs r4,r1
- asrs r1,r3
- lsls r4,r2
- lsrs r0,r3
+ asrs r1,r1,r3
+ lsls r4,r4,r2
+ lsrs r0,r0,r3
  orrs r0,r4
  movs r2,#0                    // rounding
  adcs r0,r2
@@ -1589,7 +1589,7 @@ uf2d:
 
 1:
  movs r0,r1                    // down 32 places
- asrs r1,#31
+ asrs r1,r1,#31
  subs r3,#32
  adds r2,#32
  bpl 2b
@@ -1665,14 +1665,14 @@ uf2d:
  movs r4,#0
  ldr r5,=0x9df04dbb           // this value compensates for the non-unity scaling of the CORDIC rotations
  ldr r6,=0x36f656c5
- lsls r2,#31
+ lsls r2,r2,#31
  bcc 1f
 // quadrant 2 or 3
  mvns r6,r6
  negs r5,r5
  adcs r6,r4
 1:
- lsls r2,#1
+ lsls r2,r2,#1
  bcs 1f
 // even quadrant
  mov r10,r4
@@ -1707,7 +1707,7 @@ dcos_finish:
 // and we wish to calculate cos θ=cos(α+ε)~cos α - ε sin α
  mov r1,r11
 // mov r2,r10
-// lsrs r2,#31
+// lsrs r2,r2,#31
 // adds r1,r2                    // rounding improves accuracy very slightly
  muls32_s32_64 r0,r1, r2,r3, r4,r5,r6,r2,r3
 // r2:r3   ε sin α Q(62+62-32)=Q92
@@ -1766,8 +1766,8 @@ dreddata0:
  cmp r4,r5                     // or Inf/NaN?
  bne 2f
 1:
- lsrs r1,#20                   // flush
- lsls r1,#20
+ lsrs r1,r1,#20                // flush
+ lsls r1,r1,#20
  movs r0,#0
 2:
  movs r4,r3
@@ -1776,12 +1776,12 @@ dreddata0:
  cmp r4,r5                     // or Inf/NaN?
  bne 2f
 1:
- lsrs r3,#20                   // flush
- lsls r3,#20
+ lsrs r3,r3,#20                // flush
+ lsls r3,r3,#20
  movs r2,#0
 2:
  movs r6,#0                    // quadrant offset
- lsls r5,#11                   // constant 0x80000000
+ lsls r5,r5,#11                // constant 0x80000000
  cmp r3,#0
  bpl 1f                        // skip if x positive
  movs r6,#2
@@ -1820,11 +1820,11 @@ dreddata0:
  cmp r3,#0
  beq 10f                       // x==0 going into division?
  lsls r4,r3,#1
- asrs r4,#21
+ asrs r4,r4,#21
  adds r4,#1
  bne 1f                        // x==Inf going into division?
  lsls r4,r1,#1
- asrs r4,#21
+ asrs r4,r4,#21
  adds r4,#1                    // y also ±Inf?
  bne 10f
  subs r1,#1                    // make them both just finite
@@ -1847,7 +1847,7 @@ dreddata0:
  movs r1,#0
  mov r8,r0
  movs r2,#1
- lsls r2,#30
+ lsls r2,r2,#30
  mov r9,r2                     // x=1
 
  adr r4,dtab_cc
@@ -1868,28 +1868,28 @@ dreddata0:
  subs r2,#12                   // this makes atan(0)==0
 // the following is basically a division residual y/x ~ atan(residual y/x)
  movs r4,#1
- lsls r4,#29
+ lsls r4,r4,#29
  movs r7,#0
 2:
- lsrs r2,#1
+ lsrs r2,r2,#1
  movs r3,r3                    // preserve carry
  bmi 1f
  sbcs r3,r2
  adds r0,r4
  adcs r1,r7
- lsrs r4,#1
+ lsrs r4,r4,#1
  bne 2b
  b 3f
 1:
  adcs r3,r2
  subs r0,r4
  sbcs r1,r7
- lsrs r4,#1
+ lsrs r4,r4,#1
  bne 2b
 3:
  lsls r6,r1,#31
- asrs r1,#1
- lsrs r0,#1
+ asrs r1,r1,#1
+ lsrs r0,r0,#1
  orrs r0,r6                    // Q61
 
 12:
@@ -1903,7 +1903,7 @@ dreddata0:
  mvns r4,r4                    // negative quadrant offset
  mvns r5,r5
 2:
- lsls r6,#31
+ lsls r6,r6,#31
  bne 2f                        // skip if quadrant offset is ±1
  adds r0,r4
  adcs r1,r5
@@ -1975,7 +1975,7 @@ dtab_cc:
  adr r6,dtab_exp
  movs r2,#0
  movs r3,#1
- lsls r3,#30                   // x=1 Q62
+ lsls r3,r3,#30                // x=1 Q62
 
 3:
  ldmia r6!,{r4,r5}
@@ -1987,11 +1987,11 @@ dtab_cc:
  negs r6,r7
  adds r6,#32                   // complementary shift
  movs r5,r3
- asrs r5,r7
+ asrs r5,r5,r7
  movs r4,r3
- lsls r4,r6
+ lsls r4,r4,r6
  movs r6,r2
- lsrs r6,r7                    // rounding bit in carry
+ lsrs r6,r6,r7                 // rounding bit in carry
  orrs r4,r6
  adcs r2,r4
  adcs r3,r5                    // x+=x>>i
@@ -2012,10 +2012,10 @@ dtab_cc:
 // and we wish to calculate exp x=exp a exp ε~(exp a)(1+ε)
  muls32_32_64 r0,r3, r4,r1, r5,r6,r7,r4,r1
 // r4:r1 ε exp a Q(62+62-32)=Q92
- lsrs r4,#30
+ lsrs r4,r4,#30
  lsls r0,r1,#2
  orrs r0,r4
- asrs r1,#30
+ asrs r1,r1,#30
  adds r0,r2
  adcs r1,r3
 
@@ -2032,16 +2032,16 @@ dtab_cc:
  push {r4-r7,r14}
  lsls r7,r1,#1
  bcs 5f                        // <0 ...
- asrs r7,#21
+ asrs r7,r7,#21
  beq 5f                        // ... or =0? return -Inf
  adds r7,#1
  beq 6f                        // Inf/NaN? return +Inf
  bl dunpacks
  push {r2}
- lsls r1,#9
+ lsls r1,r1,#9
  lsrs r2,r0,#23
  orrs r1,r2
- lsls r0,#9
+ lsls r0,r0,#9
 // r0:r1 m Q61 = m/2 Q62 0.5≤m/2<1
 
  movs r7,#1                    // shift
@@ -2054,11 +2054,11 @@ dtab_cc:
  negs r6,r7
  adds r6,#32                   // complementary shift
  movs r5,r1
- asrs r5,r7
+ asrs r5,r5,r7
  movs r4,r1
- lsls r4,r6
+ lsls r4,r4,r6
  movs r6,r0
- lsrs r6,r7
+ lsrs r6,r6,r7
  orrs r4,r6                    // x>>i, rounding bit in carry
  adcs r4,r0
  adcs r5,r1                    // x+(x>>i)
@@ -2082,8 +2082,8 @@ dtab_cc:
 // r0:r1 residual x, nearly 1 Q62
 // r2:r3 y ~ ln m/2 = ln m - ln2 Q62
 // result is y + ln2 + ln x ~ y + ln2 + (x-1)
- lsls r1,#2
- asrs r1,#2                    // x-1
+ lsls r1,r1,#2
+ asrs r1,r1,#2                 // x-1
  adds r2,r0
  adcs r3,r1
 
@@ -2099,12 +2099,12 @@ dtab_cc:
  muls r1,r7                    // Q41
  muls r4,r7                    // Q20
  lsls r7,r1,#21
- asrs r1,#11
+ asrs r1,r1,#11
  asrs r5,r1,#31
  adds r0,r7
  adcs r1,r5
  lsls r7,r4,#10
- asrs r4,#22
+ asrs r4,r4,#22
  asrs r5,r1,#31
  adds r1,r7
  adcs r4,r5
@@ -2119,13 +2119,13 @@ dtab_cc:
  asrs r5,r1,#31
  cmp r4,r5
  beq 2f                        // r4 a sign extension of r1?
- lsrs r0,#4                    // no: shift down 4 places and try again
+ lsrs r0,r0,#4                 // no: shift down 4 places and try again
  lsls r6,r1,#28
  orrs r0,r6
- lsrs r1,#4
+ lsrs r1,r1,#4
  lsls r6,r4,#28
  orrs r1,r6
- asrs r4,#4
+ asrs r4,r4,#4
  subs r2,#4
  b 1b
 2:
