@@ -7,10 +7,13 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <sys/stat.h>
+#include "pico/platform/compiler.h"
+#if !PICO_C_COMPILER_IS_ARMCLANG && !PICO_C_COMPILER_IS_IAR
 #include <sys/time.h>
 #include <sys/times.h>
-#include <time.h>
 #include <unistd.h>
+#endif
+#include <time.h>
 #if PICO_ENTER_USB_BOOT_ON_EXIT
 #include "pico/bootrom.h"
 #endif
@@ -74,6 +77,8 @@ __weak void *_sbrk(int incr) {
     return (void *) prev_heap_end;
 }
 
+#if !PICO_C_COMPILER_IS_ARMCLANG && !PICO_C_COMPILER_IS_IAR
+
 static int64_t epoch_time_us_since_boot;
 
 __weak int _gettimeofday (struct timeval *__restrict tv, __unused void *__restrict tz) {
@@ -112,6 +117,8 @@ __weak pid_t _getpid(void) {
 __weak int _kill(__unused pid_t pid, __unused int sig) {
     return -1;
 }
+
+#endif
 
 int __attribute__((weak)) _read(int handle, char *buffer, int length) {
 #if LIB_PICO_STDIO
