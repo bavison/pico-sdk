@@ -70,7 +70,7 @@ _macro_1arg(wrapper_func_f2, x)
 #if PICO_FLOAT_PROPAGATE_NANS
  local_func __check_nan_f1
    movs r3, #1
-   lsls r3, #24
+   lsls r3, r3, #24
    lsls r2, r0, #1
    adds r2, r3
    bhi 1f
@@ -80,7 +80,7 @@ _macro_1arg(wrapper_func_f2, x)
 
  local_func __check_nan_f2
    movs r3, #1
-   lsls r3, #24
+   lsls r3, r3, #24
    lsls r2, r0, #1
    adds r2, r3
    bhi 1f
@@ -168,7 +168,7 @@ _macro_2args(shimmable_table_tail_call, SF_TABLE_OFFSET, shim)
     // to support IRQ usage (or context switch) we must save/restore divider state around call if state is dirty
     ldr r2, =(SIO_BASE)
     ldr r3, [r2, #SIO_DIV_CSR_OFFSET]
-    lsrs r3, #SIO_DIV_CSR_DIRTY_SHIFT_FOR_CARRY
+    lsrs r3, r3, #SIO_DIV_CSR_DIRTY_SHIFT_FOR_CARRY
     bcs fdiv_save_state
 #else
     // to avoid worrying about IRQs (or context switches), simply disable interrupts around call
@@ -201,16 +201,16 @@ fdiv_fsub_nan_helper:
     beq 2f
     pop {pc}
 2:
-    lsls r1, #1
+    lsls r1, r1, #1
     asrs r1, r1, #24
-    lsls r2, #1
+    lsls r2, r2, #1
     asrs r2, r2, #24
     ands r1, r2
     adds r1, #1
     bne 3f
     // infinite to nan
     movs r1, #1
-    lsls r1, #22
+    lsls r1, r1, #22
     orrs r0, r1
 3:
     pop {pc}
@@ -235,7 +235,7 @@ fdiv_fsub_nan_helper:
     bne 3f
     // infinite to nan
     movs r1, #1
-    lsls r1, #22
+    lsls r1, r1, #22
     orrs r0, r1
 3:
     pop {pc}
@@ -263,26 +263,26 @@ fdiv_fsub_nan_helper:
 
 __aeabi_cfcmple_guts:
     lsls r2,r0,#1
-    lsrs r2,#24
+    lsrs r2,r2,#24
     beq 1f
     cmp r2,#0xff
     bne 2f
     lsls r2, r0, #9
     bhi 3f
 1:
-    lsrs r0,#23     // clear mantissa if denormal or infinite
-    lsls r0,#23
+    lsrs r0,r0,#23  // clear mantissa if denormal or infinite
+    lsls r0,r0,#23
 2:
     lsls r2,r1,#1
-    lsrs r2,#24
+    lsrs r2,r2,#24
     beq 1f
     cmp r2,#0xff
     bne 2f
     lsls r2, r1, #9
     bhi 3f
 1:
-    lsrs r1,#23     // clear mantissa if denormal or infinite
-    lsls r1,#23
+    lsrs r1,r1,#23  // clear mantissa if denormal or infinite
+    lsls r1,r1,#23
 2:
     movs r2,#1      // initialise result
     eors r1,r0
@@ -366,7 +366,7 @@ __aeabi_cfcmple_guts:
  float_wrapper_section __aeabi_fcmpun
  wrapper_func __aeabi_fcmpun
    movs r3, #1
-   lsls r3, #24
+   lsls r3, r3, #24
    lsls r2, r0, #1
    adds r2, r3
    bhi 1f
@@ -397,7 +397,7 @@ __aeabi_ui2f_1:
 // float FUNC_NAME(__aeabi_i2f)(int)                     integer to float (single precision) conversion
  wrapper_func __aeabi_i2f
         lsrs r1, r0, #31
-        lsls r1, #31
+        lsls r1, r1, #31
         bpl 1f
         negs r0, r0
 1:
@@ -411,7 +411,7 @@ __aeabi_i2f_main:
         ldr r3, [r3]
         blx r3
         pop {r1, r2}
-        lsls r1, r0
+        lsls r1, r1, r0
         subs r0, #158
         negs r0, r0
 
@@ -420,10 +420,10 @@ __aeabi_i2f_main:
 
         lsls r3,r1,#24 // check bottom 8 bits of r1
         beq 6f         // in rounding-tie case?
-        lsls r1,#1     // remove leading 1
+        lsls r1,r1,#1  // remove leading 1
 3:
-        lsrs r1,#9     // align mantissa
-        lsls r0,#23    // align exponent
+        lsrs r1,r1,#9  // align mantissa
+        lsls r0,r0,#23 // align exponent
         orrs r0,r2     // assemble exponent and mantissa
 4:
         orrs r0,r1     // apply sign
@@ -433,8 +433,8 @@ __aeabi_i2f_main:
         adds r0,#1     // correct exponent offset
         b 3b
 6:
-        lsrs r1,#9     // ensure even result
-        lsls r1,#10
+        lsrs r1,r1,#9  // ensure even result
+        lsls r1,r1,#10
         b 3b
 7:
         bx lr
@@ -447,18 +447,18 @@ __aeabi_i2f_main:
     lsls r1, r0, #1
     lsrs r2, r1, #24
     movs r3, #0x80
-    lsls r3, #24
+    lsls r3, r3, #24
     cmp r2, #126
     ble 1f
     subs r2, #158
     bge 2f
     asrs r1, r0, #31
-    lsls r0, #9
-    lsrs r0, #1
+    lsls r0, r0, #9
+    lsrs r0, r0, #1
     orrs r0, r3
     negs r2, r2
-    lsrs r0, r2
-    lsls r1, #1
+    lsrs r0, r0, r2
+    lsls r1, r1, #1
     adds r1, #1
     muls r0, r1
     bx lr
@@ -466,7 +466,7 @@ __aeabi_i2f_main:
     movs r0, #0
     bx lr
 2:
-    lsrs r0, #31
+    lsrs r0, r0, #31
     adds r0, r3
     subs r0, #1
     bx lr
@@ -474,8 +474,8 @@ __aeabi_i2f_main:
     cmn r0, r0
     bcc __aeabi_f2iz_4
     push {lr}
-    lsls r0, #1
-    lsrs r0, #1
+    lsls r0, r0, #1
+    lsrs r0, r0, #1
     movs r1, #0
     bl __aeabi_f2uiz
     cmp r0, #0
@@ -484,7 +484,7 @@ __aeabi_i2f_main:
     pop {pc}
 1:
     movs r0, #128
-    lsls r0, #24
+    lsls r0, r0, #24
     pop {pc}
 
 __aeabi_f2iz_4:
@@ -552,8 +552,8 @@ __aeabi_f2iz_4:
     cmn r0, r0
     bcc __aeabi_f2lz_2
     push {lr}
-    lsls r0, #1
-    lsrs r0, #1
+    lsls r0, r0, #1
+    lsrs r0, r0, #1
     movs r1, #0
     bl float2ufix64
     cmp r1, #0
@@ -565,7 +565,7 @@ __aeabi_f2iz_4:
     pop {pc}
 1:
     movs r1, #128
-    lsls r1, #24
+    lsls r1, r1, #24
     movs r0, #0
     pop {pc}
 
@@ -596,15 +596,15 @@ __aeabi_f2lz_2:
     // copy sign bit and 25 NAN id bits into sign bit and significant ID bits, also setting the high id bit
     asrs r1, r0, #3
     movs r2, #0xf
-    lsls r2, #27
+    lsls r2, r2, #27
     orrs r1, r2
-    lsls r0, #25
+    lsls r0, r0, #25
     bx lr
 #endif
  wrapper_func __aeabi_f2d
 #if PICO_FLOAT_PROPAGATE_NANS
     movs r3, #1
-    lsls r3, #24
+    lsls r3, r3, #24
     lsls r2, r0, #1
     adds r2, r3
     bhi 1b
@@ -625,12 +625,12 @@ __aeabi_f2lz_2:
     cmp r0, #255
     bne 2f
     // -0 or -Denormal return -0 (0x80000000)
-    lsls r0, #31
+    lsls r0, r0, #31
     bx lr
 2:
     // return -Inf (0xff800000)
     asrs r0, r1, #31
-    lsls r0, #23
+    lsls r0, r0, #23
     bx lr
 #endif
 
@@ -639,7 +639,7 @@ __aeabi_f2lz_2:
  wrapper_func cosf
     // rom version only works for -128 < angle < 128
     lsls r1, r0, #1
-    lsrs r1, #24
+    lsrs r1, r1, #24
     cmp r1, #127 + 7
     bge 1f
 2:
@@ -651,7 +651,7 @@ __aeabi_f2lz_2:
     bne 3f
     // infinite to nan
     movs r1, #1
-    lsls r1, #22
+    lsls r1, r1, #22
     orrs r0, r1
     bx lr
 3:
@@ -668,7 +668,7 @@ __aeabi_f2lz_2:
  wrapper_func sinf
     // rom version only works for -128 < angle < 128
     lsls r1, r0, #1
-    lsrs r1, #24
+    lsrs r1, r1, #24
     cmp r1, #127 + 7
     bge 1f
 2:
@@ -680,7 +680,7 @@ __aeabi_f2lz_2:
     bne 3f
     // infinite to nan
     movs r1, #1
-    lsls r1, #22
+    lsls r1, r1, #22
     orrs r0, r1
     bx lr
 3:
@@ -698,7 +698,7 @@ __aeabi_f2lz_2:
     push {r1, r2, lr}
     // rom version only works for -128 < angle < 128
     lsls r3, r0, #1
-    lsrs r3, #24
+    lsrs r3, r3, #24
     cmp r3, #127 + 7
     bge 3f
 2:
@@ -720,7 +720,7 @@ __aeabi_f2lz_2:
     bne 4f
     // infinite to nan
     movs r3, #1
-    lsls r3, #22
+    lsls r3, r3, #22
     orrs r0, r3
     str r0, [r1]
     str r0, [r2]
@@ -740,7 +740,7 @@ __aeabi_f2lz_2:
  wrapper_func tanf
     // rom version only works for -128 < angle < 128
     lsls r1, r0, #1
-    lsrs r1, #24
+    lsrs r1, r1, #24
     cmp r1, #127 + 7
     bge ftan_out_of_range
 ftan_in_range:
@@ -748,7 +748,7 @@ ftan_in_range:
     // to support IRQ usage (or context switch) we must save/restore divider state around call if state is dirty
     ldr r2, =(SIO_BASE)
     ldr r3, [r2, #SIO_DIV_CSR_OFFSET]
-    lsrs r3, #SIO_DIV_CSR_DIRTY_SHIFT_FOR_CARRY
+    lsrs r3, r3, #SIO_DIV_CSR_DIRTY_SHIFT_FOR_CARRY
     bcs ftan_save_state
 #else
     // to avoid worrying about IRQs (or context switches), simply disable interrupts around call
@@ -775,7 +775,7 @@ ftan_out_of_range:
     bne 3f
     // infinite to nan
     movs r1, #1
-    lsls r1, #22
+    lsls r1, r1, #22
     orrs r0, r1
     bx lr
 3:
