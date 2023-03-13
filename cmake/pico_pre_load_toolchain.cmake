@@ -16,6 +16,11 @@ if (CMAKE_BUILD_TYPE STREQUAL "Default")
     error("Default build type is NOT supported")
 endif()
 
+# IAR Embedded Workbench is a multi-config generator, so ensure CMAKE_CONFIGURATION_TYPES is set
+if(NOT CMAKE_CONFIGURATION_TYPES)
+    set(CMAKE_CONFIGURATION_TYPES "Debug;Release;MinSizeRel;RelWithDebInfo")
+endif()
+
 # PICO_CMAKE_CONFIG: PICO_COMPILER, Optionally specifies a different compiler (other than pico_arm_gcc.cmake) - this is not yet fully supported, default=none, group=build
 # If PICO_COMPILER is specified, set toolchain file to ${PICO_COMPILER}.cmake.
 if (DEFINED PICO_COMPILER)
