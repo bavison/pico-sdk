@@ -40,7 +40,15 @@ extern char __StackLimit; /* Set by linker.  */
 #define STDIO_HANDLE_STDOUT 1
 #define STDIO_HANDLE_STDERR 2
 
+#if PICO_C_COMPILER_IS_IAR
+// The IAR runtime libraries define a _exit symbol, so use symbol patching
+// (IAR's equivalent of wrapper functions) to ensure ours is the one that
+// gets used
+void __attribute__((noreturn)) _exit(__unused int status);
+void __attribute__((noreturn)) WRAPPER_FUNC(_exit)(__unused int status) {
+#else
 void __attribute__((noreturn)) __weak _exit(__unused int status) {
+#endif
 #if PICO_ENTER_USB_BOOT_ON_EXIT
     reset_usb_boot(0,0);
 #else
