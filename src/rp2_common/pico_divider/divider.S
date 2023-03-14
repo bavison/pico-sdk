@@ -7,6 +7,9 @@
 #include "hardware/regs/addressmap.h"
 #include "hardware/divider_helper.S"
 
+ .extern __aeabi_idiv0
+ .extern __aeabi_ldiv0
+
 .syntax unified
 .cpu cortex-m0plus
 .thumb

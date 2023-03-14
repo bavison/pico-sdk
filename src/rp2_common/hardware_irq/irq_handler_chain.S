@@ -7,6 +7,8 @@
 #include "pico.h"
 #include "hardware/irq.h"
 
+ .extern irq_add_tail_to_free_list
+
 #if !PICO_DISABLE_SHARED_IRQ_HANDLERS
 .syntax unified
 .cpu cortex-m0plus
