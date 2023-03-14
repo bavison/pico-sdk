@@ -20,6 +20,7 @@
 #define ds          .space
 #define end         .end
 #define _equ        .equ
+#define public      .global
 
 .syntax unified
 .cpu cortex-m0plus

@@ -47,6 +47,6 @@ dead:
     wfi
     b dead
 
-.global literals
+ public literals
 literals:
 .ltorg
