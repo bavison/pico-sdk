@@ -307,10 +307,10 @@ hold_non_core0_in_bootrom:
 .section .stack, "a"
 // align to allow for memory protection (although this alignment is pretty much ignored by linker script)
  alignrom 5
-    .equ StackSize, PICO_STACK_SIZE
+ _equ StackSize, PICO_STACK_SIZE
 .space StackSize
 
 .section .heap, "a"
  alignrom 2
-    .equ HeapSize, PICO_HEAP_SIZE
+ _equ HeapSize, PICO_HEAP_SIZE
 .space HeapSize

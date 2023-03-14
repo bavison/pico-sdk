@@ -17,11 +17,11 @@
 #endif
 .endm
 
-.equ MEMSET, 0
-.equ MEMCPY, 4
-.equ MEMSET4, 8
-.equ MEMCPY4, 12
-.equ MEM_FUNC_COUNT, 4
+ _equ MEMSET, 0
+ _equ MEMCPY, 4
+ _equ MEMSET4, 8
+ _equ MEMCPY4, 12
+ _equ MEM_FUNC_COUNT, 4
 
 // NOTE: All code sections are placed in RAM (at the expense of some veneer cost for calls from flash) because
 //       otherwise code using basic c division operators will require XIP flash access.
