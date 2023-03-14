@@ -8,12 +8,12 @@
 #include "hardware/regs/sio.h"
 
 #if SIO_DIV_CSR_READY_LSB == 0
-.equ SIO_DIV_CSR_READY_SHIFT_FOR_CARRY, 1
+ _equ SIO_DIV_CSR_READY_SHIFT_FOR_CARRY, 1
 #else
 need to change SHIFT above
 #endif
 #if SIO_DIV_CSR_DIRTY_LSB == 1
-.equ SIO_DIV_CSR_DIRTY_SHIFT_FOR_CARRY, 2
+ _equ SIO_DIV_CSR_DIRTY_SHIFT_FOR_CARRY, 2
 #else
 need to change SHIFT above
 #endif

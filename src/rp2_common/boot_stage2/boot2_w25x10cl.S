@@ -46,14 +46,14 @@
 // fixed addresses in the address map of every Cortex-M0+ system.
 // ----------------------------------------------------------------------------
 
-.equ SCB_VTOR,          0xE000ED08      // RW Vector Table Offset Register
+ _equ SCB_VTOR,          0xE000ED08      // RW Vector Table Offset Register
 
 // ----------------------------------------------------------------------------
 // Winbond W25X10CL Supported Commands
 // Taken from "w25x10cl_reg_021714.pdf"
 // ----------------------------------------------------------------------------
 
-.equ W25X10CL_CMD_READ_DATA_FAST_DUAL_IO, 0xbb
+ _equ W25X10CL_CMD_READ_DATA_FAST_DUAL_IO, 0xbb
 
 // ----------------------------------------------------------------------------
 // Winbond W25X10CL "Mode bits" are 8 special bits sent immediately after
@@ -63,7 +63,7 @@
 // to M[5:4] = 2'b10 to enable continuous read mode.
 // ----------------------------------------------------------------------------
 
-.equ W25X10CL_MODE_CONTINUOUS_READ,        0x20
+ _equ W25X10CL_MODE_CONTINUOUS_READ,        0x20
 
 // ----------------------------------------------------------------------------
 // Start of 2nd Stage Boot Code
