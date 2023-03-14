@@ -18,4 +18,4 @@
 str:
     _asciz "printf support is disabled"
 
- _end
+ end

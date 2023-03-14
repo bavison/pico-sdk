@@ -128,4 +128,4 @@ aeabi_bits_funcs_end:
     mov r1, ip
     pop {pc}
 
- _end
+ end

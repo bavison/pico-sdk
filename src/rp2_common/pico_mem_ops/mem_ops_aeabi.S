@@ -93,4 +93,4 @@ aeabi_mem_funcs_end:
     ldr r3, [r3, #MEMCPY]
     bx r3
 
- _end
+ end

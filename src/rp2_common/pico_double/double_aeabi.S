@@ -834,4 +834,4 @@ dtan_angle_out_of_range:
  wrapper_func_d1 log
     shimmable_table_tail_call SF_TABLE_FLN dln_shim
 
- _end
+ end

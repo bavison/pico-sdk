@@ -52,4 +52,4 @@ hw_divider_divmod_return:
     str r2, [r3, #SIO_DIV_QUOTIENT_OFFSET]
     bx lr
 
- _end
+ end

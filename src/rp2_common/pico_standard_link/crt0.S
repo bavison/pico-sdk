@@ -315,4 +315,4 @@ hold_non_core0_in_bootrom:
  _equ HeapSize, PICO_HEAP_SIZE
 .space HeapSize
 
- _end
+ end

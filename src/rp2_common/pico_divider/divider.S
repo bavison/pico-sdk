@@ -870,4 +870,4 @@ y64_x64:
     stmia r4!, {r2,r3}
     pop {r4, pc}
 
- _end
+ end
