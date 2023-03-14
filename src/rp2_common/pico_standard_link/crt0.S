@@ -56,7 +56,39 @@
  extern `SCRATCH_Y$$Limit`
  _set __StackTop, `SCRATCH_Y$$Limit`
 
+#else
+
+ .extern __binary_info_start
+ .extern __binary_info_end
+
+ .extern __bss_start__
+ .extern __bss_end__
+
+#if PICO_COPY_TO_RAM
+ .extern __ram_text_source__
+ .extern __ram_text_start__
+ .extern __ram_text_end__
 #endif
+
+ .extern __etext
+ .extern __data_start__
+ .extern __data_end__
+
+ .extern __scratch_x_source__
+ .extern __scratch_x_start__
+ .extern __scratch_x_end__
+
+ .extern __scratch_y_source__
+ .extern __scratch_y_start__
+ .extern __scratch_y_end__
+
+ .extern __StackTop
+
+#endif
+
+ .extern exit
+ .extern main
+ .extern rom_func_lookup
 
 #ifdef NDEBUG
 #ifndef COLLAPSE_IRQS

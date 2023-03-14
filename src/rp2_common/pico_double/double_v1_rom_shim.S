@@ -17,6 +17,10 @@
 
 #include "pico/asm_helper.S"
 
+ .extern pop_r8_r11
+ .extern push_r8_r11
+ .extern sd_table
+
 .syntax unified
 .cpu cortex-m0plus
 .thumb

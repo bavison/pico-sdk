@@ -11,6 +11,8 @@
 #include "pico/asm_helper.S"
 #include "pico/bootrom.h"
 
+ .extern rom_funcs_lookup
+
 __pre_init __aeabi_bits_init, 00010
 
 .macro bits_section name
