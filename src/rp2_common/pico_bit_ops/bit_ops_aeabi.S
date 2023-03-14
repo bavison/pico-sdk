@@ -11,13 +11,13 @@
 
 _macro_1arg(bits_section, name)
 #if PICO_BITS_IN_RAM
-.section RAM_SECTION_NAME(MA(name)), "ax"
+ _section(RAM_SECTION_NAME(MA(name)), "ax", CODE, 2)
 #else
-.section SECTION_NAME(MA(name)), "ax"
+ _section(SECTION_NAME(MA(name)), "ax", CODE, 2)
 #endif
  endm
 
-.section .data.aeabi_bits_funcs
+ _section(.data.aeabi_bits_funcs, "aw", DATA, 4)
  public aeabi_bits_funcs, aeabi_bits_funcs_end
  _equ BITS_FUNC_COUNT, 4
  alignrom 4
@@ -28,7 +28,7 @@ aeabi_bits_funcs:
     dc32 ROM_FUNC_REVERSE32
 aeabi_bits_funcs_end:
 
-.section .text
+ _section(.text, "ax", CODE, 2)
  local_func __aeabi_bits_init
     ldr r0, =aeabi_bits_funcs
     movs r1, #BITS_FUNC_COUNT
