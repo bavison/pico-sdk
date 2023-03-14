@@ -8,6 +8,29 @@
 #include "pico/bootrom/sf_table.h"
 #include "hardware/divider_helper.S"
 
+ extern __aeabi_cfcmpeq
+ extern __aeabi_cfcmple
+ extern __aeabi_cfrcmple
+ extern __aeabi_f2uiz
+ extern __aeabi_float_init
+ extern __aeabi_i2f
+ extern __aeabi_ui2f
+ extern fatan2_shim
+ extern fix642float_shim
+ extern float2double_shim
+ extern float2fix64_shim
+ extern float2fix_shim
+ extern float2int64_shim
+ extern float2int_shim
+ extern float2ufix64_shim
+ extern float2uint64_shim
+ extern int642float_shim
+ extern remainderf
+ extern sf_clz_func
+ extern sf_table
+ extern ufix642float_shim
+ extern uint642float_shim
+
  __pre_init __aeabi_float_init, 00020
 
 _macro_1arg(float_section, name)
