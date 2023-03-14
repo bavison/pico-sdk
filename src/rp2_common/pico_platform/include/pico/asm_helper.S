@@ -35,3 +35,5 @@ endm
 .word \func
 .endm
 
+#define code_in_code_area
+#define data_in_code_area
