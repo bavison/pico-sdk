@@ -18,6 +18,7 @@
 #define endm        .endm
 #define endr        .endr
 #define _equ        .equ
+#define _extern     .extern
 #define if          .if
 #define ltorg       .ltorg
 #define _macro(x)   .macro x

@@ -10,6 +10,24 @@
 #include "pico/asm_helper.S"
 #include "pico/binary_info/defs.h"
 
+ _extern __binary_info_end
+ _extern __binary_info_start
+ _extern __bss_end__
+ _extern __bss_start__
+ _extern __data_end__
+ _extern __data_start__
+ _extern __etext
+ _extern exit
+ _extern main
+ _extern rom_func_lookup
+ _extern __scratch_x_end__
+ _extern __scratch_x_source__
+ _extern __scratch_x_start__
+ _extern __scratch_y_end__
+ _extern __scratch_y_source__
+ _extern __scratch_y_start__
+ _extern __StackTop
+
 #ifdef NDEBUG
 #ifndef COLLAPSE_IRQS
 #define COLLAPSE_IRQS
