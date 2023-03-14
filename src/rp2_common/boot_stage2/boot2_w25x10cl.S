@@ -69,7 +69,7 @@
 // Start of 2nd Stage Boot Code
 // ----------------------------------------------------------------------------
 
-.org 0
+ _org 0
 
 // This code will get copied to 0x20000000 and then executed
 
