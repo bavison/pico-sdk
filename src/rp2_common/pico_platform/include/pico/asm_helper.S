@@ -13,7 +13,7 @@
 #define dc32        .word
 #define end         .end
 #define _equ        .equ
-#define _global     .global
+#define public      .global
 
 .syntax unified
 .cpu cortex-m0plus

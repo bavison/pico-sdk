@@ -19,7 +19,7 @@
 .section .vectors, "ax"
  alignrom 2
 
- _global __vectors, __VECTOR_TABLE
+ public __vectors, __VECTOR_TABLE
 __VECTOR_TABLE:
 __vectors:
     dc32 __StackTop
@@ -73,7 +73,7 @@ __vectors:
 
 // all default exception handlers do nothing, and we can check for them being set to our
 // default values by seeing if they point to somewhere between __defaults_isrs_start and __default_isrs_end
- _global __default_isrs_start
+ public __default_isrs_start
 __default_isrs_start:
 
 // Declare a weak symbol for each ISR.
@@ -93,7 +93,7 @@ __default_isrs_start:
  decl_isr_bkpt isr_pendsv
  decl_isr_bkpt isr_systick
 
- _global __default_isrs_end
+ public __default_isrs_end
 __default_isrs_end:
 
 .macro decl_isr name
@@ -137,7 +137,7 @@ __default_isrs_end:
  regular_func __unhandled_user_irq
     mrs  r0, ipsr
     subs r0, #16
- _global unhandled_user_irq_num_in_r0
+ public unhandled_user_irq_num_in_r0
 unhandled_user_irq_num_in_r0:
     bkpt #0
 

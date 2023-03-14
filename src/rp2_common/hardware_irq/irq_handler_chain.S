@@ -11,10 +11,10 @@
 .data
  alignrom 2
 
- _global irq_handler_chain_slots
+ public irq_handler_chain_slots
 
- _global irq_handler_chain_first_slot
- _global irq_handler_chain_remove_tail
+ public irq_handler_chain_first_slot
+ public irq_handler_chain_remove_tail
 
 //
 // These Slots make up the code and structure of the handler chains; the only external information are the VTABLE entries
