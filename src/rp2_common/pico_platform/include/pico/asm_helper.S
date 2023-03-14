@@ -24,6 +24,7 @@
 #define public      .global
 #define _section(name, flags, cd, align)   .section name, flags
 #define _root_section(name, flags, cd, align) .section name, flags
+#define _set        .set
 
 // Expand a macro argument
 #define MA(x)  \##x
