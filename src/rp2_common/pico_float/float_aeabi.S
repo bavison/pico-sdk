@@ -92,7 +92,7 @@
     bx r3
 #if PICO_FLOAT_SUPPORT_ROM_V1 && PICO_RP2040_B0_SUPPORTED
     dc8 \SF_TABLE_OFFSET, 0xdf
-    _word \shim
+    dc32 \shim
 #endif
 .endm
 

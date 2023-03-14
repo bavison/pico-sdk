@@ -22,54 +22,54 @@
 .global __vectors, __VECTOR_TABLE
 __VECTOR_TABLE:
 __vectors:
-    _word __StackTop
-    _word _reset_handler
-    _word isr_nmi
-    _word isr_hardfault
-    _word isr_invalid // Reserved, should never fire
-    _word isr_invalid // Reserved, should never fire
-    _word isr_invalid // Reserved, should never fire
-    _word isr_invalid // Reserved, should never fire
-    _word isr_invalid // Reserved, should never fire
-    _word isr_invalid // Reserved, should never fire
-    _word isr_invalid // Reserved, should never fire
-    _word isr_svcall
-    _word isr_invalid // Reserved, should never fire
-    _word isr_invalid // Reserved, should never fire
-    _word isr_pendsv
-    _word isr_systick
-    _word isr_irq0
-    _word isr_irq1
-    _word isr_irq2
-    _word isr_irq3
-    _word isr_irq4
-    _word isr_irq5
-    _word isr_irq6
-    _word isr_irq7
-    _word isr_irq8
-    _word isr_irq9
-    _word isr_irq10
-    _word isr_irq11
-    _word isr_irq12
-    _word isr_irq13
-    _word isr_irq14
-    _word isr_irq15
-    _word isr_irq16
-    _word isr_irq17
-    _word isr_irq18
-    _word isr_irq19
-    _word isr_irq20
-    _word isr_irq21
-    _word isr_irq22
-    _word isr_irq23
-    _word isr_irq24
-    _word isr_irq25
-    _word isr_irq26
-    _word isr_irq27
-    _word isr_irq28
-    _word isr_irq29
-    _word isr_irq30
-    _word isr_irq31
+    dc32 __StackTop
+    dc32 _reset_handler
+    dc32 isr_nmi
+    dc32 isr_hardfault
+    dc32 isr_invalid // Reserved, should never fire
+    dc32 isr_invalid // Reserved, should never fire
+    dc32 isr_invalid // Reserved, should never fire
+    dc32 isr_invalid // Reserved, should never fire
+    dc32 isr_invalid // Reserved, should never fire
+    dc32 isr_invalid // Reserved, should never fire
+    dc32 isr_invalid // Reserved, should never fire
+    dc32 isr_svcall
+    dc32 isr_invalid // Reserved, should never fire
+    dc32 isr_invalid // Reserved, should never fire
+    dc32 isr_pendsv
+    dc32 isr_systick
+    dc32 isr_irq0
+    dc32 isr_irq1
+    dc32 isr_irq2
+    dc32 isr_irq3
+    dc32 isr_irq4
+    dc32 isr_irq5
+    dc32 isr_irq6
+    dc32 isr_irq7
+    dc32 isr_irq8
+    dc32 isr_irq9
+    dc32 isr_irq10
+    dc32 isr_irq11
+    dc32 isr_irq12
+    dc32 isr_irq13
+    dc32 isr_irq14
+    dc32 isr_irq15
+    dc32 isr_irq16
+    dc32 isr_irq17
+    dc32 isr_irq18
+    dc32 isr_irq19
+    dc32 isr_irq20
+    dc32 isr_irq21
+    dc32 isr_irq22
+    dc32 isr_irq23
+    dc32 isr_irq24
+    dc32 isr_irq25
+    dc32 isr_irq26
+    dc32 isr_irq27
+    dc32 isr_irq28
+    dc32 isr_irq29
+    dc32 isr_irq30
+    dc32 isr_irq31
 
 // all default exception handlers do nothing, and we can check for them being set to our
 // default values by seeing if they point to somewhere between __defaults_isrs_start and __default_isrs_end
@@ -152,11 +152,11 @@ unhandled_user_irq_num_in_r0:
 
 #if !PICO_NO_BINARY_INFO
 binary_info_header:
-    _word BINARY_INFO_MARKER_START
-    _word __binary_info_start
-    _word __binary_info_end
-    _word data_cpy_table // we may need to decode pointers that are in RAM at runtime.
-    _word BINARY_INFO_MARKER_END
+    dc32 BINARY_INFO_MARKER_START
+    dc32 __binary_info_start
+    dc32 __binary_info_end
+    dc32 data_cpy_table // we may need to decode pointers that are in RAM at runtime.
+    dc32 BINARY_INFO_MARKER_END
 #endif
 
 // ----------------------------------------------------------------------------
@@ -265,23 +265,23 @@ data_cpy:
 .align 2
 data_cpy_table:
 #if PICO_COPY_TO_RAM
-    _word __ram_text_source__
-    _word __ram_text_start__
-    _word __ram_text_end__
+    dc32 __ram_text_source__
+    dc32 __ram_text_start__
+    dc32 __ram_text_end__
 #endif
-    _word __etext
-    _word __data_start__
-    _word __data_end__
+    dc32 __etext
+    dc32 __data_start__
+    dc32 __data_end__
 
-    _word __scratch_x_source__
-    _word __scratch_x_start__
-    _word __scratch_x_end__
+    dc32 __scratch_x_source__
+    dc32 __scratch_x_start__
+    dc32 __scratch_x_end__
 
-    _word __scratch_y_source__
-    _word __scratch_y_start__
-    _word __scratch_y_end__
+    dc32 __scratch_y_source__
+    dc32 __scratch_y_start__
+    dc32 __scratch_y_end__
 
-    _word 0 // null terminator
+    dc32 0 // null terminator
 
 // ----------------------------------------------------------------------------
 // Provide safe defaults for _exit and runtime_init

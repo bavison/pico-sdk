@@ -1738,10 +1738,10 @@ dsin_finish:
 .ltorg
 .align 2
 dreddata0:
-    _word 0x0000517d               // 2/π Q15
-    _word 0x0014611A               // π/2 Q62=6487ED5110B4611A split into 21-bit pieces
-    _word 0x000A8885
-    _word 0x001921FB
+    dc32 0x0000517d                // 2/π Q15
+    dc32 0x0014611A                // π/2 Q62=6487ED5110B4611A split into 21-bit pieces
+    dc32 0x000A8885
+    dc32 0x001921FB
 
 
 .align 2
@@ -1911,38 +1911,38 @@ dreddata0:
 .ltorg
 
 dtab_cc:
-    _word 0x61bb4f69, 0x1dac6705   // atan 2^-1 Q62
-    _word 0x96406eb1, 0x0fadbafc   // atan 2^-2 Q62
-    _word 0xab0bdb72, 0x07f56ea6   // atan 2^-3 Q62
-    _word 0xe59fbd39, 0x03feab76   // atan 2^-4 Q62
-    _word 0xba97624b, 0x01ffd55b   // atan 2^-5 Q62
-    _word 0xdddb94d6, 0x00fffaaa   // atan 2^-6 Q62
-    _word 0x56eeea5d, 0x007fff55   // atan 2^-7 Q62
-    _word 0xaab7776e, 0x003fffea   // atan 2^-8 Q62
-    _word 0x5555bbbc, 0x001ffffd   // atan 2^-9 Q62
-    _word 0xaaaaadde, 0x000fffff   // atan 2^-10 Q62
-    _word 0xf555556f, 0x0007ffff   // atan 2^-11 Q62
-    _word 0xfeaaaaab, 0x0003ffff   // atan 2^-12 Q62
-    _word 0xffd55555, 0x0001ffff   // atan 2^-13 Q62
-    _word 0xfffaaaab, 0x0000ffff   // atan 2^-14 Q62
-    _word 0xffff5555, 0x00007fff   // atan 2^-15 Q62
-    _word 0xffffeaab, 0x00003fff   // atan 2^-16 Q62
-    _word 0xfffffd55, 0x00001fff   // atan 2^-17 Q62
-    _word 0xffffffab, 0x00000fff   // atan 2^-18 Q62
-    _word 0xfffffff5, 0x000007ff   // atan 2^-19 Q62
-    _word 0xffffffff, 0x000003ff   // atan 2^-20 Q62
-    _word 0x00000000, 0x00000200   // atan 2^-21 Q62 @ consider optimising these
-    _word 0x00000000, 0x00000100   // atan 2^-22 Q62
-    _word 0x00000000, 0x00000080   // atan 2^-23 Q62
-    _word 0x00000000, 0x00000040   // atan 2^-24 Q62
-    _word 0x00000000, 0x00000020   // atan 2^-25 Q62
-    _word 0x00000000, 0x00000010   // atan 2^-26 Q62
-    _word 0x00000000, 0x00000008   // atan 2^-27 Q62
-    _word 0x00000000, 0x00000004   // atan 2^-28 Q62
-    _word 0x00000000, 0x00000002   // atan 2^-29 Q62
-    _word 0x00000000, 0x00000001   // atan 2^-30 Q62
-    _word 0x80000000, 0x00000000   // atan 2^-31 Q62
-    _word 0x40000000, 0x00000000   // atan 2^-32 Q62
+    dc32 0x61bb4f69, 0x1dac6705    // atan 2^-1 Q62
+    dc32 0x96406eb1, 0x0fadbafc    // atan 2^-2 Q62
+    dc32 0xab0bdb72, 0x07f56ea6    // atan 2^-3 Q62
+    dc32 0xe59fbd39, 0x03feab76    // atan 2^-4 Q62
+    dc32 0xba97624b, 0x01ffd55b    // atan 2^-5 Q62
+    dc32 0xdddb94d6, 0x00fffaaa    // atan 2^-6 Q62
+    dc32 0x56eeea5d, 0x007fff55    // atan 2^-7 Q62
+    dc32 0xaab7776e, 0x003fffea    // atan 2^-8 Q62
+    dc32 0x5555bbbc, 0x001ffffd    // atan 2^-9 Q62
+    dc32 0xaaaaadde, 0x000fffff    // atan 2^-10 Q62
+    dc32 0xf555556f, 0x0007ffff    // atan 2^-11 Q62
+    dc32 0xfeaaaaab, 0x0003ffff    // atan 2^-12 Q62
+    dc32 0xffd55555, 0x0001ffff    // atan 2^-13 Q62
+    dc32 0xfffaaaab, 0x0000ffff    // atan 2^-14 Q62
+    dc32 0xffff5555, 0x00007fff    // atan 2^-15 Q62
+    dc32 0xffffeaab, 0x00003fff    // atan 2^-16 Q62
+    dc32 0xfffffd55, 0x00001fff    // atan 2^-17 Q62
+    dc32 0xffffffab, 0x00000fff    // atan 2^-18 Q62
+    dc32 0xfffffff5, 0x000007ff    // atan 2^-19 Q62
+    dc32 0xffffffff, 0x000003ff    // atan 2^-20 Q62
+    dc32 0x00000000, 0x00000200    // atan 2^-21 Q62 @ consider optimising these
+    dc32 0x00000000, 0x00000100    // atan 2^-22 Q62
+    dc32 0x00000000, 0x00000080    // atan 2^-23 Q62
+    dc32 0x00000000, 0x00000040    // atan 2^-24 Q62
+    dc32 0x00000000, 0x00000020    // atan 2^-25 Q62
+    dc32 0x00000000, 0x00000010    // atan 2^-26 Q62
+    dc32 0x00000000, 0x00000008    // atan 2^-27 Q62
+    dc32 0x00000000, 0x00000004    // atan 2^-28 Q62
+    dc32 0x00000000, 0x00000002    // atan 2^-29 Q62
+    dc32 0x00000000, 0x00000001    // atan 2^-30 Q62
+    dc32 0x80000000, 0x00000000    // atan 2^-31 Q62
+    dc32 0x40000000, 0x00000000    // atan 2^-32 Q62
 
  double_section dexp_guts
  regular_func dexp_shim
@@ -2134,44 +2134,44 @@ dtab_cc:
 
 .align 2
 dreddata1:
-    _word 0x0000B8AA               // 1/ln2 Q15
-    _word 0x0013DE6B               // ln2 Q62 Q62=2C5C85FDF473DE6B split into 21-bit pieces
-    _word 0x000FEFA3
-    _word 0x000B1721
+    dc32 0x0000B8AA                // 1/ln2 Q15
+    dc32 0x0013DE6B                // ln2 Q62 Q62=2C5C85FDF473DE6B split into 21-bit pieces
+    dc32 0x000FEFA3
+    dc32 0x000B1721
 
 dtab_exp:
-    _word 0xbf984bf3, 0x19f323ec   // log 1+2^-1 Q62
-    _word 0xcd4d10d6, 0x0e47fbe3   // log 1+2^-2 Q62
-    _word 0x8abcb97a, 0x0789c1db   // log 1+2^-3 Q62
-    _word 0x022c54cc, 0x03e14618   // log 1+2^-4 Q62
-    _word 0xe7833005, 0x01f829b0   // log 1+2^-5 Q62
-    _word 0x87e01f1e, 0x00fe0545   // log 1+2^-6 Q62
-    _word 0xac419e24, 0x007f80a9   // log 1+2^-7 Q62
-    _word 0x45621781, 0x003fe015   // log 1+2^-8 Q62
-    _word 0xa9ab10e6, 0x001ff802   // log 1+2^-9 Q62
-    _word 0x55455888, 0x000ffe00   // log 1+2^-10 Q62
-    _word 0x0aa9aac4, 0x0007ff80   // log 1+2^-11 Q62
-    _word 0x01554556, 0x0003ffe0   // log 1+2^-12 Q62
-    _word 0x002aa9ab, 0x0001fff8   // log 1+2^-13 Q62
-    _word 0x00055545, 0x0000fffe   // log 1+2^-14 Q62
-    _word 0x8000aaaa, 0x00007fff   // log 1+2^-15 Q62
-    _word 0xe0001555, 0x00003fff   // log 1+2^-16 Q62
-    _word 0xf80002ab, 0x00001fff   // log 1+2^-17 Q62
-    _word 0xfe000055, 0x00000fff   // log 1+2^-18 Q62
-    _word 0xff80000b, 0x000007ff   // log 1+2^-19 Q62
-    _word 0xffe00001, 0x000003ff   // log 1+2^-20 Q62
-    _word 0xfff80000, 0x000001ff   // log 1+2^-21 Q62
-    _word 0xfffe0000, 0x000000ff   // log 1+2^-22 Q62
-    _word 0xffff8000, 0x0000007f   // log 1+2^-23 Q62
-    _word 0xffffe000, 0x0000003f   // log 1+2^-24 Q62
-    _word 0xfffff800, 0x0000001f   // log 1+2^-25 Q62
-    _word 0xfffffe00, 0x0000000f   // log 1+2^-26 Q62
-    _word 0xffffff80, 0x00000007   // log 1+2^-27 Q62
-    _word 0xffffffe0, 0x00000003   // log 1+2^-28 Q62
-    _word 0xfffffff8, 0x00000001   // log 1+2^-29 Q62
-    _word 0xfffffffe, 0x00000000   // log 1+2^-30 Q62
-    _word 0x80000000, 0x00000000   // log 1+2^-31 Q62
-    _word 0x40000000, 0x00000000   // log 1+2^-32 Q62
+    dc32 0xbf984bf3, 0x19f323ec    // log 1+2^-1 Q62
+    dc32 0xcd4d10d6, 0x0e47fbe3    // log 1+2^-2 Q62
+    dc32 0x8abcb97a, 0x0789c1db    // log 1+2^-3 Q62
+    dc32 0x022c54cc, 0x03e14618    // log 1+2^-4 Q62
+    dc32 0xe7833005, 0x01f829b0    // log 1+2^-5 Q62
+    dc32 0x87e01f1e, 0x00fe0545    // log 1+2^-6 Q62
+    dc32 0xac419e24, 0x007f80a9    // log 1+2^-7 Q62
+    dc32 0x45621781, 0x003fe015    // log 1+2^-8 Q62
+    dc32 0xa9ab10e6, 0x001ff802    // log 1+2^-9 Q62
+    dc32 0x55455888, 0x000ffe00    // log 1+2^-10 Q62
+    dc32 0x0aa9aac4, 0x0007ff80    // log 1+2^-11 Q62
+    dc32 0x01554556, 0x0003ffe0    // log 1+2^-12 Q62
+    dc32 0x002aa9ab, 0x0001fff8    // log 1+2^-13 Q62
+    dc32 0x00055545, 0x0000fffe    // log 1+2^-14 Q62
+    dc32 0x8000aaaa, 0x00007fff    // log 1+2^-15 Q62
+    dc32 0xe0001555, 0x00003fff    // log 1+2^-16 Q62
+    dc32 0xf80002ab, 0x00001fff    // log 1+2^-17 Q62
+    dc32 0xfe000055, 0x00000fff    // log 1+2^-18 Q62
+    dc32 0xff80000b, 0x000007ff    // log 1+2^-19 Q62
+    dc32 0xffe00001, 0x000003ff    // log 1+2^-20 Q62
+    dc32 0xfff80000, 0x000001ff    // log 1+2^-21 Q62
+    dc32 0xfffe0000, 0x000000ff    // log 1+2^-22 Q62
+    dc32 0xffff8000, 0x0000007f    // log 1+2^-23 Q62
+    dc32 0xffffe000, 0x0000003f    // log 1+2^-24 Q62
+    dc32 0xfffff800, 0x0000001f    // log 1+2^-25 Q62
+    dc32 0xfffffe00, 0x0000000f    // log 1+2^-26 Q62
+    dc32 0xffffff80, 0x00000007    // log 1+2^-27 Q62
+    dc32 0xffffffe0, 0x00000003    // log 1+2^-28 Q62
+    dc32 0xfffffff8, 0x00000001    // log 1+2^-29 Q62
+    dc32 0xfffffffe, 0x00000000    // log 1+2^-30 Q62
+    dc32 0x80000000, 0x00000000    // log 1+2^-31 Q62
+    dc32 0x40000000, 0x00000000    // log 1+2^-32 Q62
 
 
 #endif

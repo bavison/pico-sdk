@@ -31,10 +31,10 @@
 
 .align 2
 aeabi_mem_funcs:
-    _word ROM_FUNC_MEMSET
-    _word ROM_FUNC_MEMCPY
-    _word ROM_FUNC_MEMSET4
-    _word ROM_FUNC_MEMCPY44
+    dc32 ROM_FUNC_MEMSET
+    dc32 ROM_FUNC_MEMCPY
+    dc32 ROM_FUNC_MEMSET4
+    dc32 ROM_FUNC_MEMCPY44
 aeabi_mem_funcs_end:
 
 .section .text

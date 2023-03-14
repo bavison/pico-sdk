@@ -9,7 +9,7 @@
 #define _asciz      .asciz
 #define dc8         .byte
 #define dc16        .hword
-#define _word       .word
+#define dc32        .word
 
 .syntax unified
 .cpu cortex-m0plus
@@ -37,7 +37,7 @@
 .macro __pre_init func, priority_string
 .section .preinit_array.\priority_string
 .align 2
-    _word \func
+    .word \func
 .endm
 
 .macro local_func x

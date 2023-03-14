@@ -45,7 +45,7 @@ irq_handler_chain_slots:
     dc8 0x00
 1:
     // and finally the handler function pointer
-    _word 0x00000000
+    dc32 0x00000000
     .set next_slot_number, next_slot_number + 1
 .endr
 
