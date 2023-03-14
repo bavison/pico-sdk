@@ -269,11 +269,12 @@ divmod_s64s64_savestate:
 #endif /* !PICO_DIVIDER_DISABLE_INTERRUPTS */
 
 _macro_2args(dneg, lo, hi)
+ local skip
  mvns MA(hi),MA(hi)
  negs MA(lo),MA(lo)
- bne l\@_1
+ bne skip
  adds MA(hi),#1
-l\@_1:
+skip:
  endm
 
  alignrom 2
