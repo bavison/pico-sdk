@@ -8,7 +8,7 @@
 
 #define _asciz      .asciz
 #define dc8         .byte
-#define _hword      .hword
+#define dc16        .hword
 #define _word       .word
 
 .syntax unified
