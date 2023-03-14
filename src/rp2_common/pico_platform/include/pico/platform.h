@@ -559,9 +559,9 @@ __force_inline static uint get_core_num(void) {
 #else // __ASSEMBLER__
 
 #if defined(__IASMARM__) || defined(PICO_USE_ARM_LINK)
-#define WRAPPER_FUNC_NAME(x) $Sub$$##x
+#define WRAPPER_FUNC_NAME(x) __CONCAT1($Sub$$,x)
 #else
-#define WRAPPER_FUNC_NAME(x) __wrap_##x
+#define WRAPPER_FUNC_NAME(x) __CONCAT1(__wrap_,x)
 #endif
 #define SECTION_NAME(x) .text.##x
 #define RAM_SECTION_NAME(x) .time_critical.##x
