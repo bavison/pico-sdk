@@ -22,6 +22,8 @@
 #define _macro_6args(x,a,b,c,d,e,f)        .macro x a,b,c,d,e,f
 #define _macro_9args(x,a,b,c,d,e,f,g,h,i)  .macro x a,b,c,d,e,f,g,h,i
 #define public      .global
+#define _section(name, flags, cd, align)   .section name, flags
+#define _root_section(name, flags, cd, align) .section name, flags
 
 // Expand a macro argument
 #define MA(x)  \##x

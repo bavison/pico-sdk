@@ -20,9 +20,9 @@
 _macro_1arg(double_section, name)
 // todo separate flag for shims?
 #if PICO_DOUBLE_IN_RAM
-.section RAM_SECTION_NAME(MA(name)), "ax"
+ _section(RAM_SECTION_NAME(MA(name)), "ax", CODE, 2)
 #else
-.section SECTION_NAME(MA(name)), "ax"
+ _section(SECTION_NAME(MA(name)), "ax", CODE, 2)
 #endif
  endm
 
@@ -849,7 +849,7 @@ dd_4:
  lsls r1,r3,#20
  b dd_5
 
-.section SECTION_NAME(dsqrt_shim)
+ _section(SECTION_NAME(dsqrt_shim), "ax", CODE, 2)
 /*
 Approach to square root x=sqrt(y) is as follows.
 

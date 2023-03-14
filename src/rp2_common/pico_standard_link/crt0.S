@@ -16,7 +16,7 @@
 #endif
 #endif
 
-.section .vectors, "ax"
+ _section(.vectors, "ax", CODE, 2)
  alignrom 2
 
  public __vectors, __VECTOR_TABLE
@@ -143,7 +143,7 @@ unhandled_user_irq_num_in_r0:
 
 // ----------------------------------------------------------------------------
 
-.section .binary_info_header, "a"
+ _section(.binary_info_header, "a", CONST, 2)
 
 // Header must be in first 256 bytes of main image (i.e. excluding flash boot2).
 // For flash builds we put it immediately after vector table; for NO_FLASH the
@@ -161,7 +161,7 @@ binary_info_header:
 
 // ----------------------------------------------------------------------------
 
-.section .reset, "ax"
+ _section(.reset, "ax", CODE, 2)
 
 // On flash builds, the vector table comes first in the image (conventional).
 // On NO_FLASH builds, the reset handler section comes first, as the entry
@@ -304,13 +304,13 @@ hold_non_core0_in_bootrom:
 // ----------------------------------------------------------------------------
 // Stack/heap dummies to set size
 
-.section .stack, "a"
+ _root_section(.stack, "a", DATA, 5)
 // align to allow for memory protection (although this alignment is pretty much ignored by linker script)
  alignrom 5
  _equ StackSize, PICO_STACK_SIZE
 .space StackSize
 
-.section .heap, "a"
+ _root_section(.heap, "a", DATA, 2)
  alignrom 2
  _equ HeapSize, PICO_HEAP_SIZE
 .space HeapSize

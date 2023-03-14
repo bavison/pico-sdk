@@ -19,7 +19,7 @@
 // end::hw_div_u32[]
 
 // Common delay and return section for s32 and u32
-.section .text.hw_divider_divmod_return
+ _section(.text.hw_divider_divmod_return, "ax", CODE, 2)
 hw_divider_divmod_return:
     // Branching here is 2 cycles, delay another 6
     b 1f

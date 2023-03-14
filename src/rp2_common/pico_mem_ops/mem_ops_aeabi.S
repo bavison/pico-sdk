@@ -11,9 +11,9 @@
 
 _macro_1arg(mem_section, name)
 #if PICO_MEM_IN_RAM
-.section RAM_SECTION_NAME(MA(name)), "ax"
+ _section(RAM_SECTION_NAME(MA(name)), "ax", CODE, 2)
 #else
-.section SECTION_NAME(MA(name)), "ax"
+ _section(SECTION_NAME(MA(name)), "ax", CODE, 2)
 #endif
  endm
 
@@ -26,7 +26,7 @@ _macro_1arg(mem_section, name)
 // NOTE: All code sections are placed in RAM (at the expense of some veneer cost for calls from flash) because
 //       otherwise code using basic c division operators will require XIP flash access.
 
-.section .data.aeabi_mem_funcs
+ _section(.data.aeabi_mem_funcs, "aw", DATA, 2)
  public aeabi_mem_funcs, aeabi_mem_funcs_end
 
  alignrom 2
@@ -37,7 +37,7 @@ aeabi_mem_funcs:
     dc32 ROM_FUNC_MEMCPY44
 aeabi_mem_funcs_end:
 
-.section .text
+ _section(.text, "ax", CODE, 2)
  regular_func __aeabi_mem_init
     ldr r0, =aeabi_mem_funcs
     movs r1, #MEM_FUNC_COUNT
