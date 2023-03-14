@@ -122,8 +122,10 @@ __check_nan_f2:
 #endif
     bx r3
 #if PICO_FLOAT_SUPPORT_ROM_V1 && PICO_RP2040_B0_SUPPORTED
+    data_in_code_area
 .byte \SF_TABLE_OFFSET, 0xdf
 .word \shim
+    code_in_code_area
 #endif
 .endm
 

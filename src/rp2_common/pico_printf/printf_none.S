@@ -20,4 +20,5 @@ regular_func printf_none_assert
     bl panic
 
 str:
+    data_in_code_area
     .asciz "printf support is disabled"
