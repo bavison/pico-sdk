@@ -11,6 +11,9 @@
 #define	__CONCAT(x,y)	__CONCAT1(x,y)
 
 #define PICO_PANIC_FUNCTION_IS_EMPTY (__CONCAT(PICO_PANIC_FUNCTION, 1))
+
+ .extern PICO_PANIC_FUNCTION
+
 .text
 // Use a forwarding method here as it is a little simpler than renaming the symbol as it is used from assembler
 .weak panic // also allow override

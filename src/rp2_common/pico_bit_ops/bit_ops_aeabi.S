@@ -10,6 +10,8 @@
 #endif
 #include "pico/runtime_init.h"
 
+ .extern rom_funcs_lookup
+
 pico_default_asm_setup
 
 .macro bits_section name

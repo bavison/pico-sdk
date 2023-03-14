@@ -15,6 +15,33 @@
 #include "boot/picobin.h"
 #include "pico/bootrom.h"
 
+ .extern __binary_info_start
+ .extern __binary_info_end
+
+ .extern __bss_start__
+ .extern __bss_end__
+
+ .extern __ram_text_source__
+ .extern __ram_text_start__
+ .extern __ram_text_end__
+
+ .extern __etext
+ .extern __data_start__
+ .extern __data_end__
+
+ .extern __scratch_x_source__
+ .extern __scratch_x_start__
+ .extern __scratch_x_end__
+
+ .extern __scratch_y_source__
+ .extern __scratch_y_start__
+ .extern __scratch_y_end__
+
+ .extern __StackTop
+
+ .extern exit
+ .extern main
+
 // PICO_CONFIG: PICO_CRT0_NEAR_CALLS, Whether calls from crt0 into the binary are near (<16M away) - ignored for PICO_COPY_TO_RAM, default=0, type=bool, group=pico_crt0
 #ifndef PICO_CRT0_NEAR_CALLS
 #define PICO_CRT0_NEAR_CALLS 0
