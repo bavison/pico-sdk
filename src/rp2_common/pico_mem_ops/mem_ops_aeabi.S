@@ -27,7 +27,7 @@
 //       otherwise code using basic c division operators will require XIP flash access.
 
 .section .data.aeabi_mem_funcs
-.global aeabi_mem_funcs, aeabi_mem_funcs_end
+ _global aeabi_mem_funcs, aeabi_mem_funcs_end
 
  alignrom 2
 aeabi_mem_funcs:
