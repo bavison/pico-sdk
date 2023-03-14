@@ -11,9 +11,9 @@
 
 _macro_1arg(mem_section, name)
 #if PICO_MEM_IN_RAM
-.section RAM_SECTION_NAME(\name), "ax"
+.section RAM_SECTION_NAME(MA(name)), "ax"
 #else
-.section SECTION_NAME(\name), "ax"
+.section SECTION_NAME(MA(name)), "ax"
 #endif
  endm
 
