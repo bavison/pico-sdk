@@ -23,6 +23,10 @@
 #define _macro_9args(x,a,b,c,d,e,f,g,h,i)  .macro x a,b,c,d,e,f,g,h,i
 #define public      .global
 
+// Expand a macro argument
+#define MA(x)  \##x
+#define MA2(x) \##x
+
 .syntax unified
 .cpu cortex-m0plus
 .thumb
