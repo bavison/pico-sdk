@@ -89,6 +89,7 @@ pico_default_asm_setup
 
 .section .vectors, "ax"
 .align 2
+    data_in_code_area
 
 .global __vectors, __VECTOR_TABLE, __vectors_end
 __VECTOR_TABLE:
@@ -586,6 +587,7 @@ data_cpy:
 // we skip the copy, because it is listed in binary info
 
 .p2align 2
+    data_in_code_area
 data_cpy_table:
 #if PICO_RP2350 && PICO_EMBED_XIP_SETUP && !PICO_NO_FLASH
 .word __boot2_start__
