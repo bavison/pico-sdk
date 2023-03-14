@@ -102,6 +102,12 @@
  public __vectors, __VECTOR_TABLE
 __VECTOR_TABLE:
 __vectors:
+#ifdef __IASMARM__
+// The IAR debugger uses the two words at the symbol __vector_table to set
+// the initial stack pointer and program counter, so be sure to define it.
+ public __vector_table
+__vector_table:
+#endif
     dc32 __StackTop
     dc32 _reset_handler
     dc32 isr_nmi
