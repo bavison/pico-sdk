@@ -35,8 +35,7 @@ _macro_1arg(div_section, name)
 // wait 8-n cycles for the hardware divider
 _macro_1arg(wait_div, n)
  rept (8-MA(n)) / 2
-  b 9f
-9:
+  b .+2
  endr
  if (8-MA(n)) % 2
  nop
@@ -115,7 +114,7 @@ _macro(restore_div_state_and_return_64)
     str r0, [r2, #SIO_DIV_SDIVIDEND_OFFSET]
     str r1, [r2, #SIO_DIV_SDIVISOR_OFFSET]
     cmp r1, #0
-    beq 1f
+    beq idiv_by0
     wait_div 2
     // return 64 bit value so we can efficiently return both (note read order is important since QUOTIENT must be read last)
     ldr r1, [r2, #SIO_DIV_REMAINDER_OFFSET]
@@ -124,7 +123,7 @@ _macro(restore_div_state_and_return_64)
     msr PRIMASK, r3
 #endif /* PICO_DIVIDER_DISABLE_INTERRUPTS */
     bx lr
-1:
+idiv_by0:
 #if PICO_DIVIDER_DISABLE_INTERRUPTS
     msr PRIMASK, r3
 #endif /* PICO_DIVIDER_DISABLE_INTERRUPTS */
@@ -134,9 +133,9 @@ _macro(restore_div_state_and_return_64)
     asrs r2, r0, #31
     eors r1, r2
     cmp r0, #0
-    beq 1f
+    beq idiv_0by0
     mvns r0, r1
-1:
+idiv_0by0:
 #if PICO_DIVIDER_CALL_IDIV0
     bl __aeabi_idiv0
 #endif
@@ -177,7 +176,7 @@ _macro(restore_div_state_and_return_64)
     str r0, [r2, #SIO_DIV_UDIVIDEND_OFFSET]
     str r1, [r2, #SIO_DIV_UDIVISOR_OFFSET]
     cmp r1, #0
-    beq 1f
+    beq uidiv_by0
     wait_div 2
     // return 64 bit value so we can efficiently return both (note read order is important since QUOTIENT must be read last)
     ldr r1, [r2, #SIO_DIV_REMAINDER_OFFSET]
@@ -186,16 +185,16 @@ _macro(restore_div_state_and_return_64)
     msr PRIMASK, r3
 #endif /* PICO_DIVIDER_DISABLE_INTERRUPTS */
     bx lr
-1:
+uidiv_by0:
 #if PICO_DIVIDER_DISABLE_INTERRUPTS
     msr PRIMASK, r3
 #endif /* PICO_DIVIDER_DISABLE_INTERRUPTS */
     push {r2, lr}
     cmp r0, #0
-    beq 1f
+    beq uidiv_0by0
     movs r0, #0
     mvns r0, r0
-1:
+uidiv_0by0:
 #if PICO_DIVIDER_CALL_IDIV0
     bl __aeabi_idiv0
 #endif
@@ -280,10 +279,10 @@ skip:
  alignrom 2
  regular_func divmod_s64s64_unsafe
  cmp r3,#0
- blt 1f
+ blt divmod_s64s64_5
 // here x +ve
- beq 2f                    // could x be zero?
-3:
+ beq divmod_s64s64_2       // could x be zero?
+divmod_s64s64_1:
  cmp r1,#0
  bge divmod_u64u64_unsafe  // both positive
 // y -ve, x +ve
@@ -294,22 +293,22 @@ skip:
  dneg r2,r3
  pop {r15}
 
-2:
+divmod_s64s64_2:
  cmp r2,#0
- bne 3b                    // back if x not zero
+ bne divmod_s64s64_1       // back if x not zero
 
  cmp r0,#0                 // y==0?
- bne 4f
+ bne divmod_s64s64_3
  cmp r1,#0
- beq 5f                    // then pass 0 to __aeabi_ldiv0
-4:
+ beq divmod_s64s64_4       // then pass 0 to __aeabi_ldiv0
+divmod_s64s64_3:
  movs r0,#0
  lsrs r1, r1,#31
  lsls r1, r1,#31           // get sign bit
- bne 5f                    // y -ve? pass -2^63 to __aeabi_ldiv0
+ bne divmod_s64s64_4       // y -ve? pass -2^63 to __aeabi_ldiv0
  mvns r0,r0
  lsrs r1,r0,#1             // y +ve: pass 2^63-1 to __aeabi_ldiv0
-5:
+divmod_s64s64_4:
  push {r14}
 #if PICO_DIVIDER_CALL_LDIV0
  bl __aeabi_ldiv0
@@ -318,18 +317,18 @@ skip:
  movs r3,#0
  pop {r15}
 
-1:
+divmod_s64s64_5:
 // here x -ve
  push {r14}
  cmp r1,#0
- blt 1f
+ blt divmod_s64s64_6
 // y +ve, x -ve
  dneg r2,r3
  bl divmod_u64u64_unsafe
  dneg r0,r1
  pop {r15}
 
-1:
+divmod_s64s64_6:
 // y -ve, x -ve
  dneg r0,r1
  dneg r2,r3
@@ -341,9 +340,9 @@ skip:
  cmp r1,#0
  bne y64                   // y fits in 32 bits?
  cmp r3,#0                 // yes; and x?
- bne 1f
+ bne divmod_u64u64_3
  cmp r2,#0
- beq 2f                    // x==0?
+ beq divmod_u64u64_1       // x==0?
  mov r12,r7
  ldr r7,=SIO_BASE
  str r0,[r7,#SIO_DIV_UDIVIDEND_OFFSET]
@@ -356,13 +355,13 @@ skip:
  mov r7,r12
  bx r14
 
-2:                         // divide by 0 with y<2^32
+divmod_u64u64_1:           // divide by 0 with y<2^32
  cmp r0,#0                 // y==0?
- beq 3f                    // then pass 0 to __aeabi_ldiv0
+ beq divmod_u64u64_2       // then pass 0 to __aeabi_ldiv0
 udiv0:
  ldr r0,=0xffffffff
  movs r1,r0                // pass 2^64-1 to __aeabi_ldiv0
-3:
+divmod_u64u64_2:
  push {r14}
 #if PICO_DIVIDER_CALL_LDIV0
  bl __aeabi_ldiv0
@@ -371,7 +370,7 @@ udiv0:
  movs r3,#0
  pop {r15}
 
-1:
+divmod_u64u64_3:
  movs r2,r0                // x>y, so result is 0 remainder y
  movs r3,r1
  movs r0,#0
@@ -384,9 +383,9 @@ udiv0:
 // split into cases acccording to the size of x
 y64:
  cmp r3,#0
- beq 1f
+ beq divmod_u64u64_4
  b y64_x48                 // if x does not fit in 32 bits, go to 48- and 64-bit cases
-1:
+divmod_u64u64_4:
  lsrs r3,r2,#16
  bne y64_x32               // jump if x is 17..32 bits
 
@@ -434,25 +433,25 @@ y64_x32:
  mov r12,r2                // save x
  movs r5,#0                // xsh=0
  lsrs r4,r2,#24
- bne 1f
+ bne divmod_u64u64_5
  lsls r2,r2,#8             // if(x0<1U<<24) x0<<=8,xsh =8;
  adds r5,#8
-1:
+divmod_u64u64_5:
  lsrs r4,r2,#28
- bne 1f
+ bne divmod_u64u64_6
  lsls r2,r2,#4             // if(x0<1U<<28) x0<<=4,xsh+=4;
  adds r5,#4
-1:
+divmod_u64u64_6:
  lsrs r4,r2,#30
- bne 1f
+ bne divmod_u64u64_7
  lsls r2,r2,#2             // if(x0<1U<<30) x0<<=2,xsh+=2;
  adds r5,#2
-1:
+divmod_u64u64_7:
  lsrs r4,r2,#31
- bne 1f
+ bne divmod_u64u64_8
  lsls r2,r2,#1             // if(x0<1U<<31) x0<<=1,xsh+=1;
  adds r5,#1
-1:
+divmod_u64u64_8:
 // now 2^31<=x0<2^32, 0<=xsh<16 (amount x is shifted in x0); number of quotient bits to be calculated qb=xsh+33 33<=qb<49
  lsrs r4,r2,#15
  adds r4,#1                // x1=(x0>>15)+1; 2^16<x1<=2^17
@@ -524,7 +523,7 @@ y64_x32:
  muls r2,r6                // x0*q
  subs r0,r2                // y-x0*q
  lsls r7,r6,#13            // qul=q<<13
-1:
+divmod_u64u64_9:
  lsrs r6,r0,#9
  muls r6,r4
  lsrs r6,r6,#16            // q=((ui32)(y>>9)*r)>>16;
@@ -553,22 +552,22 @@ y64_x32:
  lsrs r1,r1,r3
  lsls r0,r0,r5             // r0:r1 is quh<<(4+xsh)
  adds r0,r7
- bcc 1f
-2:
+ bcc divmod_u64u64_11
+divmod_u64u64_10:
  adds r1,#1
-1:                         // qu=((ui64)quh<<(4+xsh))+qul
+divmod_u64u64_11:          // qu=((ui64)quh<<(4+xsh))+qul
  cmp r2,r4
- bhs 3f
+ bhs divmod_u64u64_12
  movs r3,#0
  pop {r4-r7,r15}
 
  ltorg
 
-3:
+divmod_u64u64_12:
  subs r2,r4
  adds r0,#1
- bcc 1b
- b 2b                      // while(y>=x) y-=x,qu++;
+ bcc divmod_u64u64_11
+ b divmod_u64u64_10        // while(y>=x) y-=x,qu++;
 
 // here:
 // r0:r1 y
@@ -585,9 +584,9 @@ last0:
  uxth r2,r4
  muls r2,r6                // q*xlo
  subs r0,r2
- bcs 1f
+ bcs divmod_u64u64_13
  subs r1,#1                // y-=q*xlo
-1:
+divmod_u64u64_13:
  lsrs r2,r4,#16            // xhi
  muls r2,r6                // q*xhi
  lsrs r3,r2,#16
@@ -602,78 +601,78 @@ last0:
  lsrs r1,r1,r7
  lsls r0,r0,r5             // r0:r1 is quh<<(4+xsh)
  adds r0,r6
- bcc 1f
+ bcc divmod_u64u64_14
  adds r1,#1                // quh<<(xsh+4))+q
-1:
+divmod_u64u64_14:
  cmp r3,#0                 // y>=2^32?
- bne 3f
+ bne divmod_u64u64_15
  cmp r2,r4                 // y>=x?
- bhs 4f
+ bhs divmod_u64u64_18
  pop {r4-r7,r15}
 
-3:
+divmod_u64u64_15:
  adds r0,#1                // qu++
- bcc 2f
+ bcc divmod_u64u64_16
  adds r1,#1
-2:
+divmod_u64u64_16:
  subs r2,r4                // y-=x
- bcs 3b
+ bcs divmod_u64u64_15
  subs r3,#1
- bne 3b
+ bne divmod_u64u64_15
 
-1:
+divmod_u64u64_17:
  cmp r2,r4
- bhs 4f
+ bhs divmod_u64u64_18
  pop {r4-r7,r15}
 
-4:
+divmod_u64u64_18:
  adds r0,#1                // qu++
- bcc 2f
+ bcc divmod_u64u64_19
  adds r1,#1
-2:
+divmod_u64u64_19:
  subs r2,r4                // y-=x
- b 1b
+ b divmod_u64u64_17
 
 y64_x48:
 // here x is 33..64 bits
  push {r4-r7,r14}          // save a copy of x
  lsrs r4,r3,#16
- beq 1f
+ beq divmod_u64u64_20
  b y64_x64                 // jump if x is 49..64 bits
-1:
+divmod_u64u64_20:
  push {r2-r3}              // save a copy of x
 // here x is 33..48 bits
  movs r5,#0                // xsh=0
  lsrs r4,r3,#8
- bne 1f
+ bne divmod_u64u64_21
  lsls r3,r3,#8
  lsrs r6,r2,#24
  orrs r3,r6
  lsls r2,r2,#8             // if(x0<1U<<40) x0<<=8,xsh =8;
  adds r5,#8
-1:
+divmod_u64u64_21:
  lsrs r4,r3,#12
- bne 1f
+ bne divmod_u64u64_22
  lsls r3,r3,#4
  lsrs r6,r2,#28
  orrs r3,r6
  lsls r2,r2,#4             // if(x0<1U<<44) x0<<=4,xsh+=4;
  adds r5,#4
-1:
+divmod_u64u64_22:
  lsrs r4,r3,#14
- bne 1f
+ bne divmod_u64u64_23
  lsls r3,r3,#2
  lsrs r6,r2,#30
  orrs r3,r6
  lsls r2,r2,#2             // if(x0<1U<<46) x0<<=2,xsh+=2;
  adds r5,#2
-1:
+divmod_u64u64_23:
  lsrs r4,r3,#15
- bne 1f
+ bne divmod_u64u64_24
  adds r2,r2
  adcs r3,r3                // if(x0<1U<<47) x0<<=1,xsh+=1;
  adds r5,#1
-1:
+divmod_u64u64_24:
 // now 2^47<=x0<2^48, 0<=xsh<16 (amount x is shifted in x0); number of quotient bits to be calculated qb=xsh+17 17<=qb<33
  movs r4,r3
  adds r7,r2,r2
@@ -701,13 +700,13 @@ y64_x48:
  uxth r7,r2                // x0l
  muls r7,r6
  subs r0,r7
- bcs 1f
+ bcs divmod_u64u64_25
  subs r1,#1
-1:
+divmod_u64u64_25:
  subs r0,r7
- bcs 1f
+ bcs divmod_u64u64_26
  subs r1,#1
-1:
+divmod_u64u64_26:
  uxth r7,r3                // x0h
  muls r7,r6
  subs r1,r7
@@ -735,9 +734,9 @@ y64_x48:
  uxth r7,r2                // x0l
  muls r7,r6
  subs r0,r7
- bcs 1f
+ bcs divmod_u64u64_27
  subs r1,#1
-1:
+divmod_u64u64_27:
  uxth r7,r3                // x0h
  muls r7,r6
  subs r1,r7
@@ -759,7 +758,7 @@ y64_x48:
  subs r5,#12
  mov r7,r14
  lsls r7,r7,r5
-2:
+divmod_u64u64_28:
  adds r7,r6                // qu=(qu<<(xsh-12))+q
  pop {r4,r5}               // recall x
 
@@ -782,13 +781,13 @@ y64_x48:
  subs r0,r2
  sbcs r1,r3                // y-=(ui64)q*x
 
-1:
+divmod_u64u64_29:
  movs r2,r0
  movs r3,r1
  adds r7,#1
  subs r0,r4
  sbcs r1,r5                // while(y>=x) y-=x,qu++;
- bhs 1b
+ bhs divmod_u64u64_29
  subs r0,r7,#1             // correction to qu
  movs r1,#0
  pop {r4-r7,r15}
@@ -806,20 +805,20 @@ last1:
  lsrs r7,r7,#13
  lsls r7,r7,r5
  adds r7,r7                // qu<<(xsh+1)
- b 2b
+ b divmod_u64u64_28
 
 y64_x64:
 // here x is 49..64 bits
  movs r4,#0                // q=0 if x>>32==0xffffffff
  adds r5,r3,#1
- beq 1f
+ beq divmod_u64u64_30
 
  ldr r7,=SIO_BASE
  str r5,[r7,#SIO_DIV_UDIVISOR_OFFSET]
  str r1,[r7,#SIO_DIV_UDIVIDEND_OFFSET]
  wait_div 0
  ldr r4,[r7,#SIO_DIV_QUOTIENT_OFFSET] // q=(ui32)(y>>32)/((x>>32)+1)
-1:
+divmod_u64u64_30:
  uxth r5,r2
  uxth r6,r3
  muls r5,r4
@@ -838,25 +837,25 @@ y64_x64:
  sbcs r1,r6                //   y-=(ui64)q*x
 
  cmp r1,r3                 //   while(y>=x) y-=x,q++
- bhs 1f
-3:
+ bhs divmod_u64u64_32
+divmod_u64u64_31:
  movs r2,r0
  movs r3,r1
  movs r0,r4
  movs r1,#0
  pop {r4-r7,r15}
 
-1:
- bne 2f
+divmod_u64u64_32:
+ bne divmod_u64u64_33
  cmp r0,r2
- blo 3b
-2:
+ blo divmod_u64u64_31
+divmod_u64u64_33:
  subs r0,r2
  sbcs r1,r3
  adds r4,#1
  cmp r1,r3
- blo 3b
- b 1b
+ blo divmod_u64u64_31
+ b divmod_u64u64_32
 
  div_section divmod_s64s64_rem
  regular_func divmod_s64s64_rem
