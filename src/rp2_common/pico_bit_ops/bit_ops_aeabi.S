@@ -68,12 +68,12 @@ aeabi_bits_funcs_end:
     ldr r3, =aeabi_bits_funcs
     ldr r3, [r3, #CLZ32]
     cmp r1, #0
-    bne 1f
+    bne clzdi_msw_nonzero
     push {lr}
     blx r3
     adds r0, #32
     pop {pc}
-1:
+clzdi_msw_nonzero:
     mov r0, r1
     bx r3
 
@@ -82,9 +82,9 @@ aeabi_bits_funcs_end:
     ldr r3, =aeabi_bits_funcs
     ldr r3, [r3, #CTZ32]
     cmp r0, #0
-    beq 1f
+    beq ctzdi_lsw_zero
     bx r3
-1:
+ctzdi_lsw_zero:
     push {lr}
     mov r0, r1
     blx r3
