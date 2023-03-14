@@ -7,7 +7,7 @@
 #include "pico/asm_helper.S"
 #include "hardware/irq.h"
 
- _extern irq_add_tail_to_free_list
+ extern irq_add_tail_to_free_list
 
 #if !PICO_DISABLE_SHARED_IRQ_HANDLERS
  _section(.data, "aw", DATA, 2)

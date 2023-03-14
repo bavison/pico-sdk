@@ -8,8 +8,8 @@
 #include "hardware/regs/addressmap.h"
 #include "hardware/divider_helper.S"
 
- _extern __aeabi_idiv0
- _extern __aeabi_ldiv0
+ extern __aeabi_idiv0
+ extern __aeabi_ldiv0
 
 // PICO_CONFIG: PICO_DIVIDER_DISABLE_INTERRUPTS, Disable interrupts around division such that divider state need not be saved/restored in exception handlers, default=0, group=pico_divider
 

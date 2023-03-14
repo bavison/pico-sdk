@@ -7,7 +7,7 @@
 #include "pico/asm_helper.S"
 #include "pico/bootrom.h"
 
- _extern rom_funcs_lookup
+ extern rom_funcs_lookup
 
  __pre_init __aeabi_mem_init, 00001
 
