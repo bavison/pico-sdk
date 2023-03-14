@@ -18,6 +18,7 @@
 #define dc16        .hword
 #define dc32        .word
 #define ds          .space
+#define _equ        .equ
 
 .syntax unified
 .cpu cortex-m0plus
