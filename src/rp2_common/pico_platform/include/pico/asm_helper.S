@@ -18,7 +18,7 @@
 #define endr        .endr
 #define _equ        .equ
 #define if          .if
-#define _ltorg      .ltorg
+#define ltorg       .ltorg
 #define _macro(x)   .macro x
 #define _macro_1arg(x,a)                   .macro x a
 #define _macro_2args(x,a,b)                .macro x a,b

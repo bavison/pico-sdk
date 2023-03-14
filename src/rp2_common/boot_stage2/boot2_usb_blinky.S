@@ -41,4 +41,4 @@ dead:
 
  public literals
 literals:
- _ltorg
+ ltorg
