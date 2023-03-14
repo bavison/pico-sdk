@@ -73,6 +73,7 @@
     bl panic
 
 str:
+    data_in_code_area
     _asciz "float support is disabled"
 
  end

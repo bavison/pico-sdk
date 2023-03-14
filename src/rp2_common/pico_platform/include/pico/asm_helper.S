@@ -80,3 +80,6 @@ endm
 .thumb_func
 \x:
 endm
+
+#define code_in_code_area
+#define data_in_code_area
