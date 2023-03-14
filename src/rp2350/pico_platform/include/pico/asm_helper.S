@@ -74,3 +74,6 @@ weak_func WRAPPER_FUNC_NAME(\x)
 .macro __pre_init func, priority_string1
 __pre_init_with_offset func, 0, priority_string1
 .endm
+
+#define code_in_code_area
+#define data_in_code_area

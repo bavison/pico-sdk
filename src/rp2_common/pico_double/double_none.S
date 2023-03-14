@@ -83,4 +83,5 @@ pico_default_asm_setup
 #endif
 
 str:
+    data_in_code_area
     .asciz "double support is disabled"
