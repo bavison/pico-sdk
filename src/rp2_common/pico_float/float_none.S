@@ -80,4 +80,5 @@ wrapper_func fmaf
     bl panic
 #endif
 str:
+    data_in_code_area
     .asciz "float support is disabled"
