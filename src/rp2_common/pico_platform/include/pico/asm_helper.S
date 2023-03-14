@@ -12,6 +12,7 @@
 #define dc16        .hword
 #define dc32        .word
 #define ds          .space
+#define end         .end
 #define _equ        .equ
 
 .syntax unified

@@ -17,3 +17,5 @@
 
 str:
     _asciz "printf support is disabled"
+
+ end
