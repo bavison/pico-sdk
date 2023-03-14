@@ -36,11 +36,11 @@ irq_handler_chain_slots:
     dc16 0    // inst3 (either: b next_slot         or for the LAST         pop {pc}                       )
 
     // next is a single byte index of next slot in chain (or -1 to end)
-.if next_slot_number == PICO_MAX_SHARED_IRQ_HANDLERS
+ if next_slot_number == PICO_MAX_SHARED_IRQ_HANDLERS
     dc8 0xff
-.else
+ else
     dc8 next_slot_number
-.endif
+ endif
     // next is the 8 bit unsigned priority
     dc8 0x00
 1:

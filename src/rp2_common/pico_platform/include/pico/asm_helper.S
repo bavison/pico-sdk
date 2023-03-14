@@ -11,10 +11,13 @@
 #define dc8         .byte
 #define dc16        .hword
 #define dc32        .word
+#define else        .else
 #define end         .end
+#define endif       .endif
 #define endm        .endm
 #define endr        .endr
 #define _equ        .equ
+#define if          .if
 #define _macro(x)   .macro x
 #define _macro_1arg(x,a)                   .macro x a
 #define _macro_2args(x,a,b)                .macro x a,b
