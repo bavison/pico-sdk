@@ -135,10 +135,10 @@
 // status register and checking for the "RX FIFO Not Empty" flag to assert.
 
     mov r1, #SSI_SR_RFNE_BITS
-00:
+poll_for_read_completion:
     ldr r0, [r3, #SSI_SR_OFFSET]    // Read status register
     tst r0, r1                      // RFNE status flag set?
-    beq 00b                         // If not then wait
+    beq poll_for_read_completion    // If not then wait
 
 // At this point CN# will be deasserted and the SPI clock will not be running.
 // The Winbond WX25X10CL device will be in continuous read, dual I/O mode and
