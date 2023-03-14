@@ -39,6 +39,7 @@
 #define MA(x)  \##x
 #define MA2(x) \##x
 
+.altmacro
 .syntax unified
 .cpu cortex-m0plus
 .thumb
@@ -83,3 +84,15 @@ endm
 
 #define code_in_code_area
 #define data_in_code_area
+
+#if PICO_C_COMPILER_IS_ARMCLANG
+
+#define DECLARE_LOCAL_LABEL(l)
+#define LOCAL_LABEL(l) local_##l##_\@
+
+#else
+
+#define DECLARE_LOCAL_LABEL(l) local local_##l
+#define LOCAL_LABEL(l) local_##l
+
+#endif
