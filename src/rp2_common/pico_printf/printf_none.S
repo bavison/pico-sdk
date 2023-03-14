@@ -16,6 +16,7 @@
     bl panic
 
 str:
+    data_in_code_area
     _asciz "printf support is disabled"
 
  end

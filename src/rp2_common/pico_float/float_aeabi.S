@@ -114,8 +114,10 @@ _macro_2args(shimmable_table_tail_call, SF_TABLE_OFFSET, shim)
 #endif
     bx r3
 #if PICO_FLOAT_SUPPORT_ROM_V1 && PICO_RP2040_B0_SUPPORTED
+    data_in_code_area
     dc8 MA(SF_TABLE_OFFSET), 0xdf
     dc32 MA(shim)
+    code_in_code_area
 #endif
  endm
 
