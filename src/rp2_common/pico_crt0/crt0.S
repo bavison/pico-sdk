@@ -15,6 +15,53 @@
 #include "boot/picobin.h"
 #include "pico/bootrom.h"
 
+#ifdef __IASMARM__
+
+                     extern `BINARY_INFO$$Base`
+__binary_info_start  set    `BINARY_INFO$$Base`
+                     extern `BINARY_INFO$$Limit`
+__binary_info_end    set    `BINARY_INFO$$Limit`
+
+                     extern `BSS$$Base`
+__bss_start__        set    `BSS$$Base`
+                     extern `BSS$$Limit`
+__bss_end__          set    `BSS$$Limit`
+
+#if PICO_COPY_TO_RAM
+                     extern `RAM_TEXT_INITIALIZERS$$Base`
+__ram_text_source__  set    `RAM_TEXT_INITIALIZERS$$Base`
+                     extern `RAM_TEXT$$Base`
+__ram_text_start__   set    `RAM_TEXT$$Base`
+                     extern `RAM_TEXT$$Limit`
+__ram_text_end__     set    `RAM_TEXT$$Limit`
+#endif
+
+                     extern `DATA_INITIALIZERS$$Base`
+__etext              set    `DATA_INITIALIZERS$$Base`
+                     extern `DATA$$Base`
+__data_start__       set    `DATA$$Base`
+                     extern `DATA$$Limit`
+__data_end__         set    `DATA$$Limit`
+
+                     extern `SCRATCH_X_INITIALIZERS$$Base`
+__scratch_x_source__ set    `SCRATCH_X_INITIALIZERS$$Base`
+                     extern `SCRATCH_X$$Base`
+__scratch_x_start__  set    `SCRATCH_X$$Base`
+                     extern `SCRATCH_X$$Limit`
+__scratch_x_end__    set    `SCRATCH_X$$Limit`
+
+                     extern `SCRATCH_Y_INITIALIZERS$$Base`
+__scratch_y_source__ set    `SCRATCH_Y_INITIALIZERS$$Base`
+                     extern `SCRATCH_Y$$Base`
+__scratch_y_start__  set    `SCRATCH_Y$$Base`
+                     extern `SCRATCH_Y$$Limit`
+__scratch_y_end__    set    `SCRATCH_Y$$Limit`
+
+                     extern `SCRATCH_Y$$Limit`
+__StackTop           set    `SCRATCH_Y$$Limit`
+
+#endif
+
 // PICO_CONFIG: PICO_CRT0_NEAR_CALLS, Whether calls from crt0 into the binary are near (<16M away) - ignored for PICO_COPY_TO_RAM, default=0, type=bool, group=pico_crt0
 #ifndef PICO_CRT0_NEAR_CALLS
 #define PICO_CRT0_NEAR_CALLS 0
