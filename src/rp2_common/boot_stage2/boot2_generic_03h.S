@@ -90,4 +90,4 @@
 
  public literals
 literals:
-.ltorg
+ ltorg
