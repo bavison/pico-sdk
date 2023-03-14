@@ -10,7 +10,7 @@
  .extern irq_add_tail_to_free_list
 
 #if !PICO_DISABLE_SHARED_IRQ_HANDLERS
-.data
+ _section(.data, "aw", DATA, 2)
  alignrom 2
 
  public irq_handler_chain_slots
