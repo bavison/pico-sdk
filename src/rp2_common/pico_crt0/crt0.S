@@ -455,6 +455,18 @@ _enter_vtable_in_r0:
     msr msp, r1
     bx r2
 
+#ifdef __IASMARM__
+// The IAR debugger uses the two words at the symbol __vector_table to set
+// the initial stack pointer and program counter during a debug session,
+// so be sure to define it.
+ public __vector_table
+__vector_table:
+    data_in_code_area
+    dc32 __StackTop
+    dc32 _entry_point
+    code_in_code_area
+#endif
+
 // Reset handler:
 // - initialises .data
 // - clears .bss
