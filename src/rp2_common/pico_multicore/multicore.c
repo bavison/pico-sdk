@@ -122,10 +122,15 @@ void multicore_launch_core1_with_stack(void (*entry)(void), uint32_t *stack_bott
 }
 
 void multicore_launch_core1(void (*entry)(void)) {
+#if PICO_C_COMPILER_IS_IAR
+    extern uint8_t __StackOneTop;
+    uint32_t *stack = (uint32_t *)(&__StackOneTop - PICO_CORE1_STACK_SIZE);
+#else
     extern uint32_t __StackOneBottom;
     uint32_t *stack_limit = (uint32_t *) &__StackOneBottom;
     // hack to reference core1_stack although that pointer is wrong.... core1_stack should always be <= stack_limit, if not boom!
     uint32_t *stack = core1_stack <= stack_limit ? stack_limit : (uint32_t *) -1;
+#endif
     multicore_launch_core1_with_stack(entry, stack, sizeof(core1_stack));
 }
 

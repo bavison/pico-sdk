@@ -10,23 +10,84 @@
 #include "pico/asm_helper.S"
 #include "pico/binary_info/defs.h"
 
- extern __binary_info_end
+#ifdef __IASMARM__
+
+ extern `BINARY_INFO$$Base`
+ _set __binary_info_start, `BINARY_INFO$$Base`
+ extern `BINARY_INFO$$Limit`
+ _set __binary_info_end, `BINARY_INFO$$Limit`
+
+ extern `BSS$$Base`
+ _set __bss_start__, `BSS$$Base`
+ extern `BSS$$Limit`
+ _set __bss_end__, `BSS$$Limit`
+
+#if PICO_COPY_TO_RAM
+ extern `RAM_TEXT_INITIALIZERS$$Base`
+ _set __ram_text_source__, `RAM_TEXT_INITIALIZERS$$Base`
+ extern `RAM_TEXT$$Base`
+ _set __ram_text_start__, `RAM_TEXT$$Base`
+ extern `RAM_TEXT$$Limit`
+ _set  __ram_text_end__, `RAM_TEXT$$Limit`
+#endif
+
+ extern `DATA_INITIALIZERS$$Base`
+ _set __etext, `DATA_INITIALIZERS$$Base`
+ extern `DATA$$Base`
+ _set __data_start__, `DATA$$Base`
+ extern `DATA$$Limit`
+ _set __data_end__, `DATA$$Limit`
+
+ extern `SCRATCH_X_INITIALIZERS$$Base`
+ _set __scratch_x_source__, `SCRATCH_X_INITIALIZERS$$Base`
+ extern `SCRATCH_X$$Base`
+ _set __scratch_x_start__, `SCRATCH_X$$Base`
+ extern `SCRATCH_X$$Limit`
+ _set __scratch_x_end__, `SCRATCH_X$$Limit`
+
+ extern `SCRATCH_Y_INITIALIZERS$$Base`
+ _set __scratch_y_source__, `SCRATCH_Y_INITIALIZERS$$Base`
+ extern `SCRATCH_Y$$Base`
+ _set __scratch_y_start__, `SCRATCH_Y$$Base`
+ extern `SCRATCH_Y$$Limit`
+ _set __scratch_y_end__, `SCRATCH_Y$$Limit`
+
+ extern `SCRATCH_Y$$Limit`
+ _set __StackTop, `SCRATCH_Y$$Limit`
+
+ #else
+
  extern __binary_info_start
- extern __bss_end__
+ extern __binary_info_end
+
  extern __bss_start__
- extern __data_end__
- extern __data_start__
+ extern __bss_end__
+
+#if PICO_COPY_TO_RAM
+ extern __ram_text_source__
+ extern __ram_text_start__
+ extern __ram_text_end__
+#endif
+
  extern __etext
+ extern __data_start__
+ extern __data_end__
+
+ extern __scratch_x_source__
+ extern __scratch_x_start__
+ extern __scratch_x_end__
+
+ extern __scratch_y_source__
+ extern __scratch_y_start__
+ extern __scratch_y_end__
+
+ extern __StackTop
+
+#endif
+
  extern exit
  extern main
  extern rom_func_lookup
- extern __scratch_x_end__
- extern __scratch_x_source__
- extern __scratch_x_start__
- extern __scratch_y_end__
- extern __scratch_y_source__
- extern __scratch_y_start__
- extern __StackTop
 
 #ifdef NDEBUG
 #ifndef COLLAPSE_IRQS

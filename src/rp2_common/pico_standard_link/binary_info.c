@@ -18,7 +18,15 @@
 
 #if !PICO_NO_FLASH
 #ifndef PICO_NO_BI_BINARY_SIZE
+#if PICO_C_COMPILER_IS_IAR
+// Can't use __section_end("FLASH") here because the compiler whinges
+// "Error[Pe028]: expression must have a constant value"
+// Technically this allocates one byte beyond the end of the flash image,
+// but I think it's the best I can do?
+const char __attribute((section(".flash_end"))) __flash_binary_end = 0;
+#else
 extern char __flash_binary_end;
+#endif
 bi_decl_with_attr(bi_binary_end((intptr_t)&__flash_binary_end), reset_section_attr)
 #endif
 #endif
