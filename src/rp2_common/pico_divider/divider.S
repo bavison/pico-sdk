@@ -31,10 +31,10 @@ _macro_1arg(div_section, name)
 
 // wait 8-n cycles for the hardware divider
 _macro_1arg(wait_div, n)
-.rept (8-MA(n)) / 2
+ rept (8-MA(n)) / 2
   b 9f
 9:
-.endr
+ endr
 .if (8-MA(n)) % 2
  nop
 .endif
