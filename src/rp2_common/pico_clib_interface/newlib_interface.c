@@ -51,12 +51,18 @@ void __attribute__((noreturn)) __weak _exit(__unused int status) {
 }
 
 __weak void *_sbrk(int incr) {
+#if PICO_C_COMPILER_IS_IAR
+#pragma section = ".heap"
+    char *heap_start = __section_begin(".heap");
+#else
     extern char end; /* Set by linker.  */
+    char *heap_start = &end;
+#endif
     static char *heap_end;
     char *prev_heap_end;
 
     if (heap_end == 0)
-        heap_end = &end;
+        heap_end = heap_start;
 
     prev_heap_end = heap_end;
     char *next_heap_end = heap_end + incr;
@@ -191,8 +197,13 @@ void runtime_init(void) {
 
 #if !PICO_RUNTIME_SKIP_INIT_PER_CORE_INSTALL_STACK_GUARD
     // install core0 stack guard
+#if PICO_C_COMPILER_IS_IAR
+    extern uint8_t __StackTop;
+    runtime_init_per_core_install_stack_guard(&__StackTop - PICO_STACK_SIZE);
+#else
     extern char __StackBottom;
     runtime_init_per_core_install_stack_guard(&__StackBottom);
+#endif
 #endif
 
     // todo maybe we want to do this in the future, but it does stuff like register_tm_clones
@@ -203,9 +214,17 @@ void runtime_init(void) {
     // ... so instead just do the __preinit_array
     runtime_run_initializers();
     // ... and the __init_array
+#if PICO_C_COMPILER_IS_IAR
+#pragma section = "INIT_ARRAYS"
+    void (**p__init_array_start)(void) = (void (**)(void)) __section_begin("INIT_ARRAYS");
+    void (**p__init_array_end)(void)   = (void (**)(void)) __section_end("INIT_ARRAYS");
+#else
     extern void (*__init_array_start)(void);
     extern void (*__init_array_end)(void);
-    for (void (**p)(void) = &__init_array_start; p < &__init_array_end; ++p) {
+    void (**p__init_array_start)(void) = &__init_array_start;
+    void (**p__init_array_end)(void) = &__init_array_end;
+#endif
+    for (void (**p)(void) = p__init_array_start; p < p__init_array_end; ++p) {
         (*p)();
     }
 }
