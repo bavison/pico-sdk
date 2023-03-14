@@ -12,6 +12,9 @@
 #warning "Building divider_hardware.S on a platform with no SIO divider hardware"
 #endif
 
+ .extern __aeabi_idiv0
+ .extern __aeabi_ldiv0
+
 // PICO_CONFIG: PICO_DIVIDER_DISABLE_INTERRUPTS, Disable interrupts around division such that divider state need not be saved/restored in exception handlers, default=0, type=bool, group=pico_divider
 #if 0 // make tooling checks happy
 #define PICO_DIVIDER_DISABLE_INTERRUPTS 0

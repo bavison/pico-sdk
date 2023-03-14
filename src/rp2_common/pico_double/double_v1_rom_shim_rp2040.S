@@ -7,6 +7,10 @@
 #include "pico/asm_helper.S"
 #include "pico/double.h"
 
+ .extern pop_r8_r11
+ .extern push_r8_r11
+ .extern sd_table
+
 pico_default_asm_setup
 
 .macro double_section name
