@@ -7,7 +7,7 @@
 #include "pico.h"
 
 #define _asciz      .asciz
-#define _byte       .byte
+#define dc8         .byte
 #define _hword      .hword
 #define _word       .word
 

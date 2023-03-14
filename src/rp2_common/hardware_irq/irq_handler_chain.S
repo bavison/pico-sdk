@@ -37,12 +37,12 @@ irq_handler_chain_slots:
 
     // next is a single byte index of next slot in chain (or -1 to end)
 .if next_slot_number == PICO_MAX_SHARED_IRQ_HANDLERS
-    _byte 0xff
+    dc8 0xff
 .else
-    _byte next_slot_number
+    dc8 next_slot_number
 .endif
     // next is the 8 bit unsigned priority
-    _byte 0x00
+    dc8 0x00
 1:
     // and finally the handler function pointer
     _word 0x00000000
