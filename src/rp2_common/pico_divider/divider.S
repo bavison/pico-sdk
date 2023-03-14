@@ -21,16 +21,16 @@
 #endif
 
 // PICO_CONFIG: PICO_DIVIDER_IN_RAM, Whether divider functions should be placed in RAM, default=0, group=pico_divider
-.macro div_section name
+_macro_1arg(div_section, name)
 #if PICO_DIVIDER_IN_RAM
 .section RAM_SECTION_NAME(\name), "ax"
 #else
 .section SECTION_NAME(\name), "ax"
 #endif
-.endm
+ _endm(endm)
 
 // wait 8-n cycles for the hardware divider
-.macro wait_div n
+_macro_1arg(wait_div, n)
 .rept (8-\n) / 2
   b 9f
 9:
@@ -38,14 +38,14 @@
 .if (8-\n) % 2
  nop
 .endif
-.endm
+ _endm(endm)
 
 #if (SIO_DIV_SDIVISOR_OFFSET != SIO_DIV_SDIVIDEND_OFFSET + 4) || (SIO_DIV_QUOTIENT_OFFSET != SIO_DIV_SDIVISOR_OFFSET + 4) || (SIO_DIV_REMAINDER_OFFSET != SIO_DIV_QUOTIENT_OFFSET + 4)
 #error register layout has changed - we rely on this order to make sure we save/restore in the right order
 #endif
 
 #if !PICO_DIVIDER_DISABLE_INTERRUPTS
-.macro save_div_state_and_lr_64
+_macro(save_div_state_and_lr_64)
     push {r4, r5, r6, r7, lr}
     ldr r6, =SIO_BASE
     // note we must read quotient last, and since it isn't the last reg, we'll not use ldmia!
@@ -54,9 +54,9 @@
     // No need to wait before reading result as long as preceeding code takes more than 8 cycles
     ldr r7, [r6, #SIO_DIV_REMAINDER_OFFSET]
     ldr r6, [r6, #SIO_DIV_QUOTIENT_OFFSET]
-.endm
+ _endm(endm)
 
-.macro restore_div_state_and_return_64
+_macro(restore_div_state_and_return_64)
     // writing sdividend (r4), sdivisor (r5), quotient (r6), remainder (r7) in that order
     //
     // it is worth considering what happens if we are interrupted
@@ -81,7 +81,7 @@
     str r6, [r2, #SIO_DIV_QUOTIENT_OFFSET]
     mov r2, ip
     pop {r4, r5, r6, r7, pc}
-.endm
+ _endm(endm)
 
 #endif /* !PICO_DIVIDER_DISABLE_INTERRUPTS */
 
@@ -265,13 +265,13 @@ divmod_s64s64_savestate:
     pop {r4, pc}
 #endif /* !PICO_DIVIDER_DISABLE_INTERRUPTS */
 
-.macro dneg lo,hi
+_macro_2args(dneg, lo, hi)
  mvns \hi,\hi
  negs \lo,\lo
  bne l\@_1
  adds \hi,#1
 l\@_1:
-.endm
+ _endm(endm)
 
  alignrom 2
  regular_func divmod_s64s64_unsafe

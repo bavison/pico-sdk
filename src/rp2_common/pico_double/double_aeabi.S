@@ -10,35 +10,35 @@
 
  __pre_init __aeabi_double_init, 00020
 
-.macro double_section name
+_macro_1arg(double_section, name)
 #if PICO_DOUBLE_IN_RAM
 .section RAM_SECTION_NAME(\name), "ax"
 #else
 .section SECTION_NAME(\name), "ax"
 #endif
-.endm
+ _endm(endm)
 
-.macro _double_wrapper_func x
+_macro_1arg(_double_wrapper_func, x)
  wrapper_func \x
-.endm
+ _endm(endm)
 
-.macro wrapper_func_d1 x
+_macro_1arg(wrapper_func_d1, x)
    _double_wrapper_func \x
 #if PICO_DOUBLE_PROPAGATE_NANS
     mov ip, lr
     bl __check_nan_d1
     mov lr, ip
 #endif
-.endm
+ _endm(endm)
 
-.macro wrapper_func_d2 x
+_macro_1arg(wrapper_func_d2, x)
     _double_wrapper_func \x
 #if PICO_DOUBLE_PROPAGATE_NANS
     mov ip, lr
     bl __check_nan_d2
     mov lr, ip
 #endif
-.endm
+ _endm(endm)
 
 #if PICO_DOUBLE_PROPAGATE_NANS
  local_func __check_nan_d1
@@ -73,7 +73,7 @@
    bx ip
 #endif
 
-.macro table_tail_call SF_TABLE_OFFSET
+_macro_1arg(table_tail_call, SF_TABLE_OFFSET)
     push {r3, r4}
 #if PICO_DOUBLE_SUPPORT_ROM_V1 && PICO_RP2040_B0_SUPPORTED
 #ifndef NDEBUG
@@ -85,9 +85,9 @@
     ldr r3, [r3, #\SF_TABLE_OFFSET]
     str r3, [sp, #4]
     pop {r3, pc}
-.endm
+ _endm(endm)
 
-.macro shimmable_table_tail_call SF_TABLE_OFFSET shim
+_macro_2args(shimmable_table_tail_call, SF_TABLE_OFFSET, shim)
     push {r3, r4}
     ldr r3, =sd_table
     ldr r3, [r3, #\SF_TABLE_OFFSET]
@@ -100,11 +100,11 @@
     dc8 \SF_TABLE_OFFSET, 0xdf
     dc32 \shim
 #endif
-.endm
+ _endm(endm)
 
-.macro double_wrapper_section func
+_macro_1arg(double_wrapper_section, func)
  double_section WRAPPER_FUNC_NAME(\func)
-.endm
+ _endm(endm)
 
  double_section push_r8_r11
  regular_func push_r8_r11

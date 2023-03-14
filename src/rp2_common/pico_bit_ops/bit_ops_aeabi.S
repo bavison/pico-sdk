@@ -9,13 +9,13 @@
 
  __pre_init __aeabi_bits_init, 00010
 
-.macro bits_section name
+_macro_1arg(bits_section, name)
 #if PICO_BITS_IN_RAM
 .section RAM_SECTION_NAME(\name), "ax"
 #else
 .section SECTION_NAME(\name), "ax"
 #endif
-.endm
+ _endm(endm)
 
 .section .data.aeabi_bits_funcs
  public aeabi_bits_funcs, aeabi_bits_funcs_end

@@ -80,10 +80,10 @@ __default_isrs_start:
 // By default, they will fall through to the undefined IRQ handler below (breakpoint),
 // but can be overridden by C functions with correct name.
 
-.macro decl_isr_bkpt name
+_macro_1arg(decl_isr_bkpt, name)
  weak_func \name
     bkpt #0
-.endm
+ _endm(endm)
 
 // these are separated out for clarity
  decl_isr_bkpt isr_invalid
@@ -96,9 +96,9 @@ __default_isrs_start:
  public __default_isrs_end
 __default_isrs_end:
 
-.macro decl_isr name
+_macro_1arg(decl_isr, name)
  weak_func \name
-.endm
+ _endm(endm)
 
  decl_isr isr_irq0
  decl_isr isr_irq1
