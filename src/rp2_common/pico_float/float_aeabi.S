@@ -107,7 +107,7 @@
 // float FUNC_NAME(__aeabi_frsub)(float x, float y)    single-precision reverse subtraction, y - x
 
 // frsub first because it is the only one that needs alignment
- _align 2
+ alignrom 2
  wrapper_func __aeabi_frsub
     eors r0, r1
     eors r1, r0
@@ -220,7 +220,7 @@ fdiv_fsub_nan_helper:
 
 // void FUNC_NAME(__aeabi_cfrcmple)(float, float)         reversed 3-way (<, =, ?>) compare [1], result in PSR ZC flags
  float_wrapper_section __aeabi_cfcmple
- _align 2
+ alignrom 2
  wrapper_func __aeabi_cfrcmple
     push {r0-r2, lr}
     eors r0, r1
@@ -231,7 +231,7 @@ fdiv_fsub_nan_helper:
 // NOTE these share an implementation as we have no excepting NaNs.
 // void FUNC_NAME(__aeabi_cfcmple)(float, float)         3-way (<, =, ?>) compare [1], result in PSR ZC flags
 // void FUNC_NAME(__aeabi_cfcmpeq)(float, float)         non-excepting equality comparison [1], result in PSR ZC flags
- _align 2
+ alignrom 2
  wrapper_func __aeabi_cfcmple
  wrapper_func __aeabi_cfcmpeq
     push {r0-r2, lr}
@@ -281,7 +281,7 @@ __aeabi_cfcmple_guts:
 
 // int FUNC_NAME(__aeabi_fcmpeq)(float, float)         result (1, 0) denotes (=, ?<>) [2], use for C == and !=
  float_wrapper_section __aeabi_fcmpeq
- _align 2
+ alignrom 2
  wrapper_func __aeabi_fcmpeq
     push {lr}
     bl __aeabi_cfcmpeq
@@ -294,7 +294,7 @@ __aeabi_cfcmple_guts:
 
 // int FUNC_NAME(__aeabi_fcmplt)(float, float)         result (1, 0) denotes (<, ?>=) [2], use for C <
  float_wrapper_section __aeabi_fcmplt
- _align 2
+ alignrom 2
  wrapper_func __aeabi_fcmplt
     push {lr}
     bl __aeabi_cfcmple
@@ -303,7 +303,7 @@ __aeabi_cfcmple_guts:
 
 // int FUNC_NAME(__aeabi_fcmple)(float, float)         result (1, 0) denotes (<=, ?>) [2], use for C <=
  float_wrapper_section __aeabi_fcmple
- _align 2
+ alignrom 2
  wrapper_func __aeabi_fcmple
     push {lr}
     bl __aeabi_cfcmple
@@ -316,7 +316,7 @@ __aeabi_cfcmple_guts:
 
 // int FUNC_NAME(__aeabi_fcmpge)(float, float)         result (1, 0) denotes (>=, ?<) [2], use for C >=
  float_wrapper_section __aeabi_fcmpge
- _align 2
+ alignrom 2
  wrapper_func __aeabi_fcmpge
     push {lr}
     // because of NaNs it is better to reverse the args than the result
@@ -673,7 +673,7 @@ __aeabi_i2f_main:
     str r1, [r3]
     pop {pc}
 #if PICO_FLOAT_PROPAGATE_NANS
- _align 2
+ alignrom 2
     pop {pc}
 #endif
 3:

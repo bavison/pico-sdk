@@ -14,7 +14,7 @@
 
 #include "pico/asm_helper.S"
 
- _align 2
+ alignrom 2
 
  regular_func call_apsr_f
     push {lr}
