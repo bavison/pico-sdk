@@ -8,6 +8,8 @@
 #include "pico/bootrom.h"
 #include "pico/runtime_init.h"
 
+ .extern rom_funcs_lookup
+
 pico_default_asm_setup
 
 PICO_RUNTIME_INIT_FUNC_RUNTIME(__aeabi_mem_init, PICO_RUNTIME_INIT_AEABI_MEM_OPS)

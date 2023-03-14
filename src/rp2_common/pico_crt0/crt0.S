@@ -62,6 +62,9 @@ __StackTop           set    `SCRATCH_Y$$Limit`
 
 #endif
 
+ .extern exit
+ .extern main
+
 // PICO_CONFIG: PICO_CRT0_NEAR_CALLS, Whether calls from crt0 into the binary are near (<16M away) - ignored for PICO_COPY_TO_RAM, default=0, type=bool, group=pico_crt0
 #ifndef PICO_CRT0_NEAR_CALLS
 #define PICO_CRT0_NEAR_CALLS 0
