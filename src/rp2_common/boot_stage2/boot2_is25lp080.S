@@ -249,4 +249,4 @@ configure_ssi:
 
  public literals
 literals:
-.ltorg
+ _ltorg
