@@ -31,6 +31,7 @@ float_section WRAPPER_FUNC_NAME(\func)
 float_section frrcore_v
 
 .p2align 2
+    data_in_code_area
 // 1/2π to plenty of accuracy
 .long 0                      @ this allows values of e down to -32
 rtwopi:
@@ -172,6 +173,7 @@ wrapper_func expf
  bx r14
 
 .p2align 3
+    data_in_code_area
 k_exp2:
 .float 0.693147181           @ log2
 .float 0.240226507           @ log²2/2
@@ -285,6 +287,7 @@ wrapper_func logf
  bx r14
 
 .p2align 3
+    data_in_code_area
 k_log3:
 .float 0.5
 .float 0.333333333333333
@@ -420,6 +423,7 @@ float_wrapper_section fsin_fcos
 @ prepare to re-enter with no risk of looping
  b 5f
 
+    data_in_code_area
 k_sc4:
 @ 2/π=0.A2F9836E4E441529FC...
 .word 0x3f22f983             @ 2/π
@@ -568,6 +572,7 @@ fsc_costail:
  bx r14
 
 .p2align 3
+    data_in_code_area
 k_sc3:
 .word 0x3EFFFEC1             @ ~ 1/2! with PMC
 .word 0x3e2aaa25             @ ~ 1/3! with PMC
@@ -895,6 +900,7 @@ wrapper_func atan2f
 #endif
  bx r14
 
+    data_in_code_area
 piover2:  .word 0x3243f6a9   @ Q29
 pi:       .word 0x6487ed51   @ Q29
 onethird: .float 0.33333333

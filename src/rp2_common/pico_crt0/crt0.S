@@ -66,6 +66,7 @@ pico_default_asm_setup
 
 .section .vectors, "ax"
 .align 2
+    data_in_code_area
 
 .global __vectors, __VECTOR_TABLE, __vectors_end
 __VECTOR_TABLE:
@@ -198,6 +199,8 @@ if_irq_word 79 isr_irq79
 #endif
 #endif  // #if !PICO_MINIMAL_STORED_VECTOR_TABLE
 __vectors_end:
+
+    code_in_code_area
 
 // all default exception handlers do nothing, and we can check for them being set to our
 // default values by seeing if they point to somewhere between __defaults_isrs_start and __default_isrs_end
@@ -372,10 +375,13 @@ __default_isrs_end:
 // with the IAR toolchain, if there's any chance that anyone might want to
 // use your image in an IAR debugging session.
 .align 2
+    data_in_code_area
 .global __vector_table
 __vector_table:
 .word __StackTop
 .word _entry_point
+
+    code_in_code_area
 
 // ----------------------------------------------------------------------------
 
@@ -574,6 +580,7 @@ data_cpy:
 // we skip the copy, because it is listed in binary info
 
 .p2align 2
+    data_in_code_area
 data_cpy_table:
 #if PICO_RP2350 && PICO_EMBED_XIP_SETUP && !PICO_NO_FLASH
 .word __boot2_start__
@@ -599,6 +606,7 @@ data_cpy_table:
 .word __scratch_y_end__
 
 .word 0 // null terminator
+    code_in_code_area
 
 // ----------------------------------------------------------------------------
 // Provide safe defaults for _exit and runtime_init

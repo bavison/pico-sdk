@@ -59,6 +59,7 @@ double_section WRAPPER_FUNC_NAME(\func)
 
 double_section rtwopi
 
+    data_in_code_area
 // 1/2π to plenty of accuracy, 256 bits per line
 .long 0                      @ this allows values of e down to -32
 rtwopi:
@@ -736,6 +737,7 @@ dreduce:
 double_section exptab
 
 .align 2
+    data_in_code_area
 exptab0:
 .quad 0x0000000000000000,0x0f85186008b15304,0x1e27076e2af2e5c8,0x2f57120421b2120d
 .quad 0x3f7230dabc7c5512,0x4e993155a517a717,0x5fabe0ee0abf0d9d,0x6fad36769c6defe3
@@ -1189,6 +1191,7 @@ hardabi_wrapper_func wrapper log 1
 @===========================================
 
 double_section trigtab
+    data_in_code_area
 trigtab:
 //     φ Q64 lo    φ Q64 hi    sin φ Q31   cos φ Q31
 .long 0x25735c0b, 0x03f574a9, 0x01fab529, 0x7ffc1500

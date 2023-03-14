@@ -27,4 +27,5 @@ regular_func printf_none_assert
 #endif
 
 str:
+    data_in_code_area
     .asciz "printf support is disabled"
