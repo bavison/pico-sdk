@@ -19,7 +19,15 @@
 #define dc32        .word
 #define ds          .space
 #define end         .end
+#define endm        .endm
 #define _equ        .equ
+#define _macro(x)   .macro x
+#define _macro_1arg(x,a)                   .macro x a
+#define _macro_2args(x,a,b)                .macro x a,b
+#define _macro_3args(x,a,b,c)              .macro x a,b,c
+#define _macro_5args(x,a,b,c,d,e)          .macro x a,b,c,d,e
+#define _macro_6args(x,a,b,c,d,e,f)        .macro x a,b,c,d,e,f
+#define _macro_9args(x,a,b,c,d,e,f,g,h,i)  .macro x a,b,c,d,e,f,g,h,i
 #define public      .global
 
 .syntax unified
@@ -33,17 +41,17 @@
 .type \x,%function
 .thumb_func
 \x:
-.endm
+endm
 
 .macro regular_func_with_section x
 .section .text.\x
  regular_func \x
-.endm
+endm
 
 // do not put align in here as it is used mid function sometimes
 .macro wrapper_func x
  regular_func WRAPPER_FUNC_NAME(\x)
-.endm
+endm
 
 // gnu_func is for functions unique to GNU C libraries, so uses wrapper only in GNU case
 .macro gnu_func x
@@ -54,20 +62,20 @@ endm
 .section .preinit_array.\priority_string
 .align 2
     .word \func
-.endm
+endm
 
 .macro local_func x
 .type \x,%function
 .thumb_func
 \x:
-.endm
+endm
 
 .macro weak_func x
 .weak \x
 .type \x,%function
 .thumb_func
 \x:
-.endm
+endm
 
 #define code_in_code_area
 #define data_in_code_area

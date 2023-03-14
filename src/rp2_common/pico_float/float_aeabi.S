@@ -33,39 +33,39 @@
 
  __pre_init __aeabi_float_init, 00020
 
-.macro float_section name
+_macro_1arg(float_section, name)
 #if PICO_FLOAT_IN_RAM
 .section RAM_SECTION_NAME(\name), "ax"
 #else
 .section SECTION_NAME(\name), "ax"
 #endif
-.endm
+ endm
 
-.macro float_wrapper_section func
+_macro_1arg(float_wrapper_section, func)
  float_section WRAPPER_FUNC_NAME(\func)
-.endm
+ endm
 
-.macro _float_wrapper_func x
+_macro_1arg(_float_wrapper_func, x)
  wrapper_func \x
-.endm
+ endm
 
-.macro wrapper_func_f1 x
+_macro_1arg(wrapper_func_f1, x)
    _float_wrapper_func \x
 #if PICO_FLOAT_PROPAGATE_NANS
     mov ip, lr
     bl __check_nan_f1
     mov lr, ip
 #endif
-.endm
+ endm
 
-.macro wrapper_func_f2 x
+_macro_1arg(wrapper_func_f2, x)
    _float_wrapper_func \x
 #if PICO_FLOAT_PROPAGATE_NANS
     mov ip, lr
     bl __check_nan_f2
     mov lr, ip
 #endif
-.endm
+ endm
 
 #if PICO_FLOAT_PROPAGATE_NANS
  local_func __check_nan_f1
@@ -94,7 +94,7 @@
    bx ip
 #endif
 
-.macro table_tail_call SF_TABLE_OFFSET
+_macro_1arg(table_tail_call, SF_TABLE_OFFSET)
 #if PICO_FLOAT_SUPPORT_ROM_V1 && PICO_RP2040_B0_SUPPORTED
 #ifndef NDEBUG
     movs r3, #0
@@ -104,9 +104,9 @@
     ldr r3, =sf_table
     ldr r3, [r3, #\SF_TABLE_OFFSET]
     bx r3
-.endm
+ endm
 
-.macro shimmable_table_tail_call SF_TABLE_OFFSET shim
+_macro_2args(shimmable_table_tail_call, SF_TABLE_OFFSET, shim)
     ldr r3, =sf_table
     ldr r3, [r3, #\SF_TABLE_OFFSET]
 #if PICO_FLOAT_SUPPORT_ROM_V1 && PICO_RP2040_B0_SUPPORTED
@@ -119,7 +119,7 @@
     dc32 \shim
     code_in_code_area
 #endif
-.endm
+ endm
 
 
 // note generally each function is in a separate section unless there is fall thru or branching between them
