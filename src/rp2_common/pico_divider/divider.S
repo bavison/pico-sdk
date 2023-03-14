@@ -377,7 +377,7 @@ udiv0:
  movs r1,#0
  bx r14
 
-.ltorg
+ ltorg
 
 // here y occupies more than 32 bits
 // split into cases acccording to the size of x
@@ -425,7 +425,7 @@ y64:
  pop {r4,r5,r7}
  bx r14
 
-.ltorg
+ ltorg
 
 y64_x32:
 // here x is 17..32 bits
@@ -561,7 +561,7 @@ y64_x32:
  movs r3,#0
  pop {r4-r7,r15}
 
-.ltorg
+ ltorg
 
 3:
  subs r2,r4
