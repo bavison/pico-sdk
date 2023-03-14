@@ -339,6 +339,17 @@ decl_isr_bkpt isr_systick
 .global __default_isrs_end
 __default_isrs_end:
 
+// The IAR debugger uses the two words at the symbol __vector_table to set
+// the initial stack pointer and program counter during a debug session,
+// so be sure to define it. This is required even if you aren't compiling
+// with the IAR toolchain, if there's any chance that anyone might want to
+// use your image in an IAR debugging session.
+.align 2
+.global __vector_table
+__vector_table:
+.word __StackTop
+.word _entry_point
+
 // ----------------------------------------------------------------------------
 
 .section .binary_info_header, "a"
