@@ -31,6 +31,7 @@
 #define _section(name, flags, cd, align)   .section name, flags
 #define _root_section(name, flags, cd, align) .section name, flags
 #define _set        .set
+#define _space      .space
 
 // Expand a macro argument
 #define MA(x)  \##x
