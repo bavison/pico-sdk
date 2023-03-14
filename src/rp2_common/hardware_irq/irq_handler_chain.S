@@ -10,6 +10,8 @@
 
 pico_default_asm_setup
 
+ .extern irq_add_tail_to_free_list
+
 #if !PICO_DISABLE_SHARED_IRQ_HANDLERS
 
 .data

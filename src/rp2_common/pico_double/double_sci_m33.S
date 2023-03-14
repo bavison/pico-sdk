@@ -10,6 +10,8 @@
 
 pico_default_asm_setup
 
+ .extern __aeabi_ddiv
+
 .macro double_section name
 #if PICO_DOUBLE_IN_RAM
 .section RAM_SECTION_NAME(\name), "ax"

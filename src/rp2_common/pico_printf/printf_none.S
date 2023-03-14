@@ -6,6 +6,8 @@
 
 #include "pico/asm_helper.S"
 
+ .extern panic
+
 pico_default_asm_setup
 
 wrapper_func sprintf

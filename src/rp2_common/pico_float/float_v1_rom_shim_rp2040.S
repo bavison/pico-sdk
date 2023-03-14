@@ -7,6 +7,8 @@
 #include "pico/asm_helper.S"
 #include "pico/float.h"
 
+ .extern sf_table
+
 #if PICO_FLOAT_SUPPORT_ROM_V1 && PICO_RP2040_B0_SUPPORTED
 
 pico_default_asm_setup
