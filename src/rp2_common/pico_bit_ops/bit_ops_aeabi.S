@@ -127,3 +127,5 @@ aeabi_bits_funcs_end:
     blx r3
     mov r1, ip
     pop {pc}
+
+ _end

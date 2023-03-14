@@ -869,3 +869,5 @@ y64_x64:
     ldr r4, [sp, #8]
     stmia r4!, {r2,r3}
     pop {r4, pc}
+
+ _end

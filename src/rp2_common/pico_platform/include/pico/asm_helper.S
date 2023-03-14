@@ -11,6 +11,7 @@
 #define dc8         .byte
 #define dc16        .hword
 #define dc32        .word
+#define _end        .end
 #define _equ        .equ
 
 .syntax unified
