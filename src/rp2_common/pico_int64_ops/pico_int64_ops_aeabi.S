@@ -12,7 +12,7 @@ _macro_1arg(int64_section, name)
 #else
 .section SECTION_NAME(\name), "ax"
 #endif
- _endm(endm)
+ endm
 
  int64_section __aeabi_lmul
 

@@ -83,7 +83,7 @@ __default_isrs_start:
 _macro_1arg(decl_isr_bkpt, name)
  weak_func \name
     bkpt #0
- _endm(endm)
+ endm
 
 // these are separated out for clarity
  decl_isr_bkpt isr_invalid
@@ -98,7 +98,7 @@ __default_isrs_end:
 
 _macro_1arg(decl_isr, name)
  weak_func \name
- _endm(endm)
+ endm
 
  decl_isr isr_irq0
  decl_isr isr_irq1

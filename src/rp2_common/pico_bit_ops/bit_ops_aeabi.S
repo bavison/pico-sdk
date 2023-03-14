@@ -15,7 +15,7 @@ _macro_1arg(bits_section, name)
 #else
 .section SECTION_NAME(\name), "ax"
 #endif
- _endm(endm)
+ endm
 
 .section .data.aeabi_bits_funcs
  public aeabi_bits_funcs, aeabi_bits_funcs_end

@@ -27,7 +27,7 @@ _macro_1arg(div_section, name)
 #else
 .section SECTION_NAME(\name), "ax"
 #endif
- _endm(endm)
+ endm
 
 // wait 8-n cycles for the hardware divider
 _macro_1arg(wait_div, n)
@@ -38,7 +38,7 @@ _macro_1arg(wait_div, n)
 .if (8-\n) % 2
  nop
 .endif
- _endm(endm)
+ endm
 
 #if (SIO_DIV_SDIVISOR_OFFSET != SIO_DIV_SDIVIDEND_OFFSET + 4) || (SIO_DIV_QUOTIENT_OFFSET != SIO_DIV_SDIVISOR_OFFSET + 4) || (SIO_DIV_REMAINDER_OFFSET != SIO_DIV_QUOTIENT_OFFSET + 4)
 #error register layout has changed - we rely on this order to make sure we save/restore in the right order
@@ -54,7 +54,7 @@ _macro(save_div_state_and_lr_64)
     // No need to wait before reading result as long as preceeding code takes more than 8 cycles
     ldr r7, [r6, #SIO_DIV_REMAINDER_OFFSET]
     ldr r6, [r6, #SIO_DIV_QUOTIENT_OFFSET]
- _endm(endm)
+ endm
 
 _macro(restore_div_state_and_return_64)
     // writing sdividend (r4), sdivisor (r5), quotient (r6), remainder (r7) in that order
@@ -81,7 +81,7 @@ _macro(restore_div_state_and_return_64)
     str r6, [r2, #SIO_DIV_QUOTIENT_OFFSET]
     mov r2, ip
     pop {r4, r5, r6, r7, pc}
- _endm(endm)
+ endm
 
 #endif /* !PICO_DIVIDER_DISABLE_INTERRUPTS */
 
@@ -271,7 +271,7 @@ _macro_2args(dneg, lo, hi)
  bne l\@_1
  adds \hi,#1
 l\@_1:
- _endm(endm)
+ endm
 
  alignrom 2
  regular_func divmod_s64s64_unsafe

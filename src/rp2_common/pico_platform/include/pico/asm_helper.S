@@ -12,7 +12,7 @@
 #define dc16        .hword
 #define dc32        .word
 #define end         .end
-#define _endm(x)    .endm
+#define endm        .endm
 #define _equ        .equ
 #define _macro(x)   .macro x
 #define _macro_1arg(x,a)                   .macro x a
@@ -34,33 +34,33 @@
 .type \x,%function
 .thumb_func
 \x:
-.endm
+endm
 
 .macro regular_func_with_section x
 .section .text.\x
  regular_func \x
-.endm
+endm
 
 // do not put align in here as it is used mid function sometimes
 .macro wrapper_func x
  regular_func WRAPPER_FUNC_NAME(\x)
-.endm
+endm
 
 .macro __pre_init func, priority_string
 .section .preinit_array.\priority_string
 .align 2
     .word \func
-.endm
+endm
 
 .macro local_func x
 .type \x,%function
 .thumb_func
 \x:
-.endm
+endm
 
 .macro weak_func x
 .weak \x
 .type \x,%function
 .thumb_func
 \x:
-.endm
+endm

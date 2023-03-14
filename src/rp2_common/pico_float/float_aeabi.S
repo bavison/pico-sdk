@@ -16,15 +16,15 @@ _macro_1arg(float_section, name)
 #else
 .section SECTION_NAME(\name), "ax"
 #endif
- _endm(endm)
+ endm
 
 _macro_1arg(float_wrapper_section, func)
  float_section WRAPPER_FUNC_NAME(\func)
- _endm(endm)
+ endm
 
 _macro_1arg(_float_wrapper_func, x)
  wrapper_func \x
- _endm(endm)
+ endm
 
 _macro_1arg(wrapper_func_f1, x)
    _float_wrapper_func \x
@@ -33,7 +33,7 @@ _macro_1arg(wrapper_func_f1, x)
     bl __check_nan_f1
     mov lr, ip
 #endif
- _endm(endm)
+ endm
 
 _macro_1arg(wrapper_func_f2, x)
    _float_wrapper_func \x
@@ -42,7 +42,7 @@ _macro_1arg(wrapper_func_f2, x)
     bl __check_nan_f2
     mov lr, ip
 #endif
- _endm(endm)
+ endm
 
 #if PICO_FLOAT_PROPAGATE_NANS
  local_func __check_nan_f1
@@ -81,7 +81,7 @@ _macro_1arg(table_tail_call, SF_TABLE_OFFSET)
     ldr r3, =sf_table
     ldr r3, [r3, #\SF_TABLE_OFFSET]
     bx r3
- _endm(endm)
+ endm
 
 _macro_2args(shimmable_table_tail_call, SF_TABLE_OFFSET, shim)
     ldr r3, =sf_table
@@ -94,7 +94,7 @@ _macro_2args(shimmable_table_tail_call, SF_TABLE_OFFSET, shim)
     dc8 \SF_TABLE_OFFSET, 0xdf
     dc32 \shim
 #endif
- _endm(endm)
+ endm
 
 
 // note generally each function is in a separate section unless there is fall thru or branching between them

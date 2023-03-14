@@ -16,11 +16,11 @@ _macro_1arg(double_section, name)
 #else
 .section SECTION_NAME(\name), "ax"
 #endif
- _endm(endm)
+ endm
 
 _macro_1arg(_double_wrapper_func, x)
  wrapper_func \x
- _endm(endm)
+ endm
 
 _macro_1arg(wrapper_func_d1, x)
    _double_wrapper_func \x
@@ -29,7 +29,7 @@ _macro_1arg(wrapper_func_d1, x)
     bl __check_nan_d1
     mov lr, ip
 #endif
- _endm(endm)
+ endm
 
 _macro_1arg(wrapper_func_d2, x)
     _double_wrapper_func \x
@@ -38,7 +38,7 @@ _macro_1arg(wrapper_func_d2, x)
     bl __check_nan_d2
     mov lr, ip
 #endif
- _endm(endm)
+ endm
 
 #if PICO_DOUBLE_PROPAGATE_NANS
  local_func __check_nan_d1
@@ -85,7 +85,7 @@ _macro_1arg(table_tail_call, SF_TABLE_OFFSET)
     ldr r3, [r3, #\SF_TABLE_OFFSET]
     str r3, [sp, #4]
     pop {r3, pc}
- _endm(endm)
+ endm
 
 _macro_2args(shimmable_table_tail_call, SF_TABLE_OFFSET, shim)
     push {r3, r4}
@@ -100,11 +100,11 @@ _macro_2args(shimmable_table_tail_call, SF_TABLE_OFFSET, shim)
     dc8 \SF_TABLE_OFFSET, 0xdf
     dc32 \shim
 #endif
- _endm(endm)
+ endm
 
 _macro_1arg(double_wrapper_section, func)
  double_section WRAPPER_FUNC_NAME(\func)
- _endm(endm)
+ endm
 
  double_section push_r8_r11
  regular_func push_r8_r11

@@ -24,7 +24,7 @@ _macro_1arg(double_section, name)
 #else
 .section SECTION_NAME(\name), "ax"
 #endif
- _endm(endm)
+ endm
 
  double_section double_table_shim_on_use_helper
  regular_func double_table_shim_on_use_helper
@@ -94,7 +94,7 @@ _macro_1arg(mdump, k)
  mov r14,r0
  pop {r0-r3}
 .endif
- _endm(endm)
+ endm
 
 
 // IEEE double in ra:rb ->
@@ -121,7 +121,7 @@ l\@_1:
  subs \re,#128
  lsls \re,#12
 l\@_2:
- _endm(endm)
+ endm
 
 // IEEE double in ra:rb ->
 // signed mantissa in ra:rb 12Q52 (53 significant bits) with implied 1
@@ -159,7 +159,7 @@ l\@_2:
  subs \re,#128
  lsls \re,#12
 l\@_3:
- _endm(endm)
+ endm
 
  double_section WRAPPER_FUNC_NAME(__aeabi_dsub)
 
@@ -384,7 +384,7 @@ l\@_1:
  lsrs \rzh,\rt1,#16            //                       MH
  adds \rzl,\rt0                //                  ZL
  adcs \rzh,\rt2                //                       ZH
- _endm(endm)
+ endm
 
 // SUMULL: x signed, y unsigned
 // in table below ¯ means signed variable
@@ -419,7 +419,7 @@ _macro_9args(muls32_32_64, rx, ry, rzl, rzh, rt0, rt1, rt2, rt3, rt4)
  lsrs \rzh,\rt1,#16            //                       M~
  adds \rzl,\rt0                //                  ZL
  adcs \rzh,\rt2                //                      ¯ZH
- _endm(endm)
+ endm
 
 // SSMULL: x signed, y signed
 // in table below ¯ means signed variable
@@ -455,7 +455,7 @@ l\@_1:
  lsrs \rzh,\rt1,#16            //                       M~
  adds \rzl,\rt0                //                  ZL
  adcs \rzh,\rt2                //                      ¯ZH
- _endm(endm)
+ endm
 
 // can have rt2==rx, in which case rx trashed
 // can have rzl==rx
@@ -472,7 +472,7 @@ _macro_6args(square32_64, rx, rzl, rzh, rt0, rt1, rt2)
  lsrs \rzh,\rt1,#15            //                       MH
  adds \rzl,\rt0                //                  ZL
  adcs \rzh,\rt2                //                       ZH
- _endm(endm)
+ endm
 
  double_section dmul_shim
  regular_func dmul_shim

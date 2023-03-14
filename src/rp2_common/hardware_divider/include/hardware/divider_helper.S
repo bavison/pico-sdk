@@ -37,7 +37,7 @@ _macro(save_div_state_and_lr)
     ldr r5, [r2, #SIO_DIV_UDIVISOR_OFFSET]
     ldr r7, [r2, #SIO_DIV_REMAINDER_OFFSET]
     ldr r6, [r2, #SIO_DIV_QUOTIENT_OFFSET]
- _endm(endm)
+ endm
 
 // restores divider state from r4-r7, then pops them and pc
 _macro(restore_div_state_and_return)
@@ -64,4 +64,4 @@ _macro(restore_div_state_and_return)
     str r7, [r2, #SIO_DIV_REMAINDER_OFFSET]
     str r6, [r2, #SIO_DIV_QUOTIENT_OFFSET]
     pop {r4, r5, r6, r7, pc}
- _endm(endm)
+ endm

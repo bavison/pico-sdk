@@ -18,7 +18,7 @@ _macro_1arg(float_section, name)
 #else
 .section SECTION_NAME(\name), "ax"
 #endif
- _endm(endm)
+ endm
 
  float_section float_table_shim_on_use_helper
  regular_func float_table_shim_on_use_helper

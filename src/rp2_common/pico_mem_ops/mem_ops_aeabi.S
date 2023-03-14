@@ -15,7 +15,7 @@ _macro_1arg(mem_section, name)
 #else
 .section SECTION_NAME(\name), "ax"
 #endif
- _endm(endm)
+ endm
 
  _equ MEMSET, 0
  _equ MEMCPY, 4
