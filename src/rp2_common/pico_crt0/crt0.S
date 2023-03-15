@@ -553,16 +553,29 @@ bss_fill_test:
     bne bss_fill_loop
 
 platform_entry: // symbol for stack traces
+#if PICO_C_COMPILER_IS_ARMCLANG
+    .extern __rt_entry
+#else
+    .extern main
+#endif
 #if PICO_CRT0_NEAR_CALLS && !PICO_COPY_TO_RAM
     bl runtime_init
+#if PICO_C_COMPILER_IS_ARMCLANG
+    bl __rt_entry
+#else
     bl main
+#endif
     bl exit
 #else
     // Use 32-bit jumps, in case these symbols are moved out of branch range
     // (e.g. if main is in SRAM and crt0 in flash)
     ldr r1, =runtime_init
     blx r1
+#if PICO_C_COMPILER_IS_ARMCLANG
+    ldr r1, =__rt_entry
+#else
     ldr r1, =main
+#endif
     blx r1
     ldr r1, =exit
     blx r1
@@ -624,6 +637,23 @@ runtime_init:
     bx lr
 
 #endif // PICO_CRT0_NO_RESET_SECTION
+// ----------------------------------------------------------------------------
+
+#if PICO_C_COMPILER_IS_ARMCLANG
+
+ .extern Image$$SCRATCH_Y_STACK$$Limit
+ .extern Image$$HEAP$$Base
+ .extern Image$$HEAP$$Limit
+
+ regular_func __user_setup_stackheap
+    ldr     r0, =Image$$HEAP$$Base
+    ldr     r1, =Image$$SCRATCH_Y_STACK$$Limit
+    mov     sp, r1
+    ldr     r2, =Image$$HEAP$$Limit
+    bx      lr
+
+#endif
+
 // ----------------------------------------------------------------------------
 // Stack/heap dummies to set size
 
