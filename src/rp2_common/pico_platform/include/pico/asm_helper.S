@@ -53,6 +53,12 @@
 .thumb
 .section .text
 
+.macro mark_section_used
+#if PICO_C_COMPILER_IS_ARMCLANG
+__tagsym$$used.\@:
+#endif
+endm
+
 // do not put align in here as it is used mid function sometimes
 .macro regular_func x
 .global \x
@@ -78,6 +84,7 @@ endm
 
 .macro __pre_init func, priority_string
 .section .preinit_array.\priority_string
+mark_section_used
 .align 2
     .word \func
 endm
@@ -146,6 +153,9 @@ x                               set             y
 // around a bug in the IAR assembler where we use nested assembly macros
 #define MA(x)  x
 #define MA2(x) x
+
+mark_section_used               macro
+                                endm
 
 // do not put align in here as it is used mid function sometimes
 regular_func                    macro           x

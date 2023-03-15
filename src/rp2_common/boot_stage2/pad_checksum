@@ -48,6 +48,9 @@ try:
         ofile.write(".cpu cortex-m0plus\n")
         ofile.write(".thumb\n\n")
         ofile.write(".section .boot2, \"ax\"\n\n")
+        ofile.write("#ifdef __ARMCOMPILER_VERSION\n")
+        ofile.write("__tagsym$$used.1:\n")
+        ofile.write("#endif\n\n")
         for offs in range(0, len(odata), 16):
             chunk = odata[offs:min(offs + 16, len(odata))]
             ofile.write(".byte {}\n".format(", ".join("0x{:02x}".format(b) for b in chunk)))
