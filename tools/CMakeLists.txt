@@ -7,6 +7,9 @@ function(_pico_init_pioasm)
         # todo CMAKE_CURRENT_FUNCTION_LIST_DIR ... what version?
         find_package(Pioasm REQUIRED)
     endif()
+    if (CMAKE_HOST_WIN32)
+        set(Pioasm_EXECUTABLE ${Pioasm_EXECUTABLE} PARENT_SCOPE)
+    endif()
 endfunction()
 
 # PICO_CMAKE_CONFIG: PICO_DEFAULT_PIOASM_OUTPUT_FORMAT, default output format used by pioasm when using pico_generate_pio_header, default=c-sdk, group=build
@@ -35,10 +38,17 @@ function(pico_generate_pio_header TARGET PIO)
 
     add_custom_target(${HEADER_GEN_TARGET} DEPENDS ${HEADER})
 
-    add_custom_command(OUTPUT ${HEADER}
-            DEPENDS ${PIO}
-            COMMAND Pioasm -o ${OUTPUT_FORMAT} ${PIO} ${HEADER}
-            VERBATIM)
+    if (CMAKE_HOST_WIN32)
+        add_custom_command(OUTPUT ${HEADER}
+                DEPENDS ${PIO}
+                COMMAND ${Pioasm_EXECUTABLE} -o ${OUTPUT_FORMAT} ${PIO} ${HEADER}
+                VERBATIM)
+    else()
+        add_custom_command(OUTPUT ${HEADER}
+                DEPENDS ${PIO}
+                COMMAND Pioasm -o ${OUTPUT_FORMAT} ${PIO} ${HEADER}
+                VERBATIM)
+    endif()
     add_dependencies(${TARGET} ${HEADER_GEN_TARGET})
     get_target_property(target_type ${TARGET} TYPE)
     if ("INTERFACE_LIBRARY" STREQUAL "${target_type}")
@@ -67,8 +77,14 @@ function(pico_add_uf2_output TARGET)
         find_package(ELF2UF2)
     endif()
     if (ELF2UF2_FOUND)
-        add_custom_command(TARGET ${TARGET} POST_BUILD
-            COMMAND ELF2UF2 $<TARGET_FILE:${TARGET}> ${output_path}$<IF:$<BOOL:$<TARGET_PROPERTY:${TARGET},OUTPUT_NAME>>,$<TARGET_PROPERTY:${TARGET},OUTPUT_NAME>,$<TARGET_PROPERTY:${TARGET},NAME>>.uf2
-            VERBATIM)
+        if (CMAKE_HOST_WIN32)
+            add_custom_command(TARGET ${TARGET} POST_BUILD
+                COMMAND ${ELF2UF2_EXECUTABLE} ${output_path}$<TARGET_FILE:${TARGET}> $<IF:$<BOOL:$<TARGET_PROPERTY:${TARGET},OUTPUT_NAME>>,$<TARGET_PROPERTY:${TARGET},OUTPUT_NAME>,$<TARGET_PROPERTY:${TARGET},NAME>>.uf2
+                VERBATIM)
+        else()
+            add_custom_command(TARGET ${TARGET} POST_BUILD
+                COMMAND ELF2UF2 ${output_path}$<TARGET_FILE:${TARGET}> $<IF:$<BOOL:$<TARGET_PROPERTY:${TARGET},OUTPUT_NAME>>,$<TARGET_PROPERTY:${TARGET},OUTPUT_NAME>,$<TARGET_PROPERTY:${TARGET},NAME>>.uf2
+                VERBATIM)
+        endif()
     endif()
 endfunction()
