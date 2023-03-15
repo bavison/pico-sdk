@@ -75,6 +75,7 @@
 #endif
 
 pico_default_asm_setup
+mark_section_used
 
 // PICO_CONFIG: PICO_CRT0_NO_RESET_SECTION, Omit .reset section contents containing the startup code. This must be set if you want to replace the startup code while still keeping the rest of pico_crt0 as the reset section define here is not garbage collected, type=bool, default=0, advanced=true, group=pico_crt0
 #ifndef PICO_CRT0_NO_RESET_SECTION
@@ -390,6 +391,7 @@ __default_isrs_end:
 // ----------------------------------------------------------------------------
 
 .section .binary_info_header, "a"
+mark_section_used
 
 // Header must be in first 256 bytes of main image (i.e. excluding flash boot2).
 // For flash builds we put it immediately after vector table; for NO_FLASH the
@@ -411,6 +413,7 @@ binary_info_header:
 
 #if !PICO_CRT0_NO_RESET_SECTION
 .section .reset, "ax"
+mark_section_used
 
 // On flash builds, the vector table comes first in the image (conventional).
 // On NO_FLASH builds, the reset handler section comes first, as the entry
@@ -649,6 +652,7 @@ runtime_init:
 spacer_section .stack
 // align to allow for memory protection (although this alignment is pretty much ignored by linker script)
 .p2align 5
+mark_section_used
     .equ StackSize, PICO_STACK_SIZE
 .if StackSize != 0
 .space StackSize
@@ -656,6 +660,7 @@ spacer_section .stack
 
 spacer_section .heap
 .p2align 2
+mark_section_used
     .equ HeapSize, PICO_HEAP_SIZE
 .if HeapSize != 0
 .space HeapSize

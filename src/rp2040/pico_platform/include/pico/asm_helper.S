@@ -15,6 +15,12 @@
 .thumb
 .endm
 
+.macro mark_section_used
+#if PICO_C_COMPILER_IS_ARMCLANG
+__tagsym$$used.\@:
+#endif
+endm
+
 // do not put align in here as it is used mid function sometimes
 .macro regular_func x
 .global \x
@@ -52,6 +58,7 @@ weak_func WRAPPER_FUNC_NAME(\x)
 # backwards compatibility
 .macro __pre_init func, priority_string
 .section .preinit_array.\priority_string
+mark_section_used
 .p2align 2
 .word \func
 .endm
