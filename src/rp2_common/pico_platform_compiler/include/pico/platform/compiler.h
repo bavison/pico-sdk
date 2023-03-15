@@ -20,14 +20,26 @@
 #ifndef __ASSEMBLER__
 
 #if defined __GNUC__
-#include <sys/cdefs.h>
-// note LLVM defines __GNUC__
-#ifdef __clang__
+// note Arm compiler and LLVM define __GNUC__
+#ifdef __ARMCOMPILER_VERSION
+#define PICO_C_COMPILER_IS_ARMCLANG 1
+#elif defined __clang__
 #define PICO_C_COMPILER_IS_CLANG 1
 #else
 #define PICO_C_COMPILER_IS_GNU 1
 #endif
 #elif defined __ICCARM__
+#define PICO_C_COMPILER_IS_IAR 1
+#else
+#error Unsupported toolchain
+#endif
+
+#if PICO_C_COMPILER_IS_CLANG || PICO_C_COMPILER_IS_GNU
+
+#include <sys/cdefs.h>
+
+#elif PICO_C_COMPILER_IS_ARMCLANG || PICO_C_COMPILER_IS_IAR
+
 #ifndef __aligned
 #define __aligned(x)	__attribute__((__aligned__(x)))
 #endif
@@ -58,6 +70,11 @@
 #ifndef __STRING
 #define __STRING(a)     #a
 #endif
+
+#endif
+
+#if PICO_C_COMPILER_IS_IAR
+
 /* Compatible definitions of GCC builtins */
 
 static inline uint __builtin_ctz(uint x) {
@@ -66,8 +83,7 @@ static inline uint __builtin_ctz(uint x) {
 }
 #define __builtin_expect(x, y) (x)
 #define __builtin_isnan(x) __iar_isnan(x)
-#else
-#error Unsupported toolchain
+
 #endif
 
 #define __weak __attribute__((weak))
