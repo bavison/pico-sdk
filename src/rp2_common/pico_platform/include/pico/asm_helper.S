@@ -195,4 +195,16 @@ x:
 
 #endif
 
+#if PICO_C_COMPILER_IS_ARMCLANG
+
+#define DECLARE_LOCAL_LABEL(l)
+#define LOCAL_LABEL(l) local_##l##_\@
+
+#else
+
+#define DECLARE_LOCAL_LABEL(l) local local_##l
+#define LOCAL_LABEL(l) local_##l
+
+#endif
+
 #endif // sentry INCLUDED_ASM_HELPER_S
