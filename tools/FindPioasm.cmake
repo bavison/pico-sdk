@@ -10,6 +10,12 @@
 #
 
 if (NOT Pioasm_FOUND)
+    if (CMAKE_HOST_WIN32)
+        set(Pioasm_EXECUTABLE ${PICO_SDK_PATH}/tools/pioasm/pioasm.exe)
+    else()
+
+        # Indentation should proably be changed below, but left as-is for now to ease merging
+
     # todo we would like to use pckgconfig to look for it first
     # see https://pabloariasal.github.io/2018/02/19/its-time-to-do-cmake-right/
 
@@ -35,11 +41,7 @@ if (NOT Pioasm_FOUND)
                 )
     endif()
 
-    if (CMAKE_HOST_WIN32)
-        set(Pioasm_EXECUTABLE ${PIOASM_BINARY_DIR}/pioasm.exe)
-    else()
-        set(Pioasm_EXECUTABLE ${PIOASM_BINARY_DIR}/pioasm)
-    endif()
+    set(Pioasm_EXECUTABLE ${PIOASM_BINARY_DIR}/pioasm)
     if(NOT TARGET ${Pioasm_TARGET})
 #        message("Adding executable ${Pioasm_Target} in ${CMAKE_CURRENT_LIST_DIR}")
         add_executable(${Pioasm_TARGET} IMPORTED)
@@ -50,4 +52,6 @@ if (NOT Pioasm_FOUND)
 #    message("EXE is ${Pioasm_EXECUTABLE}")
     add_dependencies(${Pioasm_TARGET} ${PioasmBuild_TARGET})
     set(Pioasm_FOUND 1)
+
+    endif()
 endif()
