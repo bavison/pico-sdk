@@ -667,7 +667,7 @@ float_wrapper_section fsin_fcos
 @ drop into sincosf code below...
  b 20f
 
-wrapper_func sincosf
+ gnu_func sincosf
  push {r1, r2, lr}
  bl sincosf_raw
  pop {r2, r3}

@@ -307,7 +307,7 @@ double_wrapper_section sin_cos
  b 20f
 
 @ sincos à la GNU with pointers to where to put results
-wrapper_func sincos
+ gnu_func sincos
 #if defined(__ARM_PCS_VFP)
  push {r0-r1,r4-r5, lr}
  vmov r0,r1,d0

@@ -40,6 +40,11 @@ regular_func \x
 regular_func WRAPPER_FUNC_NAME(\x)
 .endm
 
+// gnu_func is for functions unique to GNU C libraries, so uses wrapper only in GNU case
+.macro gnu_func x
+regular_func WRAPPER_FUNC_NAME(\x)
+.endm
+
 .macro weak_wrapper_func x
 weak_func WRAPPER_FUNC_NAME(\x)
 .endm

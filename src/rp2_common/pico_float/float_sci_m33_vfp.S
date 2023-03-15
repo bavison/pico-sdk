@@ -426,7 +426,7 @@ k_sc4:
 @ π/2=1.921FB54442D1846989...
 .word 0xb695777a,0x3fc91000  @ these two add up to π/2 with error ~1.6e-13
 
-wrapper_func sincosf
+ gnu_func sincosf
 #if defined(__ARM_PCS_VFP)
  mov r2,r1
  mov r1,r0
