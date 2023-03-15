@@ -795,7 +795,7 @@ double_wrapper_section sincos
     mov lr, r2
     b 1f // continue with sincos
 
-wrapper_func sincos
+ gnu_func sincos
     push {r2-r5, lr}
     // rom version only works for -1024 < angle < 1024
     lsls r2, r1, #2

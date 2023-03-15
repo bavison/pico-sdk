@@ -199,9 +199,11 @@ __force_inline static void __compiler_memory_barrier(void) {
 #define __check_type_compatible(type_a, type_b) static_assert(__builtin_types_compatible_p(type_a, type_b), __STRING(type_a) " is not compatible with " __STRING(type_b));
 
 #if PICO_C_COMPILER_IS_IAR || PICO_C_COMPILER_IS_ARMCLANG
+#define GNU_FUNC(x) x
 #define WRAPPER_FUNC(x) $Sub$$ ## x
 #define REAL_FUNC(x) $Super$$ ## x
 #else
+#define GNU_FUNC(x) __wrap_ ## x
 #define WRAPPER_FUNC(x) __wrap_ ## x
 #define REAL_FUNC(x) __real_ ## x
 #endif
