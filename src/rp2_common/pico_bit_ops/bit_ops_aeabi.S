@@ -46,28 +46,28 @@ __aeabi_bits_init:
 .equ REVERSE32, 12
 
 bits_section clzsi
-wrapper_func __clz
-wrapper_func __clzl
-wrapper_func __clzsi2
+ gnu_func __clz
+ gnu_func __clzl
+ gnu_func __clzsi2
     ldr r3, =aeabi_bits_funcs
     ldr r3, [r3, #CLZ32]
     bx r3
 
 bits_section ctzsi
-wrapper_func __ctzsi2
+ gnu_func __ctzsi2
     ldr r3, =aeabi_bits_funcs
     ldr r3, [r3, #CTZ32]
     bx r3
 
 bits_section popcountsi
-wrapper_func __popcountsi2
+ gnu_func __popcountsi2
     ldr r3, =aeabi_bits_funcs
     ldr r3, [r3, #POPCOUNT32]
     bx r3
 
 bits_section clzdi
-wrapper_func __clzll
-wrapper_func __clzdi2
+ gnu_func __clzll
+ gnu_func __clzdi2
     ldr r3, =aeabi_bits_funcs
     ldr r3, [r3, #CLZ32]
     cmp r1, #0
@@ -81,7 +81,7 @@ wrapper_func __clzdi2
     bx r3
 
 bits_section ctzdi
-wrapper_func __ctzdi2
+ gnu_func __ctzdi2
     ldr r3, =aeabi_bits_funcs
     ldr r3, [r3, #CTZ32]
     cmp r0, #0
@@ -95,7 +95,7 @@ wrapper_func __ctzdi2
     pop {pc}
 
 bits_section popcountdi
-wrapper_func __popcountdi2
+ gnu_func __popcountdi2
     ldr r3, =aeabi_bits_funcs
     ldr r3, [r3, #POPCOUNT32]
     push {r1, r3, lr}
