@@ -10,6 +10,12 @@
 #
 
 if (NOT ELF2UF2_FOUND)
+    if (CMAKE_HOST_WIN32)
+        set(ELF2UF2_EXECUTABLE ${PICO_SDK_PATH}/tools/elf2uf2/elf2uf2.exe)
+    else()
+
+        # Indentation should proably be changed below, but left as-is for now to ease merging
+
     # todo we would like to use pckgconfig to look for it first
     # see https://pabloariasal.github.io/2018/02/19/its-time-to-do-cmake-right/
 
@@ -41,5 +47,6 @@ if (NOT ELF2UF2_FOUND)
             ${ELF2UF2_EXECUTABLE})
 
     add_dependencies(${ELF2UF2_TARGET} ${ELF2UF2_BUILD_TARGET})
+    endif()
     set(ELF2UF2_FOUND 1)
 endif()
