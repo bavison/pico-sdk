@@ -22,9 +22,12 @@
  _section(.text.hw_divider_divmod_return, "ax", CODE, 2)
 hw_divider_divmod_return:
     // Branching here is 2 cycles, delay another 6
-    b .+2
-    b .+2
-    b .+2
+    b delay1
+delay1:
+    b delay2
+delay2:
+    b delay3
+delay3:
     // return 64 bit value so we can efficiently return both (note quotient must be read last)
     ldr r1, [r3, #SIO_DIV_REMAINDER_OFFSET]
     ldr r0, [r3, #SIO_DIV_QUOTIENT_OFFSET]
