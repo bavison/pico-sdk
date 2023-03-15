@@ -68,6 +68,7 @@
 .syntax unified
 .cpu cortex-m0plus
 .thumb
+ mark_section_used
 
 .section .vectors, "ax"
 .align 2
@@ -205,6 +206,7 @@ unhandled_user_irq_num_in_r0:
 // ----------------------------------------------------------------------------
 
 .section .binary_info_header, "a"
+ mark_section_used
 
 // Header must be in first 256 bytes of main image (i.e. excluding flash boot2).
 // For flash builds we put it immediately after vector table; for NO_FLASH the
@@ -223,6 +225,7 @@ binary_info_header:
 // ----------------------------------------------------------------------------
 
 .section .reset, "ax"
+ mark_section_used
 
 // On flash builds, the vector table comes first in the image (conventional).
 // On NO_FLASH builds, the reset handler section comes first, as the entry
@@ -376,10 +379,12 @@ hold_non_core0_in_bootrom:
 .section .stack, "a"
 // align to allow for memory protection (although this alignment is pretty much ignored by linker script)
 .align 5
+ mark_section_used
     .equ StackSize, PICO_STACK_SIZE
 .space StackSize
 
 .section .heap, "a"
 .align 2
+ mark_section_used
     .equ HeapSize, PICO_HEAP_SIZE
 .space HeapSize

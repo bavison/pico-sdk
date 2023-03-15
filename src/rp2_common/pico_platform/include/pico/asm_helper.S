@@ -6,6 +6,12 @@
 
 #include "pico.h"
 
+.macro mark_section_used
+#if PICO_C_COMPILER_IS_ARMCLANG
+__tagsym$$used.\@:
+#endif
+endm
+
 // do not put align in here as it is used mid function sometimes
 .macro regular_func x
 .global \x
@@ -31,6 +37,7 @@ endm
 
 .macro __pre_init func, priority_string
 .section .preinit_array.\priority_string
+mark_section_used
 .align 2
 .word \func
 .endm
