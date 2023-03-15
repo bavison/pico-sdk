@@ -495,9 +495,11 @@ static inline uint __get_current_exception(void) {
 }
 
 #if PICO_C_COMPILER_IS_IAR
+#define GNU_FUNC(x) x
 #define WRAPPER_FUNC(x) $Sub$$ ## x
 #define REAL_FUNC(x) $Super$$ ## x
 #else
+#define GNU_FUNC(x) __wrap_ ## x
 #define WRAPPER_FUNC(x) __wrap_ ## x
 #define REAL_FUNC(x) __real_ ## x
 #endif

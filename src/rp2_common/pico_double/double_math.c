@@ -338,7 +338,7 @@ double WRAPPER_FUNC(exp2)(double x) {
     return dldexp(exp(x*LOG2),e);
 }
 double WRAPPER_FUNC(log2)(double x) { check_nan_d1(x); return log(x)*LOG2E;  }
-double WRAPPER_FUNC(exp10)(double x) { check_nan_d1(x); return pow(10,x); }
+double GNU_FUNC(exp10)(double x) { check_nan_d1(x); return pow(10,x); }
 double WRAPPER_FUNC(log10)(double x) { check_nan_d1(x); return log(x)*LOG10E; }
 
 // todo these are marked as lofi
@@ -418,7 +418,7 @@ static double dpowint_0(double x,int y) {
     return dpow_1(x,y);
 }
 
-double WRAPPER_FUNC(powint)(double x,int y) {
+double GNU_FUNC(powint)(double x,int y) {
     GCC_Like_Pragma("GCC diagnostic push")
     GCC_Like_Pragma("GCC diagnostic ignored \"-Wfloat-equal\"")
     if(x==1.0||y==0) return 1;
@@ -617,7 +617,7 @@ double WRAPPER_FUNC(remquo)(double x,double y,int*quo) {
     return fix642double(mx,0x3ff-ey+52);
 }
 
-double WRAPPER_FUNC(drem)(double x,double y) { check_nan_d2(x, y); return remquo(x,y,0); }
+double GNU_FUNC(drem)(double x,double y) { check_nan_d2(x, y); return remquo(x,y,0); }
 
 double WRAPPER_FUNC(remainder)(double x,double y) { check_nan_d2(x, y); return remquo(x,y,0); }
 
