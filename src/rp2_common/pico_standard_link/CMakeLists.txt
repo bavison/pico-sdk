@@ -10,6 +10,10 @@ if (NOT TARGET pico_standard_link)
     # add the default linker script include directories
     list(APPEND PICO_LINKER_SCRIPT_INCLUDE_DIRS ${CMAKE_CURRENT_LIST_DIR}/script_include)
 
+    if (PICO_C_COMPILER_IS_ARMCLANG)
+        target_include_directories(pico_standard_link INTERFACE ${PICO_SDK_PATH}/src/rp2_common/pico_crt0/${PICO_CHIP}/include)
+    endif ()
+
     # pico_add_link_depend(TARGET dependency)
     # \brief\ Add a link time dependency to the target
     #

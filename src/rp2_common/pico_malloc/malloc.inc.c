@@ -27,7 +27,13 @@ auto_init_mutex(malloc_mutex);
 #define REAL_HEAP_FUNC(x) REAL_FUNC_EXP(__CONCAT(PREFIX, x))
 #define WRAPPER_HEAP_FUNC(x) WRAPPER_FUNC_EXP(__CONCAT(PREFIX, x))
 
+#if PICO_C_COMPILER_IS_ARMCLANG
+#include "pico/memmap.h"
+#define STACK_LIMIT ((char *) PICO_RAM_LIMIT)
+#else
 extern char __StackLimit; /* Set by linker.  */
+#define STACK_LIMIT &__StackLimit
+#endif
 
 #if !PICO_USE_MALLOC_MUTEX
 #define MALLOC_ENTER(outer) ((void)0);
@@ -64,7 +70,7 @@ static uint8_t mutex_exception_level_plus_one[NUM_CORES];
 
 static inline void check_alloc(__unused void *mem, __unused uint size) {
 #if PICO_MALLOC_PANIC
-    if (!mem || (((char *)mem) + size) > &__StackLimit) {
+    if (!mem || (((char *)mem) + size) > STACK_LIMIT)) {
         panic("Out of memory");
     }
 #endif
