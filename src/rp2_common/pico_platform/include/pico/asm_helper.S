@@ -12,6 +12,8 @@
 
 #include "pico.h"
 
+.eabi_attribute Tag_ABI_align_preserved, 1
+
 #define alignrom    .align
 #define _asciz      .asciz
 #define dc8         .byte
