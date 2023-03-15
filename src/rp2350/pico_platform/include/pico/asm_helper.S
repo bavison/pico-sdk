@@ -23,6 +23,7 @@
 .cpu cortex-m33
 .fpu fpv5-sp-d16
 .thumb
+.eabi_attribute Tag_ABI_align_preserved, 1
 #endif
 .endm
 

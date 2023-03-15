@@ -13,6 +13,7 @@
 .syntax unified
 .cpu cortex-m0plus
 .thumb
+.eabi_attribute Tag_ABI_align_preserved, 1
 .endm
 
 .macro mark_section_used
