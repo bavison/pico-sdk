@@ -6,6 +6,8 @@
 
 #include "pico.h"
 
+.eabi_attribute Tag_ABI_align_preserved, 1
+
 .macro mark_section_used
 #if PICO_C_COMPILER_IS_ARMCLANG
 __tagsym$$used.\@:
