@@ -57,8 +57,12 @@ function(pico_define_boot_stage2 NAME SOURCES)
     target_include_directories(${NAME} PRIVATE ${PICO_BOOT_STAGE2_DIR}/asminclude)
 
     target_link_libraries(${NAME} hardware_regs boot_stage2_headers)
-    target_link_options(${NAME} PRIVATE "LINKER:--script=${PICO_BOOT_STAGE2_DIR}/boot_stage2.ld")
-    set_target_properties(${NAME} PROPERTIES LINK_DEPENDS ${PICO_BOOT_STAGE2_DIR}/boot_stage2.ld)
+    if (PICO_C_COMPILER_IS_ARMCLANG)
+        target_link_options(${NAME} PRIVATE "LINKER:--ro_base=0x20081f00" "LINKER:--entry=_stage2_boot")
+    else ()
+        target_link_options(${NAME} PRIVATE "LINKER:--script=${PICO_BOOT_STAGE2_DIR}/boot_stage2.ld")
+        set_target_properties(${NAME} PROPERTIES LINK_DEPENDS ${PICO_BOOT_STAGE2_DIR}/boot_stage2.ld)
+    endif ()
 
     pico_add_dis_output(${NAME})
     pico_add_map_output(${NAME})
@@ -69,8 +73,13 @@ function(pico_define_boot_stage2 NAME SOURCES)
     find_package (Python3 REQUIRED COMPONENTS Interpreter)
 
     add_custom_target(${NAME}_bin DEPENDS ${ORIGINAL_BIN})
-    add_custom_command(OUTPUT ${ORIGINAL_BIN} DEPENDS ${NAME} COMMAND ${CMAKE_OBJCOPY} -Obinary $<TARGET_FILE:${NAME}> ${ORIGINAL_BIN}
-        VERBATIM)
+    if (PICO_C_COMPILER_IS_ARMCLANG)
+        add_custom_command(OUTPUT ${ORIGINAL_BIN} DEPENDS ${NAME} COMMAND ${CMAKE_OBJCOPY} --bin $<TARGET_FILE:${NAME}> --output ${ORIGINAL_BIN}
+            VERBATIM)
+    else ()
+        add_custom_command(OUTPUT ${ORIGINAL_BIN} DEPENDS ${NAME} COMMAND ${CMAKE_OBJCOPY} -Obinary $<TARGET_FILE:${NAME}> ${ORIGINAL_BIN}
+            VERBATIM)
+    endif ()
 
     add_custom_command(OUTPUT ${PADDED_CHECKSUMMED_ASM} DEPENDS ${ORIGINAL_BIN}
             COMMAND ${Python3_EXECUTABLE} ${PICO_BOOT_STAGE2_DIR}/pad_checksum -s 0xffffffff -a $<IF:${PICO_RISCV},riscv,arm> ${ORIGINAL_BIN} ${PADDED_CHECKSUMMED_ASM}

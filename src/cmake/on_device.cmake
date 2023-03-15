@@ -31,7 +31,11 @@ endfunction()
 function(pico_add_hex_output TARGET)
     pico_get_runtime_output_directory(${TARGET} output_path)
     pico_get_output_name(${TARGET} output_name)
-    add_custom_command(TARGET ${TARGET} POST_BUILD COMMAND ${CMAKE_OBJCOPY} -Oihex $<TARGET_FILE:${TARGET}> ${output_path}$<IF:$<BOOL:$<TARGET_PROPERTY:${TARGET},OUTPUT_NAME>>,$<TARGET_PROPERTY:${TARGET},OUTPUT_NAME>,$<TARGET_PROPERTY:${TARGET},NAME>>.hex VERBATIM BYPRODUCTS "${output_path}${output_name}.hex")
+    if (PICO_C_COMPILER_IS_ARMCLANG)
+        add_custom_command(TARGET ${TARGET} POST_BUILD COMMAND ${CMAKE_OBJCOPY} --i32 $<TARGET_FILE:${TARGET}> --output ${output_path}${output_name}.hex VERBATIM BYPRODUCTS "${output_path}${output_name}.hex")
+    else ()
+        add_custom_command(TARGET ${TARGET} POST_BUILD COMMAND ${CMAKE_OBJCOPY} -Oihex $<TARGET_FILE:${TARGET}> ${output_path}$<IF:$<BOOL:$<TARGET_PROPERTY:${TARGET},OUTPUT_NAME>>,$<TARGET_PROPERTY:${TARGET},OUTPUT_NAME>,$<TARGET_PROPERTY:${TARGET},NAME>>.hex VERBATIM BYPRODUCTS "${output_path}${output_name}.hex")
+    endif ()
 endfunction()
 
 # pico_add_bin_output(TARGET)
@@ -39,31 +43,37 @@ endfunction()
 function(pico_add_bin_output TARGET)
     pico_get_runtime_output_directory(${TARGET} output_path)
     pico_get_output_name(${TARGET} output_name)
-    add_custom_command(TARGET ${TARGET} POST_BUILD COMMAND ${CMAKE_OBJCOPY} -Obinary $<TARGET_FILE:${TARGET}> ${output_path}$<IF:$<BOOL:$<TARGET_PROPERTY:${TARGET},OUTPUT_NAME>>,$<TARGET_PROPERTY:${TARGET},OUTPUT_NAME>,$<TARGET_PROPERTY:${TARGET},NAME>>.bin VERBATIM BYPRODUCTS "${output_path}${output_name}.bin")
+    if (PICO_C_COMPILER_IS_ARMCLANG)
+        add_custom_command(TARGET ${TARGET} POST_BUILD COMMAND ${CMAKE_OBJCOPY} --bin $<TARGET_FILE:${TARGET}> --output ${output_path}${output_name}.bin VERBATIM BYPRODUCTS "${output_path}${output_name}.bin")
+    else ()
+        add_custom_command(TARGET ${TARGET} POST_BUILD COMMAND ${CMAKE_OBJCOPY} -Obinary $<TARGET_FILE:${TARGET}> ${output_path}$<IF:$<BOOL:$<TARGET_PROPERTY:${TARGET},OUTPUT_NAME>>,$<TARGET_PROPERTY:${TARGET},OUTPUT_NAME>,$<TARGET_PROPERTY:${TARGET},NAME>>.bin VERBATIM BYPRODUCTS "${output_path}${output_name}.bin")
+    endif ()
 endfunction()
 
 # pico_add_dis_output(TARGET)
 # \brief\ Generate a disassembly file for the target
 function(pico_add_dis_output TARGET)
-    pico_get_runtime_output_directory(${TARGET} output_path)
-    pico_get_output_name(${TARGET} output_name)
+    if (NOT PICO_C_COMPILER_IS_ARMCLANG)
+        pico_get_runtime_output_directory(${TARGET} output_path)
+        pico_get_output_name(${TARGET} output_name)
 
-    # PICO_CMAKE_CONFIG: PICO_NO_COPRO_DIS, Disable disassembly listing postprocessing that disassembles RP2350 coprocessor instructions, type=bool, default=0, group=build
-    if (NOT (PICO_NO_COPRO_DIS OR PICO_NO_PICOTOOL OR PICO_RISCV OR PICO_RP2040))
-        # Don't run coprocessor dissassembly on Risc-V or RP2040, as those don't have the RP2350 coprocessors
-        pico_init_picotool()
-        if(picotool_FOUND)
-            # add custom disassembly if we have picotool
-            set(EXTRA_COMMAND COMMAND picotool coprodis --quiet ${output_path}$<IF:$<BOOL:$<TARGET_PROPERTY:${TARGET},OUTPUT_NAME>>,$<TARGET_PROPERTY:${TARGET},OUTPUT_NAME>,$<TARGET_PROPERTY:${TARGET},NAME>>.dis ${output_path}$<IF:$<BOOL:$<TARGET_PROPERTY:${TARGET},OUTPUT_NAME>>,$<TARGET_PROPERTY:${TARGET},OUTPUT_NAME>,$<TARGET_PROPERTY:${TARGET},NAME>>.dis)
+        # PICO_CMAKE_CONFIG: PICO_NO_COPRO_DIS, Disable disassembly listing postprocessing that disassembles RP2350 coprocessor instructions, type=bool, default=0, group=build
+        if (NOT (PICO_NO_COPRO_DIS OR PICO_NO_PICOTOOL OR PICO_RISCV OR PICO_RP2040))
+            # Don't run coprocessor dissassembly on Risc-V or RP2040, as those don't have the RP2350 coprocessors
+            pico_init_picotool()
+            if(picotool_FOUND)
+                # add custom disassembly if we have picotool
+                set(EXTRA_COMMAND COMMAND picotool coprodis --quiet ${output_path}$<IF:$<BOOL:$<TARGET_PROPERTY:${TARGET},OUTPUT_NAME>>,$<TARGET_PROPERTY:${TARGET},OUTPUT_NAME>,$<TARGET_PROPERTY:${TARGET},NAME>>.dis ${output_path}$<IF:$<BOOL:$<TARGET_PROPERTY:${TARGET},OUTPUT_NAME>>,$<TARGET_PROPERTY:${TARGET},OUTPUT_NAME>,$<TARGET_PROPERTY:${TARGET},NAME>>.dis)
+            endif()
         endif()
-    endif()
-    add_custom_command(TARGET ${TARGET} POST_BUILD
-            COMMAND ${CMAKE_OBJDUMP} -h $<TARGET_FILE:${TARGET}> > ${output_path}$<IF:$<BOOL:$<TARGET_PROPERTY:${TARGET},OUTPUT_NAME>>,$<TARGET_PROPERTY:${TARGET},OUTPUT_NAME>,$<TARGET_PROPERTY:${TARGET},NAME>>.dis
-            COMMAND ${CMAKE_OBJDUMP} -d ${PICO_DISASM_OBJDUMP_ARGS} $<TARGET_FILE:${TARGET}> >> ${output_path}$<IF:$<BOOL:$<TARGET_PROPERTY:${TARGET},OUTPUT_NAME>>,$<TARGET_PROPERTY:${TARGET},OUTPUT_NAME>,$<TARGET_PROPERTY:${TARGET},NAME>>.dis
-            ${EXTRA_COMMAND}
-            VERBATIM
-            BYPRODUCTS "${output_path}${output_name}.dis"
-            )
+        add_custom_command(TARGET ${TARGET} POST_BUILD
+                COMMAND ${CMAKE_OBJDUMP} -h $<TARGET_FILE:${TARGET}> > ${output_path}$<IF:$<BOOL:$<TARGET_PROPERTY:${TARGET},OUTPUT_NAME>>,$<TARGET_PROPERTY:${TARGET},OUTPUT_NAME>,$<TARGET_PROPERTY:${TARGET},NAME>>.dis
+                COMMAND ${CMAKE_OBJDUMP} -d ${PICO_DISASM_OBJDUMP_ARGS} $<TARGET_FILE:${TARGET}> >> ${output_path}$<IF:$<BOOL:$<TARGET_PROPERTY:${TARGET},OUTPUT_NAME>>,$<TARGET_PROPERTY:${TARGET},OUTPUT_NAME>,$<TARGET_PROPERTY:${TARGET},NAME>>.dis
+                ${EXTRA_COMMAND}
+                VERBATIM
+                BYPRODUCTS "${output_path}${output_name}.dis"
+                )
+    endif ()
 endfunction()
 
 # pico_add_extra_outputs(TARGET)

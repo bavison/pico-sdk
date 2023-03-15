@@ -1,0 +1,110 @@
+#! armclang --target=arm-arm-none-eabi -march=armv8-a -E -x c
+
+#include "include/pico/memmap.h"
+
+LR_1 PICO_RAM_BASE
+{
+  ENTRY +0 FIXED
+  {
+    *(.reset)
+  }
+  TEXT +0 FIXED
+  {
+    *(.binary_info_header)
+    *(.vectors)
+    *(.time_critical*)
+    *(.text*)
+    *(.init)
+    *(.fini)
+    *(.ctors)
+    *(.dtors)
+    *(.eh_frame*)
+    *(.ARM.Collect$$*)
+    *(.emb_text)
+    *(i.*)
+    *(locale$$code)
+    *(x$fpl$*)
+    *(InRoot$$Sections)
+  }
+  RODATA +0 FIXED
+  {
+    *(.rodata*)
+    *(.flashdata*)
+    *(.constdata)
+    *(locale$$data)
+  }
+  EXTAB +0 FIXED
+  {
+    *(.ARM.extab*)
+  }
+  EXIDX +0 FIXED
+  {
+    *(.ARM.exidx*)
+  }
+  BINARY_INFO +0 FIXED
+  {
+    *(.binary_info.keep.*)
+    *(.binary_info.*)
+  }
+  DATA_1 +0 FIXED
+  {
+    *(vtable)
+    *(.data*)
+    *(.after_data.*)
+  }
+  MUTEX_ARRAYS +0 FIXED
+  {
+    *(.mutex_array.*)
+    *(.mutex_array)
+  }
+  INIT_ARRAYS +0 FIXED
+  {
+    *(.init_array.*)
+    *(.init_array)
+  }
+  PREINIT_ARRAYS +0 FIXED
+  {
+    *(.preinit_array.*)
+    *(.preinit_array)
+  }
+  DATA_2 +0 FIXED
+  {
+    *(.fini_array.*)
+    *(.fini_array)
+    *(.jcr)
+  }
+  UNINITIALIZED_DATA +0 FIXED UNINIT
+  {
+    *(.uninitialized_data*)
+  }
+  BSS +0 FIXED UNINIT
+  {
+    *(.bss*)
+  }
+  HEAP +0 FIXED UNINIT
+  {
+    *(.heap*)
+  }
+}
+LR_2 PICO_SCRATCH_X_BASE
+{
+  SCRATCH_X +0 FIXED
+  {
+    *(.scratch_x.*)
+  }
+  SCRATCH_X_STACK +0 FIXED UNINIT
+  {
+    *(.stack1*)
+  }
+}
+LR_3 PICO_SCRATCH_Y_BASE
+{
+  SCRATCH_Y +0 FIXED
+  {
+    *(.scratch_y.*)
+  }
+  SCRATCH_Y_STACK +0 FIXED UNINIT
+  {
+    *(.stack*)
+  }
+}

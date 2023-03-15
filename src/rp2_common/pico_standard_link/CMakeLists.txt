@@ -176,10 +176,18 @@ if (NOT TARGET pico_standard_link)
 
     # LINKER script will be PICO_TARGET_LINKER_SCRIPT if set on target, or ${CMAKE_CURRENT_LIST_DIR}/memmap_foo.ld
     # if PICO_TARGET_BINARY_TYPE is set to foo on the target, otherwise ${CMAKE_CURRENT_LIST_DIR}/memmap_${PICO_DEFAULT_BINARY_TYPE).ld
-    set(_LINKER_SCRIPT_EXPRESSION "$<IF:$<BOOL:$<TARGET_PROPERTY:PICO_TARGET_LINKER_SCRIPT>>,$<TARGET_PROPERTY:PICO_TARGET_LINKER_SCRIPT>,${PICO_LINKER_SCRIPT_PATH}/memmap_$<IF:$<STREQUAL:$<TARGET_PROPERTY:PICO_TARGET_BINARY_TYPE>,>,${PICO_DEFAULT_BINARY_TYPE},$<TARGET_PROPERTY:PICO_TARGET_BINARY_TYPE>>.ld>")
-    target_link_options(pico_standard_link INTERFACE
-        "LINKER:--script=${_LINKER_SCRIPT_EXPRESSION}"
-            )
+    if (PICO_C_COMPILER_IS_ARMCLANG)
+        set(_LINKER_SCRIPT_EXPRESSION "$<IF:$<BOOL:$<TARGET_PROPERTY:PICO_TARGET_LINKER_SCRIPT>>,$<TARGET_PROPERTY:PICO_TARGET_LINKER_SCRIPT>,${CMAKE_CURRENT_LIST_DIR}/memmap_$<IF:$<STREQUAL:$<TARGET_PROPERTY:PICO_TARGET_BINARY_TYPE>,>,${PICO_DEFAULT_BINARY_TYPE},$<TARGET_PROPERTY:PICO_TARGET_BINARY_TYPE>>.scat>")
+        target_link_options(pico_standard_link INTERFACE
+                "LINKER:--scatter=${_LINKER_SCRIPT_EXPRESSION}"
+                "LINKER:--entry=_entry_point"
+        )
+    else ()
+        set(_LINKER_SCRIPT_EXPRESSION "$<IF:$<BOOL:$<TARGET_PROPERTY:PICO_TARGET_LINKER_SCRIPT>>,$<TARGET_PROPERTY:PICO_TARGET_LINKER_SCRIPT>,${PICO_LINKER_SCRIPT_PATH}/memmap_$<IF:$<STREQUAL:$<TARGET_PROPERTY:PICO_TARGET_BINARY_TYPE>,>,${PICO_DEFAULT_BINARY_TYPE},$<TARGET_PROPERTY:PICO_TARGET_BINARY_TYPE>>.ld>")
+        target_link_options(pico_standard_link INTERFACE
+            "LINKER:--script=${_LINKER_SCRIPT_EXPRESSION}"
+                )
+    endif ()
     pico_add_link_depend(pico_standard_link ${_LINKER_SCRIPT_EXPRESSION})
     unset(_LINKER_SCRIPT_EXPRESSION)
 
@@ -208,7 +216,11 @@ if (NOT TARGET pico_standard_link)
 
     # PICO_CMAKE_CONFIG: PICO_USE_DEFAULT_MAX_PAGE_SIZE, Don't shrink linker max page to 4096, type=bool, default=0, advanced=true, group=pico_standard_link
     if (NOT PICO_USE_DEFAULT_MAX_PAGE_SIZE)
-        target_link_options(pico_standard_link INTERFACE "LINKER:-z,max-page-size=4096")
+        if (PICO_C_COMPILER_IS_ARMCLANG)
+            target_link_options(pico_standard_link INTERFACE "LINKER:--pagesize=4096,--diag_suppress=6314,--diag_suppress=6329")
+         else ()
+            target_link_options(pico_standard_link INTERFACE "LINKER:-z,max-page-size=4096")
+         endif ()
     endif()
     # done in compiler now
     #target_link_options(pico_standard_link INTERFACE "LINKER:--build-id=none")
@@ -219,7 +231,9 @@ if (NOT TARGET pico_standard_link)
     # PICO_CMAKE_CONFIG: PICO_NO_GC_SECTIONS, Disable `-ffunction-sections` `-fdata-sections` and `--gc-sections`, type=bool, default=0, advanced=true, group=pico_standard_link
     if (NOT PICO_NO_GC_SECTIONS)
         target_compile_options(pico_standard_link INTERFACE -ffunction-sections -fdata-sections)
-        target_link_options(pico_standard_link INTERFACE "LINKER:--gc-sections")
+        if (NOT PICO_C_COMPILER_IS_ARMCLANG)
+            target_link_options(pico_standard_link INTERFACE "LINKER:--gc-sections")
+        endif ()
     endif()
 
     if (PICO_C_COMPILER_IS_GNU)
