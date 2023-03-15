@@ -122,7 +122,10 @@ void multicore_launch_core1_with_stack(void (*entry)(void), uint32_t *stack_bott
 }
 
 void multicore_launch_core1(void (*entry)(void)) {
-#if PICO_C_COMPILER_IS_IAR
+#if PICO_C_COMPILER_IS_ARMCLANG
+#include "pico/memmap.h"
+    uint32_t *stack = (uint32_t *)(PICO_SCRATCH_X_LIMIT - PICO_CORE1_STACK_SIZE);
+#elif PICO_C_COMPILER_IS_IAR
     extern uint8_t __StackOneTop;
     uint32_t *stack = (uint32_t *)(&__StackOneTop - PICO_CORE1_STACK_SIZE);
 #else

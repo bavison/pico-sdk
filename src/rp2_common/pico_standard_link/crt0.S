@@ -55,6 +55,12 @@
  extern `SCRATCH_Y$$Limit`
  _set __StackTop, `SCRATCH_Y$$Limit`
 
+#elif PICO_C_COMPILER_IS_ARMCLANG
+
+#include "pico/memmap.h"
+
+ _set __StackTop, PICO_SCRATCH_Y_LIMIT
+
  #else
 
  extern __binary_info_start
