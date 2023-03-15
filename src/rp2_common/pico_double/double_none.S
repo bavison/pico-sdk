@@ -44,7 +44,7 @@
  wrapper_func floor
  wrapper_func ceil
  wrapper_func round
- wrapper_func sincos
+ gnu_func sincos
  wrapper_func asin
  wrapper_func acos
  wrapper_func atan
@@ -56,14 +56,14 @@
  wrapper_func atanh
  wrapper_func exp2
  wrapper_func log2
- wrapper_func exp10
+ gnu_func exp10
  wrapper_func log10
  wrapper_func pow
- wrapper_func powint
+ gnu_func powint
  wrapper_func hypot
  wrapper_func cbrt
  wrapper_func fmod
- wrapper_func drem
+ gnu_func drem
  wrapper_func remainder
  wrapper_func remquo
  wrapper_func expm1

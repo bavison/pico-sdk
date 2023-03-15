@@ -682,7 +682,7 @@ sinf_3:
 
  float_wrapper_section sincosf
 // note we don't use _f1 since we do an infinity/nan check for outside of range
- wrapper_func sincosf
+ gnu_func sincosf
     push {r1, r2, lr}
     // rom version only works for -128 < angle < 128
     lsls r3, r0, #1
