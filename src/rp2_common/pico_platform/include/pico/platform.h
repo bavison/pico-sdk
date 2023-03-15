@@ -505,7 +505,7 @@ static inline uint __get_current_exception(void) {
     return exception;
 }
 
-#if PICO_C_COMPILER_IS_IAR
+#if PICO_C_COMPILER_IS_IAR || PICO_C_COMPILER_IS_ARMCLANG
 #define GNU_FUNC(x) x
 #define WRAPPER_FUNC(x) $Sub$$ ## x
 #define REAL_FUNC(x) $Super$$ ## x
