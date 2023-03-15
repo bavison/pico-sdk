@@ -9,9 +9,11 @@ if (NOT TARGET _pico_sdk_inclusion_marker)
 
     project(pico_sdk C CXX ASM)
 
-    string(REGEX MATCH "Clang" PICO_C_COMPILER_IS_CLANG "${CMAKE_C_COMPILER_ID}")
+    string(REGEX MATCH "ARMClang" PICO_C_COMPILER_IS_ARMCLANG "${CMAKE_C_COMPILER_ID}")
+    string(REGEX MATCH "^Clang" PICO_C_COMPILER_IS_CLANG "${CMAKE_C_COMPILER_ID}")
     string(REGEX MATCH "GNU" PICO_C_COMPILER_IS_GNU "${CMAKE_C_COMPILER_ID}")
     string(REGEX MATCH "IAR" PICO_C_COMPILER_IS_IAR "${CMAKE_C_COMPILER_ID}")
+    pico_register_common_scope_var(PICO_C_COMPILER_IS_ARMCLANG)
     pico_register_common_scope_var(PICO_C_COMPILER_IS_CLANG)
     pico_register_common_scope_var(PICO_C_COMPILER_IS_GNU)
     pico_register_common_scope_var(PICO_C_COMPILER_IS_IAR)
