@@ -69,7 +69,6 @@
 #ifndef __ASSEMBLER__
 
 #if defined __GNUC__
-#include <sys/cdefs.h>
 // note LLVM defines __GNUC__
 #ifdef __clang__
 #define PICO_C_COMPILER_IS_CLANG 1
@@ -77,6 +76,17 @@
 #define PICO_C_COMPILER_IS_GNU 1
 #endif
 #elif defined __ICCARM__
+#define PICO_C_COMPILER_IS_IAR 1
+#else
+#error Unsupported toolchain
+#endif
+
+#if PICO_C_COMPILER_IS_CLANG || PICO_C_COMPILER_IS_GNU
+
+#include <sys/cdefs.h>
+
+#elif PICO_C_COMPILER_IS_IAR
+
 #ifndef __aligned
 #define __aligned(x)	__attribute__((__aligned__(x)))
 #endif
@@ -115,8 +125,7 @@ static inline uint __builtin_ctz(uint x) {
 }
 #define __builtin_expect(x, y) (x)
 #define __builtin_isnan(x) __iar_isnan(x)
-#else
-#error Unsupported toolchain
+
 #endif
 
 #include "pico/types.h"
