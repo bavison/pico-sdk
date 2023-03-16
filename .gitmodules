@@ -13,3 +13,6 @@
 [submodule "lib/btstack"]
 	path = lib/btstack
 	url = https://github.com/bluekitchen/btstack.git
+[submodule "test/pico-examples"]
+	path = test/pico-examples
+	url = https://github.com/raspberrypi/pico-examples.git
