@@ -1,0 +1,48 @@
+name: IAR
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - 'testci'
+
+env:
+  IARBUILD_PATH: /opt/iarsystems/bxarm-9.32.2/common/bin
+  IARBUILD_OPTS: -log all -parallel 2
+
+jobs:
+  build:
+#    if: github.repository_owner == 'raspberrypi'
+    runs-on: [self-hosted, Linux, X64]
+
+    steps:
+    - name: Clean workspace
+      run: |
+        echo "Cleaning up previous run"
+        rm -rf "${{ github.workspace }}"
+        mkdir -p "${{ github.workspace }}"
+
+    - name: Checkout repo
+      uses: actions/checkout@v2
+
+    - name: Checkout submodules
+      run: git submodule update --init
+
+    - name: IAR 9.32.2 Debug
+      if: always()
+      shell: bash
+      run: cd ${{github.workspace}}; git clean -ffdx; git reset --hard; tools/iarbatch.py test/pico-examples/iar-build/pico_examples.eww "All - Debug"
+
+    - name: IAR 9.32.2 MinSizeRel
+      if: always()
+      shell: bash
+      run: cd ${{github.workspace}}; git clean -ffdx; git reset --hard; tools/iarbatch.py test/pico-examples/iar-build/pico_examples.eww "All - MinSizeRel"
+
+    - name: IAR 9.32.2 RelWithDebInfo
+      if: always()
+      shell: bash
+      run: cd ${{github.workspace}}; git clean -ffdx; git reset --hard; tools/iarbatch.py test/pico-examples/iar-build/pico_examples.eww "All - RelWithDebInfo"
+
+    - name: IAR 9.32.2 Release
+      if: always()
+      shell: bash
+      run: cd ${{github.workspace}}; git clean -ffdx; git reset --hard; tools/iarbatch.py test/pico-examples/iar-build/pico_examples.eww "All - Release"
