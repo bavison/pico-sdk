@@ -404,7 +404,13 @@ int spin_lock_claim_unused(bool required);
 bool spin_lock_is_claimed(uint lock_num);
 
 // no longer use __mem_fence_acquire here, as it is overkill on cortex M0+
+#ifdef __ICCARM__
+// IAR's implementation of statement-expressions inherits a void type from any
+// empty final subexpression.
+#define remove_volatile_cast(t, x) ({__compiler_memory_barrier(); (t)(x); })
+#else
 #define remove_volatile_cast(t, x) ({__compiler_memory_barrier(); Clang_Pragma("clang diagnostic push"); Clang_Pragma("clang diagnostic ignored \"-Wcast-qual\""); (t)(x); Clang_Pragma("clang diagnostic pop"); })
+#endif
 
 #ifdef __cplusplus
 }
