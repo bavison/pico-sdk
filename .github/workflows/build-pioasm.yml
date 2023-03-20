@@ -29,3 +29,27 @@ jobs:
           commit-message: Update Windows pioasm binary
           title: Update Windows pioasm binary
           branch: update-pioasm-windows
+
+  build-pioasm-linux:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Generate project files
+        run: cmake "-GUnix Makefiles" -S tools/pioasm -B build-linux
+
+      - name: Build
+        run: cmake --build build-linux --config Release
+
+      - name: Install
+        run: cp build-linux/pioasm tools/pioasm
+
+      - name: Create PR
+        uses: peter-evans/create-pull-request@v4.1.4
+        with:
+          add-paths: tools/pioasm/pioasm
+          commit-message: Update Linux pioasm binary
+          title: Update Linux pioasm binary
+          branch: update-pioasm-linux
