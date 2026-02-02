@@ -209,7 +209,11 @@ PICO_RUNTIME_INIT_FUNC_RUNTIME(runtime_init_spin_locks_reset, PICO_RUNTIME_INIT_
 #endif
 
 
+#if PICO_C_COMPILER_IS_IAR && __VER__ >= 9070001
+uint32_t __attribute__((section(".ram_vector_table"), noinit)) ram_vector_table[PICO_RAM_VECTOR_TABLE_SIZE];
+#else
 uint32_t __attribute__((section(".ram_vector_table"))) ram_vector_table[PICO_RAM_VECTOR_TABLE_SIZE];
+#endif
 
 #ifdef PICO_C_COMPILER_IS_IAR
 // We use inline definitions to avoid libc dependency.
