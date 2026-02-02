@@ -252,7 +252,11 @@ extern "C" {
  * \param group a string suffix to use in the section name to distinguish groups that can be linker
  *              garbage-collected independently
  */
+#if PICO_C_COMPILER_IS_IAR && __VER__ >= 9070001
+#define __uninitialized_ram(group) __attribute__((section(".uninitialized_data." #group), noinit)) group
+#else
 #define __uninitialized_ram(group) __attribute__((section(".uninitialized_data." #group))) group
+#endif
 
 /*! \brief Section attribute macro for placement in flash even in a COPY_TO_RAM binary
  *  \ingroup pico_platform
