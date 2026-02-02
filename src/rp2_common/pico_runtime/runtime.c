@@ -46,7 +46,11 @@ extern char __StackLimit; /* Set by linker.  */
 #define STACK_LIMIT &__StackLimit
 #endif
 
+#if PICO_C_COMPILER_IS_IAR
+uint32_t __attribute__((section(".ram_vector_table"), noinit)) ram_vector_table[48];
+#else
 uint32_t __attribute__((section(".ram_vector_table"))) ram_vector_table[48];
+#endif
 
 // this is called for each thread since they have their own MPU
 void runtime_install_stack_guard(void *stack_bottom) {
