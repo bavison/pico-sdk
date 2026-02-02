@@ -11,10 +11,6 @@
 #include <cstdlib>
 #include "pico.h"
 
-#ifndef __unused
-#define __unused __attribute__((__unused__))
-#endif
-
 void *operator new(std::size_t n) {
     return std::malloc(n);
 }
