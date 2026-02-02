@@ -260,15 +260,7 @@ __force_inline static void spin_lock_unsafe_blocking(spin_lock_t *lock) {
     // Note we don't do a wfe or anything, because by convention these spin_locks are VERY SHORT LIVED and NEVER BLOCK and run
     // with INTERRUPTS disabled (to ensure that)... therefore nothing on our core could be blocking us, so we just need to wait on another core
     // anyway which should be finished soon
-    while (
-#ifdef __GNUC__
-        __builtin_expect(
-#endif
-        !*lock
-#ifdef __GNUC__
-        , 0)
-#endif
-        );
+    while (__builtin_expect(!*lock, 0));
     __mem_fence_acquire();
 }
 
