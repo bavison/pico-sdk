@@ -95,7 +95,11 @@
  *              garbage-collected independently
  */
 #ifndef __uninitialized_ram
+#if PICO_C_COMPILER_IS_IAR && __VER__ >= 9070001
+#define __uninitialized_ram(group) __attribute__((section(".uninitialized_data." #group), noinit)) group
+#else
 #define __uninitialized_ram(group) __attribute__((section(".uninitialized_data." #group))) group
+#endif
 #endif
 
 /*! \brief Section attribute macro for placement in flash even in a COPY_TO_RAM binary
