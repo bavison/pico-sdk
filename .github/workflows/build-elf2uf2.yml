@@ -23,7 +23,7 @@ jobs:
         run: copy build\Release\elf2uf2.exe tools\elf2uf2
 
       - name: Create PR
-        uses: peter-evans/create-pull-request@v4.1.4
+        uses: peter-evans/create-pull-request@v8.1.0
         with:
           add-paths: tools/elf2uf2/elf2uf2.exe
           commit-message: Update Windows ELF2UF2 binary

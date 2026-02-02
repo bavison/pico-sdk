@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - 'portability-v2'
+      - 'portability-v3'
 
 env:
   IARBUILD_PATH: /opt/iarsystems/bxarm-9.32.2/common/bin
