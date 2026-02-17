@@ -26,6 +26,10 @@
 auto_init_mutex(malloc_mutex);
 #endif
 
+/* We need macros that will expand their arguments before concatenating */
+#define REAL_FUNC_EXP(x)    REAL_FUNC(x)
+#define WRAPPER_FUNC_EXP(x) WRAPPER_FUNC(x)
+
 extern char __StackLimit; /* Set by linker.  */
 
 static inline void check_alloc(__unused void *mem, __unused uint size) {
