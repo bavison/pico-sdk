@@ -81,7 +81,9 @@ static inline uint __builtin_ctz(uint x) {
   extern uint32_t __ctzsi2(uint32_t);
   return __ctzsi2(x);
 }
+#if __VER__ < 9060003
 #define __builtin_expect(x, y) (x)
+#endif
 #define __builtin_isnan(x) __iar_isnan(x)
 
 #endif
