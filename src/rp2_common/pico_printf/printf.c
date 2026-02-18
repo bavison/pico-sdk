@@ -33,9 +33,11 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <math.h>
 
 #include "pico.h"
 #include "pico/printf.h"
+#include "pico/platform.h"
 
 // PICO_CONFIG: PICO_PRINTF_NTOA_BUFFER_SIZE, Define printf ntoa buffer size, min=0, max=128, default=32, group=pico_printf
 // 'ntoa' conversion buffer size, this must be big enough to hold one converted
