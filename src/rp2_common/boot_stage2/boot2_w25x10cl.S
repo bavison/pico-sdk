@@ -69,7 +69,6 @@
 // Start of 2nd Stage Boot Code
 // ----------------------------------------------------------------------------
 
- _org 0
 
 #ifdef __IASMARM__
  // Ensure there's a reference to __checksum to keep IAR ELF Tool happy
