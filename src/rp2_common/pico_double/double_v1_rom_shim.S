@@ -2029,7 +2029,7 @@ dexp_shim_4:
  pop {r2}
  negs r2,r2
  adds r2,#62
- bl fix642double_shim          // in principle we can pack faster than this because we know the exponent
+ bl fix642double_shim                 // in principle we can pack faster than this because we know the exponent
  pop {r4-r7,r15}
 
  ltorg
