@@ -55,17 +55,17 @@
 .type \x,%function
 .thumb_func
 \x:
-endm
+.endm
 
 .macro regular_func_with_section x
 .section .text.\x
  regular_func \x
-endm
+.endm
 
 // do not put align in here as it is used mid function sometimes
 .macro wrapper_func x
  regular_func WRAPPER_FUNC_NAME(\x)
-endm
+.endm
 
 // gnu_func is for functions unique to GNU C libraries, so uses wrapper only in GNU case
 .macro gnu_func x
@@ -76,20 +76,20 @@ endm
 .section .preinit_array.\priority_string
 .align 2
     .word \func
-endm
+.endm
 
 .macro local_func x
 .type \x,%function
 .thumb_func
 \x:
-endm
+.endm
 
 .macro weak_func x
 .weak \x
 .type \x,%function
 .thumb_func
 \x:
-endm
+.endm
 
 #define code_in_code_area
 #define data_in_code_area
