@@ -75,7 +75,7 @@ endm
 .macro __pre_init func, priority_string
 .section .preinit_array.\priority_string
 .align 2
-    .word \func
+.word \func
 .endm
 
 .macro local_func x
