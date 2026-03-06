@@ -320,8 +320,8 @@ divmod_s64s64_2:
  beq divmod_s64s64_4       // then pass 0 to __aeabi_ldiv0
 divmod_s64s64_3:
  movs r0,#0
- lsrs r1, r1,#31
- lsls r1, r1,#31           // get sign bit
+ lsrs r1,r1,#31
+ lsls r1,r1,#31            // get sign bit
  bne divmod_s64s64_4       // y -ve? pass -2^63 to __aeabi_ldiv0
  mvns r0,r0
  lsrs r1,r0,#1             // y +ve: pass 2^63-1 to __aeabi_ldiv0

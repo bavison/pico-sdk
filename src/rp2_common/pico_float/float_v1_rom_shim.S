@@ -65,7 +65,8 @@ float_table_shim_on_use_helper_3:
  regular_func ufix642float_shim
  push {r4,r5,r14}
  cmp r1,#0
- bpl sixtyfourbit_to_float_shims_1 // positive? we can use signed code
+ bpl sixtyfourbit_to_float_shims_1
+                 // positive? we can use signed code
  lsls r5,r1,#31  // contribution to sticky bits
  orrs r5,r0
  lsrs r0,r1,#1
@@ -87,7 +88,8 @@ sixtyfourbit_to_float_shims_1:
 sixtyfourbit_to_float_shims_2:
  asrs r4,r1,#24  // try shifting 7 bits at a time
  cmp r4,r5
- bne sixtyfourbit_to_float_shims_3 // next shift will overflow?
+ bne sixtyfourbit_to_float_shims_3
+                 // next shift will overflow?
  lsls r1,r1,#7
  lsrs r4,r0,#25
  orrs r1,r4
@@ -127,9 +129,11 @@ ret_pop45:
  adds r4,r2,r3  // this is -760 if both arguments are 0 and at least -380-126=-506 otherwise
  asrs r4,r4,#9
  adds r4,#1
- bmi fatan2_shim_2 // force y to 0 proper, so result will be zero
+ bmi fatan2_shim_2
+                // force y to 0 proper, so result will be zero
  subs r4,r2,r3  // calculate shift
- bge fatan2_shim_1 // ex>=ey?
+ bge fatan2_shim_1
+                // ex>=ey?
  negs r4,r4     // make shift positive
  asrs r0,r0,r4
  cmp r4,#28
@@ -143,7 +147,8 @@ fatan2_shim_1:
 fatan2_shim_2:
 // here |x|>>|y| or both x and y are ±0
  cmp r0,#0
- bge fatan2_shim_3 // x positive, return signed 0
+ bge fatan2_shim_3
+                // x positive, return signed 0
  ldr r3, =0x2cfc         // &pi_q29, circular coefficients
  ldr r0,[r3]    // x negative, return +/- pi
  asrs r1,r1,#31

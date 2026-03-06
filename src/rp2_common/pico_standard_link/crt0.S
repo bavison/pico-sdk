@@ -344,7 +344,8 @@ platform_entry: // symbol for stack traces
     blx r1
     // exit should not return.  If it does, hang the core.
     // (fall thru into our hang _exit impl
-infinite: // separate label because _exit can be moved out of branch range
+infinite:
+   // separate label because _exit can be moved out of branch range
     bkpt #0
     b infinite
 

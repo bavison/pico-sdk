@@ -186,7 +186,8 @@ _macro_1arg(double_wrapper_section, func)
     mov r12, r0
     mov r0, r1
     eors r0, r3
-    bmi __aeabi_dsub_1 // different signs
+    bmi __aeabi_dsub_1
+           // different signs
     mov r0, r12
     push {r0-r3, lr}
     bl __aeabi_dsub_2
@@ -204,9 +205,9 @@ __aeabi_dsub_2:
  wrapper_func_d2 __aeabi_ddiv
 #if PICO_DOUBLE_PROPAGATE_NANS
     push {r0-r3, lr}
-    bl 1f
+    bl __aeabi_ddiv_1
     b ddiv_dsub_nan_helper
-1:
+__aeabi_ddiv_1:
 #endif
 #if !PICO_DIVIDER_DISABLE_INTERRUPTS
     // to support IRQ usage (or context switch) we must save/restore divider state around call if state is dirty
@@ -738,7 +739,8 @@ sincos_2:
     bl sincostan_remainder
     pop {r2}
     mov lr, r2
-    b sincos_3 // continue with sincos
+    b sincos_3
+         // continue with sincos
 
  gnu_func sincos
     push {r2-r5, lr}
@@ -749,7 +751,8 @@ sincos_2:
     cmp r2, #9
     bge sincos_1
 sincos_3:
-    bl sincos_4 // call the shim
+    bl sincos_4
+          // call the shim
     pop {r4-r5}
     stmia r4!, {r0, r1}
     stmia r5!, {r2, r3}

@@ -145,7 +145,8 @@ _macro_2args(shimmable_table_tail_call, SF_TABLE_OFFSET, shim)
     // we want to return nan for inf-inf or -inf - -inf, but without too much upfront cost
     mov r2, r0
     eors r2, r1
-    bmi __aeabi_fsub_1 // different signs
+    bmi __aeabi_fsub_1
+           // different signs
     push {r0, r1, lr}
     bl __aeabi_fsub_1
     b fdiv_fsub_nan_helper
@@ -286,7 +287,8 @@ __aeabi_cfcmple_3:
 __aeabi_cfcmple_4:
     movs r2,#1      // initialise result
     eors r1,r0
-    bmi __aeabi_cfcmple_6 // opposite signs? then can proceed on basis of sign of x
+    bmi __aeabi_cfcmple_6
+                    // opposite signs? then can proceed on basis of sign of x
     eors r1,r0      // restore y
     bpl __aeabi_cfcmple_5
     cmp r1,r0
@@ -416,10 +418,12 @@ __aeabi_i2f_main:
         negs r0, r0
 
         adds r1,#0x80  // rounding
-        bcs __aeabi_i2f_5 // tripped carry? then have leading 1 in C as required (and result is even so can ignore sticky bits)
+        bcs __aeabi_i2f_5
+                       // tripped carry? then have leading 1 in C as required (and result is even so can ignore sticky bits)
 
         lsls r3,r1,#24 // check bottom 8 bits of r1
-        beq __aeabi_i2f_6 // in rounding-tie case?
+        beq __aeabi_i2f_6
+                       // in rounding-tie case?
         lsls r1,r1,#1  // remove leading 1
 __aeabi_i2f_2:
         lsrs r1,r1,#9  // align mantissa
