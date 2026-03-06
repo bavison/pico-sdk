@@ -59,12 +59,12 @@
 
 .macro regular_func_with_section x
 .section .text.\x
- regular_func \x
+regular_func \x
 .endm
 
 // do not put align in here as it is used mid function sometimes
 .macro wrapper_func x
- regular_func WRAPPER_FUNC_NAME(\x)
+regular_func WRAPPER_FUNC_NAME(\x)
 .endm
 
 // gnu_func is for functions unique to GNU C libraries, so uses wrapper only in GNU case
