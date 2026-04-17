@@ -6,9 +6,13 @@
 
 #include <stdio.h>
 #include <stdarg.h>
-#include <sys/cdefs.h>
-#include <unistd.h>
 #include "pico.h"
+
+#if PICO_C_COMPILER_IS_IAR
+void __attribute__((noreturn)) _exit(__unused int status);
+#else
+#include <unistd.h>
+#endif
 
 #if LIB_PICO_PRINTF_PICO
 #include "pico/printf.h"
