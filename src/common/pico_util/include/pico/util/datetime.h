@@ -20,7 +20,6 @@ extern "C" {
  */
 
 #include <time.h>
-#include <sys/time.h>
 
 #if PICO_INCLUDE_RTC_DATETIME
 
