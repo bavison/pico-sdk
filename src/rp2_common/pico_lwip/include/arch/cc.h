@@ -32,8 +32,6 @@
 #ifndef __CC_H__
 #define __CC_H__
 
-#include <sys/time.h>
-
 #ifndef PICO_LWIP_CUSTOM_LOCK_TCPIP_CORE
 #define PICO_LWIP_CUSTOM_LOCK_TCPIP_CORE 1
 #endif
