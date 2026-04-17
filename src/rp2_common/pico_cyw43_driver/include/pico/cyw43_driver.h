@@ -104,7 +104,7 @@ void cyw43_set_pio_clkdiv_int_frac8(uint32_t clock_div_int, uint8_t clock_div_fr
 
 // backwards compatibility
 static inline void cyw43_set_pio_clock_divisor(uint16_t clock_div_int, uint8_t clock_div_frac8) {
-    return cyw43_set_pio_clkdiv_int_frac8(clock_div_int, clock_div_frac8);
+    cyw43_set_pio_clkdiv_int_frac8(clock_div_int, clock_div_frac8);
 }
 #endif
 
