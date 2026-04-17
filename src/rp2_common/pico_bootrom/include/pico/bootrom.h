@@ -532,7 +532,7 @@ bool rom_get_boot_random(uint32_t out[4]);
  */
 static inline void rom_bootrom_state_reset(uint32_t flags) {
     rom_bootrom_state_reset_fn func = (rom_bootrom_state_reset_fn) rom_func_lookup_inline(ROM_FUNC_BOOTROM_STATE_RESET);
-    return func(flags);
+    func(flags);
 }
 
 /*!

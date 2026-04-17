@@ -165,7 +165,7 @@ static __force_inline void unreset_block(uint32_t bits) {
 }
 
 static __force_inline void unreset_block_wait(uint32_t bits) {
-    return unreset_block_mask_wait_blocking(bits);
+    unreset_block_mask_wait_blocking(bits);
 }
 #endif
 
