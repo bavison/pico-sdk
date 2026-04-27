@@ -7,6 +7,8 @@
 #include <stdatomic.h>
 #include "pico/sync.h"
 
+#if !PICO_C_COMPILER_IS_IAR
+
 #ifdef PICO_C_COMPILER_IS_IAR
 // We use inline definitions to avoid libc dependency.
 static inline void* my_memcpy(void* dest, const void* src, size_t count) {
@@ -236,4 +238,6 @@ ATOMIC_OPTIMIZED_CASES
 #define ATOMIC_OPTIMIZED_CASE(n, type) ATOMIC_RMW_NAND(n, type)
 ATOMIC_OPTIMIZED_CASES
 #undef ATOMIC_OPTIMIZED_CASE
+#endif
+
 #endif
