@@ -26,11 +26,13 @@ extern "C" {
  * exclusive operations. This library provides a spin-lock protected version for arbitrary-sized atomics (including 64-bit).
  * \endif
 */
+// needed for PICO_C_COMPILER_IS_GNU and PICO_C_COMPILER_IS_IAR
+#include "pico/platform/compiler.h"
+
+#if !PICO_C_COMPILER_IS_IAR
+
 #include <stdint.h>
 #include_next <stdatomic.h>
-
-// needed for PICO_C_COMPILER_IS_GNU
-#include "pico.h"
 
 #if PICO_RP2040 && PICO_C_COMPILER_IS_GNU
 // on GNU without exclusive instructions these don't get routed thru _1 functions for some reason
@@ -41,6 +43,8 @@ extern _Bool __atomic_test_and_set_c(volatile void *mem, int model);
 
 #define atomic_flag_test_and_set(PTR) __atomic_test_and_set_c((PTR), __ATOMIC_SEQ_CST)
 #define atomic_flag_test_and_set_explicit(PTR, MO) __atomic_test_and_set_c((PTR), (MO))
+#endif
+
 #endif
 
 #ifdef __cplusplus
