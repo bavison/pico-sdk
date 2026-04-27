@@ -1,3 +1,9 @@
+// Enable ISO Annex K functions like localtime_s
+// We can't gate this on PICO_C_COMPILER_IS_IAR because that's defined in pico/platform/compiler.h
+// and that indirectly includes <assert.h> which defines __STDC_WANT_LIB_EXT1__ to 0 if unset.
+// If we want to make this conditional on toolchain then we must test predefine __ICCARM__ instead.
+#define __STDC_WANT_LIB_EXT1__ 1
+
 #include "pico/util/datetime.h"
 
 #if !PICO_ON_DEVICE && __APPLE__
@@ -8,7 +14,11 @@
 #endif
 
 __datetime_weak struct tm * pico_localtime_r(const time_t *time, struct tm *tm) {
+#if PICO_C_COMPILER_IS_IAR
+    return localtime_s(time, tm);
+#else
     return localtime_r(time, tm);
+#endif
 }
 
 __datetime_weak time_t pico_mktime(struct tm *tm) {
@@ -44,6 +54,9 @@ static const char *DATETIME_DOWS[7] = {
 };
 
 void datetime_to_str(char *buf, uint buf_size, const datetime_t *t) {
+// Defining __STDC_WANT_LIB_EXT1__ causes IAR to warn on use of snprintf instead of snprintf_s
+// but the differences don't apply in this specific use case
+IAR_Pragma("diag_suppress=Pe1215")
     snprintf(buf,
              buf_size,
              "%s %d %s %d:%02d:%02d %d",
