@@ -235,7 +235,8 @@ __force_inline static void __compiler_memory_barrier(void) {
 #else
 #define PICO_ASSEMBLER_IS_GNU 1
 #endif
-#elif defined __ICCARM__
+#elif defined __IASMARM__
+#define PICO_ASSEMBLER_IS_IAR 1
 #else
 #error Unsupported toolchain
 #endif
