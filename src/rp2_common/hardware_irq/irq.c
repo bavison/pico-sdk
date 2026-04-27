@@ -49,11 +49,11 @@ static inline void *add_thumb_bit(void *addr) {
 #endif
 }
 
-static inline void *remove_thumb_bit(void *addr) {
+static inline uintptr_t remove_thumb_bit(uintptr_t addr) {
 #ifdef __riscv
     return addr;
 #else
-    return (void *) (((uintptr_t) addr) & (uint)~0x1);
+    return addr & ~0x1;
 #endif
 }
 
@@ -403,9 +403,9 @@ void irq_add_shared_handler(uint num, irq_handler_t handler, uint8_t order_prior
         *slot = slot_data;
         vtable_handler = (irq_handler_t)add_thumb_bit(slot);
     } else {
-        assert(!((((uintptr_t)remove_thumb_bit(vtable_handler)) - ((uintptr_t)irq_handler_chain_slots)) % sizeof(struct irq_handler_chain_slot)));
+        assert(!(((remove_thumb_bit((uintptr_t) vtable_handler)) - ((uintptr_t)irq_handler_chain_slots)) % sizeof(struct irq_handler_chain_slot)));
         struct irq_handler_chain_slot *prev_slot = NULL;
-        struct irq_handler_chain_slot *existing_vtable_slot = remove_thumb_bit((void *) vtable_handler);
+        struct irq_handler_chain_slot *existing_vtable_slot = (void *) remove_thumb_bit((uintptr_t) vtable_handler);
         struct irq_handler_chain_slot *cur_slot = existing_vtable_slot;
         while (cur_slot->priority > order_priority) {
             prev_slot = cur_slot;
@@ -516,7 +516,7 @@ void irq_remove_handler(uint num, irq_handler_t handler) {
             hard_assert(!exception || exception == num + VTABLE_FIRST_IRQ);
 
             struct irq_handler_chain_slot *prev_slot = NULL;
-            struct irq_handler_chain_slot *existing_vtable_slot = remove_thumb_bit((void *) vtable_handler);
+            struct irq_handler_chain_slot *existing_vtable_slot = (void *) remove_thumb_bit((uintptr_t) vtable_handler);
             struct irq_handler_chain_slot *to_free_slot = existing_vtable_slot;
             while (handler_from_slot(to_free_slot) != handler) {
                 prev_slot = to_free_slot;
