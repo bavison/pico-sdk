@@ -114,6 +114,13 @@ static inline uint __builtin_ctz(uint x) {
 #define GCC_Pragma(x)
 #endif
 
+// IAR_Pragma(x) is a pragma on IAR only
+#if PICO_C_COMPILER_IS_IAR
+#define IAR_Pragma _Pragma
+#else
+#define IAR_Pragma(x)
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
