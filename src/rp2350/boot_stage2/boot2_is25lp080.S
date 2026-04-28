@@ -84,8 +84,6 @@
 
 pico_default_asm_setup
 
-.section text
-
 #ifdef __IASMARM__
  // Ensure there's a reference to __checksum to keep IAR ELF Tool happy
  extern  __checksum
