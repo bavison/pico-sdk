@@ -70,6 +70,9 @@
 #ifndef __STRING
 #define __STRING(a)     #a
 #endif
+#ifndef __XSTRING
+#define __XSTRING(a)    __STRING(a)
+#endif
 
 #endif
 
