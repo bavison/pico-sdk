@@ -24,6 +24,7 @@
 // that may include this file, but not use unified syntax. Note that this macro does equivalent
 // setup to the pico_default_asm macro for inline assembly in C code.
 .macro pico_default_asm_setup
+.text
 #ifndef __riscv
 .syntax unified
 .cpu cortex-m33
@@ -98,6 +99,7 @@ __pre_init_with_offset func, 0, priority_string1
 #define BACKTICK_QUOTED(string) QUOTED(string,BACKTICK)
 
 pico_default_asm_setup          macro
+                                section         `.text`:CODE:NOROOT(2)
                                 aapcs           base, interwork
                                 preserve8
                                 require8
