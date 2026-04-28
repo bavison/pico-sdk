@@ -55,8 +55,6 @@ pico_default_asm_setup
 // Start of 2nd Stage Boot Code
 // ----------------------------------------------------------------------------
 
-.section .text
-
 #ifdef __IASMARM__
  // Ensure there's a reference to __checksum to keep IAR ELF Tool happy
  extern  __checksum
