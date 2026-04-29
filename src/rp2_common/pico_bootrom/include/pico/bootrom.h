@@ -187,9 +187,9 @@ static __force_inline bool rom_size_is_64k(void) {
  * \param code the code
  * \return a pointer to the function, or NULL if the code does not match any bootrom function
  */
-#pragma GCC diagnostic push
+GCC_Like_Pragma("GCC diagnostic push")
 // diagnostic: GCC thinks near-zero value is a null pointer member access, but it's not
-#pragma GCC diagnostic ignored "-Warray-bounds"
+GCC_Like_Pragma("GCC diagnostic ignored \"-Warray-bounds\"")
 static __force_inline void *rom_func_lookup_inline(uint32_t code) {
 #if PICO_RP2040
     rom_table_lookup_fn rom_table_lookup = (rom_table_lookup_fn) rom_hword_as_ptr(BOOTROM_TABLE_LOOKUP_OFFSET);
@@ -213,7 +213,7 @@ static __force_inline void *rom_func_lookup_inline(uint32_t code) {
 #endif
 #endif
 }
-#pragma GCC diagnostic pop
+GCC_Like_Pragma("GCC diagnostic pop")
 
 /*!
  * \brief Lookup a bootrom data address by its code. This method is forcibly inlined into the caller for FLASH/RAM sensitive code usage
@@ -221,9 +221,9 @@ static __force_inline void *rom_func_lookup_inline(uint32_t code) {
  * \param code the code
  * \return a pointer to the data, or NULL if the code does not match any bootrom data
  */
-#pragma GCC diagnostic push
+GCC_Like_Pragma("GCC diagnostic push")
 // diagnostic: GCC thinks near-zero value is a null pointer member access, but it's not
-#pragma GCC diagnostic ignored "-Warray-bounds"
+GCC_Like_Pragma("GCC diagnostic ignored \"-Warray-bounds\"")
 static __force_inline void *rom_data_lookup_inline(uint32_t code) {
 #if PICO_RP2040
     rom_table_lookup_fn rom_table_lookup = (rom_table_lookup_fn) rom_hword_as_ptr(BOOTROM_TABLE_LOOKUP_OFFSET);
@@ -239,7 +239,7 @@ static __force_inline void *rom_data_lookup_inline(uint32_t code) {
     return rom_table_lookup(code, RT_FLAG_DATA);
 #endif
 }
-#pragma GCC diagnostic pop
+GCC_Like_Pragma("GCC diagnostic pop")
 
 /*!
  * \brief Reboot the device into BOOTSEL mode
