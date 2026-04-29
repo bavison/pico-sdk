@@ -659,24 +659,23 @@ runtime_init:
 #define PICO_CRT0_ALLOCATE_SPACERS 1
 #endif
 
-.macro spacer_section name
+.macro spacer_section name, align
 #if PICO_CRT0_ALLOCATE_SPACERS
 .section \name, "a"
 #else
 .section \name
 #endif
+// align to allow for memory protection (although this alignment is pretty much ignored by linker script)
+.p2align \align
 .endm
 
-spacer_section .stack
-// align to allow for memory protection (although this alignment is pretty much ignored by linker script)
-.p2align 5
+spacer_section .stack, 5
     .equ StackSize, PICO_STACK_SIZE
 .if StackSize != 0
 .space StackSize
 .endif
 
-spacer_section .heap
-.p2align 2
+spacer_section .heap, 2
     .equ HeapSize, PICO_HEAP_SIZE
 .if HeapSize != 0
 .space HeapSize
