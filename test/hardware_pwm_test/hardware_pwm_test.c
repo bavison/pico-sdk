@@ -125,7 +125,7 @@ int main() {
             PICOTEST_CHECK_CHANNEL(pwm, !(slice->csr & PWM_CH0_CSR_PH_CORRECT_BITS), "pwm_set_phase_correct(F)");
 
             for (int m = PWM_DIV_FREE_RUNNING; m <= PWM_DIV_B_FALLING; m++) {
-                pwm_set_clkdiv_mode(pwm, m);
+                pwm_set_clkdiv_mode(pwm, (enum pwm_clkdiv_mode) m);
                 PICOTEST_CHECK_CHANNEL(pwm, ((slice->csr & PWM_CH0_CSR_DIVMODE_BITS) >> PWM_CH0_CSR_DIVMODE_LSB) == m,
                                        "pwm_set_clkdiv_mode");
             }
