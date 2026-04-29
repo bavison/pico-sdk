@@ -37,9 +37,9 @@ void vreg_set_voltage(enum vreg_voltage voltage) {
 
 enum vreg_voltage vreg_get_voltage(void) {
 #if PICO_RP2040
-    return (vreg_and_chip_reset_hw->vreg & VREG_AND_CHIP_RESET_VREG_VSEL_BITS) >> VREG_AND_CHIP_RESET_VREG_VSEL_LSB;
+    return (enum vreg_voltage)((vreg_and_chip_reset_hw->vreg & VREG_AND_CHIP_RESET_VREG_VSEL_BITS) >> VREG_AND_CHIP_RESET_VREG_VSEL_LSB);
 #else
-    return (powman_hw->vreg & POWMAN_VREG_VSEL_BITS) >> POWMAN_VREG_VSEL_LSB;
+    return (enum vreg_voltage)((powman_hw->vreg & POWMAN_VREG_VSEL_BITS) >> POWMAN_VREG_VSEL_LSB);
 #endif
 }
 
