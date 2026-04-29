@@ -252,4 +252,28 @@ __force_inline static void __compiler_memory_barrier(void) {
 
 #endif // !__ASSEMBLER__
 
+/* Defines for both C and assembler */
+
+#if PICO_C_COMPILER_IS_IAR || PICO_ASSEMBLER_IS_IAR
+
+/* Define a minimal set of ACLE macros */
+
+#ifndef __ARM8M_BASELINE__
+#define __ARM8M_BASELINE__ 16
+#endif
+#ifndef __ARM8M_MAINLINE__
+#define __ARM8M_MAINLINE__ 17
+#endif
+
+/* IASMARM needs extra brackets to match C operator precedence! */
+#if (__CORE__ == __ARM6M__) && !defined(__ARM_ARCH_6M__)
+#define __ARM_ARCH_6M__ 1
+#elif (__CORE__ == __ARM8M_BASELINE__) && !defined(__ARM_ARCH_8M_BASE__)
+#define __ARM_ARCH_8M_BASE__ 1
+#elif (__CORE__ == __ARM8M_MAINLINE__) && !defined(__ARM_ARCH_8M_MAIN__)
+#define __ARM_ARCH_8M_MAIN__ 1
+#endif
+
+#endif
+
 #endif
