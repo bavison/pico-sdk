@@ -142,7 +142,7 @@ int cyw43_spi_init(cyw43_int_t *self) {
     hw_set_bits(&bus_data->pio->input_sync_bypass, 1u << (CYW43_PIN_WL_DATA_IN - pio_get_gpio_base(bus_data->pio)));
     pio_sm_set_config(bus_data->pio, bus_data->pio_sm, &config);
     pio_sm_set_consecutive_pindirs(bus_data->pio, bus_data->pio_sm, CYW43_PIN_WL_CLOCK, 1, true);
-    gpio_set_function(CYW43_PIN_WL_DATA_OUT, pio_get_funcsel(bus_data->pio));
+    gpio_set_function(CYW43_PIN_WL_DATA_OUT, (gpio_function_t) pio_get_funcsel(bus_data->pio));
 
     // Set data pin to pull down and schmitt
     gpio_set_pulls(CYW43_PIN_WL_DATA_IN, false, true);
@@ -192,8 +192,8 @@ static __noinline void ns_delay(uint32_t ns) {
 
 static void start_spi_comms(cyw43_int_t *self) {
     bus_data_t *bus_data = (bus_data_t *)self->bus_data;
-    gpio_set_function(CYW43_PIN_WL_DATA_OUT, pio_get_funcsel(bus_data->pio));
-    gpio_set_function(CYW43_PIN_WL_CLOCK, pio_get_funcsel(bus_data->pio));
+    gpio_set_function(CYW43_PIN_WL_DATA_OUT, (gpio_function_t) pio_get_funcsel(bus_data->pio));
+    gpio_set_function(CYW43_PIN_WL_CLOCK, (gpio_function_t) pio_get_funcsel(bus_data->pio));
     gpio_pull_down(CYW43_PIN_WL_CLOCK);
     // Pull CS low
     cs_set(false);

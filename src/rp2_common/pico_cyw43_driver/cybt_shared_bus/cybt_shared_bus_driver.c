@@ -461,7 +461,7 @@ cybt_result_t cybt_set_bt_awake(int value) {
         last_host_ctrl_reg = reg_val_after;
 #endif
     }
-    return 0;
+    return CYBT_SUCCESS;
 }
 
 void cybt_debug_dump(void) {
@@ -672,7 +672,7 @@ cybt_result_t cybt_mem_read_idx(cybt_addr_idx_t mem_idx, uint32_t offset, uint8_
 }
 
 cybt_result_t cybt_init_buffer(void) {
-    int result;
+    cybt_result_t result;
     result = cybt_reg_read(WLAN_RAM_BASE_REG_ADDR, &WLAN_RAM_BASE_ADDR);
     if (CYBT_SUCCESS != result) {
         return result;
