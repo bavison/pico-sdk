@@ -393,9 +393,19 @@ wrapper_func __aeabi_ui2f
 regular_func uint2float
         subs r1, r1
         cmp r0, #0
+#if PICO_ASSEMBLER_IS_IAR
+        bne trampoline___aeabi_i2f_main
+#else
         bne __aeabi_i2f_main
+#endif
         mov r0, r1
         bx lr
+
+#if PICO_ASSEMBLER_IS_IAR
+trampoline___aeabi_i2f_main:
+        ldr r3, =__aeabi_i2f_main
+        bx r3
+#endif
 
 float_wrapper_section __aeabi_i2f
 // float FUNC_NAME(__aeabi_i2f)(int)                     integer to float (single precision) conversion
@@ -477,7 +487,11 @@ regular_func float2int_z
     bx lr
 
     cmn r0, r0
+#if PICO_ASSEMBLER_IS_IAR
+    bcc trampoline_float2int
+#else
     bcc float2int
+#endif
     push {lr}
     lsls r0, #1
     lsrs r0, #1
@@ -491,6 +505,12 @@ regular_func float2int_z
     movs r0, #128
     lsls r0, #24
     pop {pc}
+
+#if PICO_ASSEMBLER_IS_IAR
+trampoline_float2int:
+    ldr r3, =float2int
+    bx r3
+#endif
 
 float_section float2int
 regular_func float2int
@@ -573,7 +593,11 @@ float_wrapper_section __aeabi_f2lz
 wrapper_func __aeabi_f2lz
 regular_func float2int64_z
     cmn r0, r0
+#if PICO_ASSEMBLER_IS_IAR
+    bcc trampoline_float2int64
+#else
     bcc float2int64
+#endif
     movs r1, #0
 float2fix64_z_neg:
     push {lr}
@@ -593,6 +617,12 @@ float2fix64_z_neg:
     movs r0, #0
     pop {pc}
 
+#if PICO_ASSEMBLER_IS_IAR
+trampoline_float2int64:
+    ldr r3, =float2int64
+    bx r3
+#endif
+
 float_section float2int64
 regular_func float2int64
     shimmable_table_tail_call SF_TABLE_FLOAT2INT64 float2int64_shim
@@ -600,11 +630,21 @@ regular_func float2int64
 float_section float2fix64
 regular_func float2fix64_z
     cmn r0, r0
+#if PICO_ASSEMBLER_IS_IAR
+    bcs trampoline_float2fix64_z_neg
+#else
     bcs float2fix64_z_neg
+#endif
     // fall thru
 
 regular_func float2fix64
     shimmable_table_tail_call SF_TABLE_FLOAT2FIX64 float2fix64_shim
+
+#if PICO_ASSEMBLER_IS_IAR
+trampoline_float2fix64_z_neg:
+    ldr r3, =float2fix64_z_neg
+    bx r3
+#endif
 
 // unsigned long long FUNC_NAME(__aeabi_f2ulz)(float)     float to unsigned long long C-style conversion [3]
 float_wrapper_section __aeabi_f2ulz
