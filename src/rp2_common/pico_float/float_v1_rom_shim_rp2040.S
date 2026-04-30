@@ -205,7 +205,15 @@ regular_func float2int64_shim
 regular_func float2fix64_shim
  push {r14}
  bl f2fix
+#if PICO_ASSEMBLER_IS_IAR
+ push {r3}
+ ldr r3,=d2f64_a               @ Thumb-1 has very limited support for literal loads!
+ mov lr,r3
+ pop {r3}
+ bx lr
+#else
  b d2f64_a
+#endif
 
 regular_func float2uint64_shim
  movs r1,#0                    @ and fall through
