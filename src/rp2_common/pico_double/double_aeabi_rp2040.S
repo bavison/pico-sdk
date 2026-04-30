@@ -582,7 +582,11 @@ double_wrapper_section __aeabi_d2lz
 wrapper_func __aeabi_d2lz
 regular_func double2int64_z
     cmn r1, r1
+#if PICO_ASSEMBLER_IS_IAR
+    bcc trampoline_double2int64
+#else
     bcc double2int64
+#endif
     push {lr}
     lsls r1, #1
     lsrs r1, #1
@@ -600,6 +604,12 @@ regular_func double2int64_z
     lsls r1, #24
     movs r0, #0
     pop {pc}
+
+#if PICO_ASSEMBLER_IS_IAR
+trampoline_double2int64:
+        ldr r3, =double2int64
+        bx r3
+#endif
 
 double_section double2int64
 regular_func double2int64
@@ -692,7 +702,12 @@ regular_func double2fix_z
 
   lsls r2, r2, #20 // align exponent adjustment offset
   adds r1, r1, r2  // we know adjustment is safe
+#if PICO_ASSEMBLER_IS_IAR
+  ldr r3, =double2int_z
+  bx r3
+#else
   b double2int_z
+#endif
 2:
   // result is zero
   movs r0, #0

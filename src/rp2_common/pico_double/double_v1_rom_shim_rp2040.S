@@ -171,7 +171,15 @@ regular_func dsub_shim
  movs r4,#1
  lsls r4,#31
  eors r3,r4                    @ flip sign on second argument
+#if PICO_ASSEMBLER_IS_IAR
+ push {r3}
+ ldr r3,=da_entry              @ Thumb-1 has very limited support for literal loads!
+ mov lr,r3
+ pop {r3}
+ bx lr                         @ continue in dadd
+#else
  b da_entry                    @ continue in dadd
+#endif
 
 .align 2
 double_section dadd_shim
@@ -1605,7 +1613,15 @@ double_section dtan_shim
  bl dsin_finish
  pop {r2,r3}
  bl pop_r8_r11
+#if PICO_ASSEMBLER_IS_IAR
+ push {r3}
+ ldr r3,=ddiv0                 @ Thumb-1 has very limited support for literal loads!
+ mov lr,r3
+ pop {r3}
+ bx lr                         @ compute sin θ/cos θ
+#else
  b ddiv0                       @ compute sin θ/cos θ
+#endif
 
 double_section dcos_shim
  regular_func dcos_shim
@@ -1613,7 +1629,12 @@ double_section dcos_shim
  bl push_r8_r11
  bl dsincos_internal
  bl dcos_finish
+#if PICO_ASSEMBLER_IS_IAR
+ bl pop_r8_r11
+ pop {r4-r7,r15}
+#else
  b 1f
+#endif
 
 double_section dsin_shim
  regular_func dsin_shim
@@ -1717,7 +1738,12 @@ dcos_finish:
  sbcs r0,r2                    @ include rounding
  sbcs r1,r3
  movs r2,#62
+#if PICO_ASSEMBLER_IS_IAR
+ ldr r3, =fix642double_shim
+ bx r3
+#else
  b fix642double_shim
+#endif
 
 .thumb_func
 dsin_finish:
@@ -1738,7 +1764,12 @@ dsin_finish:
  adcs r0,r2                    @ include rounding
  adcs r1,r3
  movs r2,#62
+#if PICO_ASSEMBLER_IS_IAR
+ ldr r3, =fix642double_shim
+ bx r3
+#else
  b fix642double_shim
+#endif
 
 .ltorg
 .align 2
