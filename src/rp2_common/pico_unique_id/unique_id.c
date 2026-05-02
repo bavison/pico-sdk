@@ -12,7 +12,8 @@ static_assert(PICO_UNIQUE_BOARD_ID_SIZE_BYTES <= FLASH_UNIQUE_ID_SIZE_BYTES, "Bo
 
 static pico_unique_board_id_t retrieved_id;
 
-#if PICO_UNIQUE_BOARD_ID_INIT_PRIORITY == -1
+// IAR doesn't support parameterised constructor attribute
+#if PICO_C_COMPILER_IS_IAR || PICO_UNIQUE_BOARD_ID_INIT_PRIORITY == -1
 #define PICO_UNIQUE_BOARD_ID_INIT_ATTRIBUTES constructor
 #else
 #define PICO_UNIQUE_BOARD_ID_INIT_ATTRIBUTES constructor(PICO_UNIQUE_BOARD_ID_INIT_PRIORITY)
