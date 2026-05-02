@@ -92,6 +92,7 @@ define block FLASH with fixed order {
   readonly section .flash_end,
 };
 place at address 0x10000100 { block FLASH };
+define exported symbol __flash_binary_end = end(FLASH);
 
 
 define block RAM_VECTOR_TABLE with fixed order {
