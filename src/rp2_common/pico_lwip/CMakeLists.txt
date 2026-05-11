@@ -278,6 +278,9 @@ if (EXISTS ${PICO_LWIP_PATH}/${LWIP_TEST_PATH})
 
     # our arch/cc.h
     pico_add_library(pico_lwip_arch NOFLAG)
+    target_sources(pico_lwip_arch INTERFACE
+            ${CMAKE_CURRENT_LIST_DIR}/lwip_assert.c
+            )
     target_include_directories(pico_lwip_arch_headers SYSTEM INTERFACE
             ${CMAKE_CURRENT_LIST_DIR}/include)
     pico_mirrored_target_link_libraries(pico_lwip_arch INTERFACE pico_rand)
