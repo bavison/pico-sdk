@@ -6,9 +6,12 @@
 
 #include <stdio.h>
 #include <string.h>
+#include "pico.h"
+#if PICO_C_COMPILER_IS_GCC
 // Include sys/types.h before inttypes.h to work around issue with
 // certain versions of GCC and newlib which causes omission of PRIu64
 #include <sys/types.h>
+#endif
 #include <inttypes.h>
 #include <stdlib.h>
 

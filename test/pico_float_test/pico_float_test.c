@@ -17,9 +17,12 @@
 #include <math.h>
 #include <pico/float.h>
 #include "pico/stdlib.h"
+#include "pico.h"
+#if PICO_C_COMPILER_IS_GCC
 // Include sys/types.h before inttypes.h to work around issue with
 // certain versions of GCC and newlib which causes omission of PRIx64
 #include <sys/types.h>
+#endif
 #include "inttypes.h"
 
 #if !LIB_PICO_FLOAT_COMPILER
