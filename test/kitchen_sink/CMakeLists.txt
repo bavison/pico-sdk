@@ -200,11 +200,13 @@ if (NOT KITCHEN_SINK_NO_BINARY_TYPE_VARIANTS)
     pico_add_extra_outputs(kitchen_sink_copy_to_ram)
     target_compile_definitions(kitchen_sink_copy_to_ram PRIVATE KITCHEN_SINK_ID="copy-to-ram binary")
 
-    add_executable(kitchen_sink_no_flash ${CMAKE_CURRENT_LIST_DIR}/kitchen_sink.c)
-    pico_set_binary_type(kitchen_sink_no_flash no_flash)
-    target_link_libraries(kitchen_sink_no_flash kitchen_sink_libs kitchen_sink_options)
-    pico_add_extra_outputs(kitchen_sink_no_flash)
-    target_compile_definitions(kitchen_sink_no_flash PRIVATE KITCHEN_SINK_ID="no-flash binary")
+    if (NOT PICO_C_COMPILER_IS_IAR)
+        add_executable(kitchen_sink_no_flash ${CMAKE_CURRENT_LIST_DIR}/kitchen_sink.c)
+        pico_set_binary_type(kitchen_sink_no_flash no_flash)
+        target_link_libraries(kitchen_sink_no_flash kitchen_sink_libs kitchen_sink_options)
+        pico_add_extra_outputs(kitchen_sink_no_flash)
+        target_compile_definitions(kitchen_sink_no_flash PRIVATE KITCHEN_SINK_ID="no-flash binary")
+    endif()
 
     if (PICO_RP2040)
         # RP2040 has blocked ram
