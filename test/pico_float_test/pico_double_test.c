@@ -394,6 +394,7 @@ int main() {
         printf("LDEXP %10.18f\n", check_close2(ldexp, x, x));
         // todo come pack
     //    printf("FMOD %10.18f\n", check_close2(fmod, x, 3.0f));
+#if !PICO_C_COMPILER_IS_IAR
         double s, c;
         sincos(x, &s, &c);
         printf("SINCOS %10.18f %10.18f\n", s, c);
@@ -401,6 +402,7 @@ int main() {
             printf("SINCOS mismatch\n");
             fail = true;
         }
+#endif
     }
 
 #if PICO_DOUBLE_PROPAGATE_NANS
@@ -418,9 +420,11 @@ int main() {
         printf("TRUNC %10.18f\n", check_nan(trunc(x)));
         printf("LDEXP %10.18f\n", check_nan(ldexp(x, x)));
         printf("FMOD %10.18f\n", check_nan(fmod(x, 3.0f)));
+#if !PICO_C_COMPILER_IS_IAR
         double s, c;
         sincos(x, &s, &c);
         printf("SINCOS %10.18f %10.18f\n", check_nan(s), check_nan(c));
+#endif
 
         for(int j=0;j<2;j++) {
             for (int i = 1; i < 4; i++) {

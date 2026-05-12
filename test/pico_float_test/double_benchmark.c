@@ -293,6 +293,7 @@ timer_func_def(dcmpge)(volatile double a, volatile double b) {
     return cycle_diff(t0, t1) - DOUBLE_INPUT_COST * 2 - DCMP_OVERHEAD;
 }
 
+#if !PICO_C_COMPILER_IS_IAR
 timer_func_def(dcmpun)(volatile double a, volatile double b) {
     register io_ro_32 *systick_ptr = systick_value_ptr();
     uint32_t t0 = *systick_ptr;
@@ -300,6 +301,7 @@ timer_func_def(dcmpun)(volatile double a, volatile double b) {
     uint32_t t1 = *systick_ptr;
     return cycle_diff(t0, t1) - DOUBLE_INPUT_COST * 2 - DCMP_OVERHEAD;
 }
+#endif
 
 timer_func_def(i2d)(volatile int32_t i) {
     register io_ro_32 *systick_ptr = systick_value_ptr();
@@ -853,6 +855,7 @@ timer_func_def(dsin)(volatile double a) {
     return cycle_diff(t0, t1) - DOUBLE_INPUT_COST - DOUBLE_OUTPUT_COST;
 }
 
+#if !PICO_C_COMPILER_IS_IAR
 timer_func_def(dsincos)(volatile double a) {
     register io_ro_32 *systick_ptr = systick_value_ptr();
     uint32_t t0 = *systick_ptr;
@@ -863,6 +866,7 @@ timer_func_def(dsincos)(volatile double a) {
     uint32_t t1 = *systick_ptr;
     return cycle_diff(t0, t1) - DOUBLE_INPUT_COST - DOUBLE_OUTPUT_COST * 2;
 }
+#endif
 
 timer_func_def(dtan)(volatile double a) {
     register io_ro_32 *systick_ptr = systick_value_ptr();
@@ -956,6 +960,7 @@ timer_func_def(dfmod)(volatile double a, volatile double b) {
     return cycle_diff(t0, t1) - DOUBLE_INPUT_COST - DOUBLE_OUTPUT_COST;
 }
 
+#if !PICO_C_COMPILER_IS_ARMCLANG && !PICO_C_COMPILER_IS_IAR
 timer_func_def(ddrem)(volatile double a, volatile double b) {
     // LLVM libc is string betting the floating point functions
 #if defined(__LLVM_LIBC__) && defined(__llvm__) // && (__clang_major__ < 23)
@@ -968,6 +973,7 @@ timer_func_def(ddrem)(volatile double a, volatile double b) {
     return cycle_diff(t0, t1) - DOUBLE_INPUT_COST - DOUBLE_OUTPUT_COST;
 #endif
 }
+#endif
 
 timer_func_def(dremainder)(volatile double a, volatile double b) {
     register io_ro_32 *systick_ptr = systick_value_ptr();
@@ -1002,6 +1008,7 @@ timer_func_def(dlog2)(volatile double a) {
     return cycle_diff(t0, t1) - DOUBLE_INPUT_COST - DOUBLE_OUTPUT_COST;
 }
 
+#if !PICO_C_COMPILER_IS_IAR
 timer_func_def(dexp10)(volatile double a) {
     register io_ro_32 *systick_ptr = systick_value_ptr();
     uint32_t t0 = *systick_ptr;
@@ -1009,6 +1016,7 @@ timer_func_def(dexp10)(volatile double a) {
     uint32_t t1 = *systick_ptr;
     return cycle_diff(t0, t1) - DOUBLE_INPUT_COST - DOUBLE_OUTPUT_COST;
 }
+#endif
 
 timer_func_def(dlog10)(volatile double a) {
     register io_ro_32 *systick_ptr = systick_value_ptr();
@@ -1186,8 +1194,12 @@ timer_func_def(dasinh)(volatile double a) {
 int main() {
     stdio_init_all();
     init_systick();
-#if PICO_C_COMPILER_IS_CLANG
+#if PICO_C_COMPILER_IS_ARMCLANG
+    printf("================= ARMClang - ");
+#elif PICO_C_COMPILER_IS_CLANG
     printf("================= Clang - ");
+#elif PICO_C_COMPILER_IS_IAR
+    printf("================= IAR - ");
 #else
     printf("================ GCC - ");
 #endif
@@ -1242,7 +1254,9 @@ int main() {
     printf("cmple             %g\n", time_binary_func(time_dcmple, d_smaller, d_bigger, count_of(d_smaller)));
     printf("cmpge             %g\n", time_binary_func(time_dcmpge, d_bigger, d_smaller, count_of(d_bigger)));
     printf("cmpgt             %g\n", time_binary_func(time_dcmpgt, d_bigger, d_smaller, count_of(d_bigger)));
+#if !PICO_C_COMPILER_IS_IAR
     printf("cmpun             %g\n", time_binary_func(time_dcmpun, d_a, d_a, count_of(d_a)));
+#endif
     printf("----------------- 32-bit Conversions ---\n");
     printf("i2d               %g\n", time_unary_int32_func(time_i2d, i_32, count_of(i_32)));
     printf("ui2d              %g\n", time_unary_int32_func(time_ui2d, i_32, count_of(i_32)));
@@ -1300,7 +1314,9 @@ int main() {
     printf("sin               %g\n", time_unary_func(time_dsin, d_positive, count_of(d_a)));
     printf("tan               %g\n", time_unary_func(time_dtan, d_positive, count_of(d_a)));
     printf("atan2             %g\n", time_binary_func(time_datan2, d_a, d_b, count_of(d_a)));
+#if !PICO_C_COMPILER_IS_IAR
     printf("sincos            %g\n", time_unary_func(time_dsincos, d_positive, count_of(d_a)));
+#endif
     printf("----------------- Sci (basic) ---\n");
     printf("dexp              %g\n", time_unary_func(time_dexp, d_a, count_of(d_a)));
     printf("dlog              %g\n", time_unary_func(time_dlog, d_positive, count_of(d_positive)));
@@ -1311,13 +1327,17 @@ int main() {
     printf("dceil             %g\n", time_unary_func(time_dceil, d_a, count_of(d_a)));
     printf("dround            %g\n", time_unary_func(time_dround, d_a, count_of(d_a)));
     printf("dfmod             %g\n", time_binary_func(time_dfmod, d_a, d_b, count_of(d_a)));
+#if !PICO_C_COMPILER_IS_ARMCLANG && !PICO_C_COMPILER_IS_IAR
     printf("ddrem             %g\n", time_binary_func(time_ddrem, d_a, d_b, count_of(d_a)));
+#endif
     printf("dremainder        %g\n", time_binary_func(time_dremainder, d_a, d_b, count_of(d_a)));
     printf("dremquo           %g\n", time_binary_func(time_dremquo, d_a, d_b, count_of(d_a)));
     printf("----------------- Sci (extra) ---\n");
     printf("dexp2             %g\n", time_unary_func(time_dexp2, d_a, count_of(d_a)));
     printf("dlog2             %g\n", time_unary_func(time_dlog2, d_positive, count_of(d_positive)));
+#if !PICO_C_COMPILER_IS_IAR
     printf("dexp10            %g\n", time_unary_func(time_dexp10, d_a, count_of(d_a)));
+#endif
     printf("dlog10            %g\n", time_unary_func(time_dlog10, d_positive, count_of(d_positive)));
     printf("dldexp            %g\n", time_binary_int_func(time_dldexp, d_a, i_pow, count_of(d_a)));
     printf("dexpm1            %g\n", time_unary_func(time_dexpm1, d_a, count_of(d_a)));

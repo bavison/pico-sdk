@@ -446,9 +446,11 @@ int main() {
 #endif
         printf("FCOS %10.18f\n", check_close1(cosf, x));
         printf("FSIN %10.18f\n", check_close1(sinf, x));
+#if !PICO_C_COMPILER_IS_IAR
         float s, c;
         sincosf(x, &s, &c);
         printf("FSINCOS %10.18f %10.18f\n", s, c);
+#endif
         printf("FTAN %10.18f\n", check_close1(tanf, x));
         printf("FATAN2 %10.18f\n", check_close2(atan2f, x, 10.f));
         printf("FATAN2 %10.18f\n", check_close2(atan2f, 10.f, x));
@@ -460,12 +462,14 @@ int main() {
 #endif
         printf("LDEXPF %10.18f\n", check_close2(ldexpf, x, x));
         printf("FMODF %10.18f\n", check_close2(fmodf, x, 3.0f));
+#if !PICO_C_COMPILER_IS_IAR
         sincosf(x, &s, &c);
         printf("SINCOS %10.18f %10.18f\n", s, c);
         if (s != sinf(x) || c != cosf(x)) {
             printf("SINCOS mismatch\n");
             fail = true;
         }
+#endif
     }
 
     for (double x = 0; x < 3; x++) {
@@ -496,9 +500,11 @@ int main() {
         printf("TRUNCF %10.18f\n", truncf(x));
         printf("LDEXPF %10.18f\n", ldexpf(x, x));
         printf("FMODF %10.18f\n", fmodf(x, 3.0f));
+#if !PICO_C_COMPILER_IS_IAR
         float s, c;
 //        sincosf(x, &s, &c);
         printf("FSINCOS %10.18f %10.18f\n", s, c);
+#endif
 
         for(int j=0;j<2;j++) {
             for (int i = 1; i < 4; i++) {
