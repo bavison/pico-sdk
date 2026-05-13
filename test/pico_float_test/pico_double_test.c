@@ -298,9 +298,9 @@ int test_dcmpun() {
 #define check_nan(a) ({ assert_nan(a); a; })
 
 double __attribute__((pcs("aapcs"))) __aeabi_i2d(int32_t);
-double __attribute__((pcs("aapcs"))) __aeabi_ui2d(int32_t);
+double __attribute__((pcs("aapcs"))) __aeabi_ui2d(uint32_t);
 double __attribute__((pcs("aapcs"))) __aeabi_l2d(int64_t);
-double __attribute__((pcs("aapcs"))) __aeabi_ul2d(int64_t);
+double __attribute__((pcs("aapcs"))) __aeabi_ul2d(uint64_t);
 int32_t __attribute__((pcs("aapcs")))__aeabi_d2iz(double);
 int64_t __attribute__((pcs("aapcs"))) __aeabi_d2lz(double);
 double __attribute__((pcs("aapcs"))) __aeabi_dmul(double, double);
