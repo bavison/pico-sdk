@@ -307,9 +307,9 @@ int test_fcmpun() {
 #define check_nan(a) ({ assert_nan(a); a; })
 
 float __attribute__((pcs("aapcs"))) __aeabi_i2f(int32_t);
-float __attribute__((pcs("aapcs"))) __aeabi_ui2f(int32_t);
+float __attribute__((pcs("aapcs"))) __aeabi_ui2f(uint32_t);
 float __attribute__((pcs("aapcs"))) __aeabi_l2f(int64_t);
-float __attribute__((pcs("aapcs"))) __aeabi_ul2f(int64_t);
+float __attribute__((pcs("aapcs"))) __aeabi_ul2f(uint64_t);
 int32_t __attribute__((pcs("aapcs"))) __aeabi_f2iz(float);
 int64_t __attribute__((pcs("aapcs"))) __aeabi_f2lz(float);
 float __attribute__((pcs("aapcs"))) __aeabi_fmul(float, float);
