@@ -110,7 +110,7 @@
     if (NOT PICO_HARD_FLOAT_ABI)
         target_link_libraries(pico_float_none INTERFACE pico_float_headers)
         wrap_float_functions(pico_float_none) # we wrap all functions
-        if (NOT PICO_RISCV)
+        if (NOT PICO_RISCV AND NOT PICO_C_COMPILER_IS_IAR)
             # be explicit that there should be no floating point instructions
             target_compile_options(pico_float_none INTERFACE -msoft-float)
         endif()
@@ -137,9 +137,12 @@
                     ${CMAKE_CURRENT_LIST_DIR}/float_sci_m33.S
                     )
 
-            # NOTE the main reason for using pico_float_pico_dcp is presumably that you
-            # don't want to use VFP at all, so turn off compiler support, otherwise, it will inline usages
-            target_compile_options(pico_float_pico_dcp INTERFACE -msoft-float)
+            # IAR can't emit FP instructions when using a soft FP ABI anyway
+            if (NOT PICO_C_COMPILER_IS_IAR)
+                # NOTE the main reason for using pico_float_pico_dcp is presumably that you
+                # don't want to use VFP at all, so turn off compiler support, otherwise, it will inline usages
+                target_compile_options(pico_float_pico_dcp INTERFACE -msoft-float)
+            endif()
 
             wrap_float_functions(pico_float_pico_dcp
                     # we wrap all functions as we don't want to use VFP (or compiler versions) at all
