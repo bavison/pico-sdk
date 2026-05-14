@@ -10,6 +10,16 @@
 
 pico_default_asm_setup
 
+#if PICO_ASSEMBLER_IS_IAR
+/* Add dummy implementations of these functions so the linker won't pull in
+ * IxxToFlt.o(m6M_tl.a) which has a relocation that isn't possible when our
+ * wrappers are present */
+ regular_func __aeabi_ul2f
+ regular_func __aeabi_l2f
+ regular_func __aeabi_ui2f
+ regular_func __aeabi_i2f
+#endif
+
 wrapper_func __aeabi_fadd
 wrapper_func __aeabi_fdiv
 wrapper_func __aeabi_fmul

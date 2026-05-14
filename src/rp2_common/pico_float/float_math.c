@@ -62,6 +62,31 @@ static inline ui32 float2ui32(float f) {
 #define check_nan_f2(x,y) ((void)0)
 #endif
 
+#if PICO_C_COMPILER_IS_IAR
+/* Add dummy implementations of these functions so the linker won't pull in
+ * IxxToFlt.o(m6M_tl.a) which has a relocation that isn't possible when our
+ * wrappers are present */
+float __aeabi_ul2f(unsigned long long x)
+{
+  return 0;
+}
+
+float __aeabi_l2f(long long x)
+{
+  return 0;
+}
+
+float __aeabi_ui2f(unsigned x)
+{
+  return 0;
+}
+
+float __aeabi_i2f(int x)
+{
+  return 0;
+}
+#endif
+
 static inline int fgetsignexp(float x) {
     ui32 ix=float2ui32(x);
     return (ix>>23)&0x1ff;
