@@ -316,8 +316,6 @@ static size_t _etoa(out_fct_type out, char *buffer, size_t idx, size_t maxlen, d
                     unsigned int width, unsigned int flags);
 #endif
 
-#define is_nan __builtin_isnan
-
 // internal ftoa for fixed decimal floating point
 static size_t _ftoa(out_fct_type out, char *buffer, size_t idx, size_t maxlen, double value, unsigned int prec,
                     unsigned int width, unsigned int flags) {
@@ -329,7 +327,7 @@ static size_t _ftoa(out_fct_type out, char *buffer, size_t idx, size_t maxlen, d
     static const double pow10[] = {1, 10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000, 1000000000};
 
     // test for special values
-    if (is_nan(value))
+    if (isnan(value))
         return _out_rev(out, buffer, idx, maxlen, "nan", 3, width, flags);
     if (value < -DBL_MAX)
         return _out_rev(out, buffer, idx, maxlen, "fni-", 4, width, flags);
@@ -447,7 +445,7 @@ static size_t _ftoa(out_fct_type out, char *buffer, size_t idx, size_t maxlen, d
 static size_t _etoa(out_fct_type out, char *buffer, size_t idx, size_t maxlen, double value, unsigned int prec,
                     unsigned int width, unsigned int flags) {
     // check for NaN and special values
-    if (is_nan(value) || (value > DBL_MAX) || (value < -DBL_MAX)) {
+    if (isnan(value) || (value > DBL_MAX) || (value < -DBL_MAX)) {
         return _ftoa(out, buffer, idx, maxlen, value, prec, width, flags);
     }
 

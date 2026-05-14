@@ -82,7 +82,6 @@ static inline uint __builtin_ctz(uint x) {
   return __ctzsi2(x);
 }
 #define __builtin_expect(x, y) (x)
-#define __builtin_isnan(x) __iar_isnan(x)
 
 #endif
 

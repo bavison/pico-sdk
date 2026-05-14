@@ -71,10 +71,6 @@ float bitcast_u2f(uint32_t x) {
 	return un.f;
 }
 
-bool is_nan_u(uint32_t x) {
-	return ((x >> 23) & 0xffu) == 0xffu && (x & ~(-1u << 23));
-}
-
 uint32_t flush_to_zero_u(uint32_t x) {
 	if (!(x & (0xffu << 23))) {
 		x &= -1u << 23;
@@ -88,7 +84,7 @@ uint32_t model_fadd(uint32_t x, uint32_t y) {
 	// Use local hardware implementation to perform calculation
 	uint32_t result = bitcast_f2u(bitcast_u2f(x) + bitcast_u2f(y));
 	// Use correct canonical generated nan
-	if (is_nan_u(result)) {
+	if (isnan(result)) {
 		result = -1u;
 	}
 	result = flush_to_zero_u(result);
@@ -101,7 +97,7 @@ uint32_t model_fmul(uint32_t x, uint32_t y) {
 	// Use local hardware implementation to perform calculation
 	uint32_t result = bitcast_f2u(bitcast_u2f(x) * bitcast_u2f(y));
 	// Use correct canonical generated nan
-	if (is_nan_u(result)) {
+	if (isnan(result)) {
 		result = -1u;
 	}
 	result = flush_to_zero_u(result);
@@ -121,10 +117,10 @@ int main() {
 		x = xr256_next(rand_state) & 0xffffffffu;
 		y = xr256_next(rand_state) & 0xffffffffu;
 		// Map nan to +-inf (input nans should already be well-covered)
-		if (is_nan_u(x)) {
+		if (isnan(x)) {
 			x &= -1u << 23;
 		}
-		if (is_nan_u(y)) {
+		if (isnan(y)) {
 			y &= -1u << 23;
 		}
 #if 1

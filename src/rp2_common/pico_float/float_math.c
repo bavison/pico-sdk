@@ -55,13 +55,8 @@ static inline ui32 float2ui32(float f) {
 }
 
 #if PICO_FLOAT_PROPAGATE_NANS
-static inline bool fisnan(float x) {
-    ui32 ix=float2ui32(x);
-    return ix * 2 > 0xff000000u;
-}
-
-#define check_nan_f1(x) if (fisnan((x))) return (x)
-#define check_nan_f2(x,y) if (fisnan((x))) return (x); else if (fisnan((y))) return (y);
+#define check_nan_f1(x) if (isnan((x))) return (x)
+#define check_nan_f2(x,y) if (isnan((x))) return (x); else if (isnan((y))) return (y);
 #else
 #define check_nan_f1(x) ((void)0)
 #define check_nan_f2(x,y) ((void)0)
@@ -108,7 +103,6 @@ float WRAPPER_FUNC(copysignf)(float x, float y) {
 static inline int fiszero(float x)  { return fgetexp    (x)==0; }
 //static inline int fispzero(float x) { return fgetsignexp(x)==0; }
 //static inline int fismzero(float x) { return fgetsignexp(x)==0x100; }
-static inline int fisinf(float x)   { return fgetexp    (x)==0xff; }
 static inline int fispinf(float x)  { return fgetsignexp(x)==0xff; }
 static inline int fisminf(float x)  { return fgetsignexp(x)==0x1ff; }
 
@@ -158,7 +152,7 @@ static inline float fneg(float x) {
 static inline int fispo2(float x) {
     ui32 ix=float2ui32(x);
     if(fiszero(x)) return 0;
-    if(fisinf(x)) return 0;
+    if(isinf(x)) return 0;
     ix&=0x007fffff;
     return ix==0;
 }
@@ -430,7 +424,7 @@ float WRAPPER_FUNC(powf)(float x,float y) {
     GCC_Like_Pragma("GCC diagnostic ignored \"-Wfloat-equal\"")
     if(x==1.0f||fiszero(y)) return 1;
     check_nan_f2(x,y);
-    if(x==-1.0f&&fisinf(y)) return 1;
+    if(x==-1.0f&&isinf(y)) return 1;
     GCC_Like_Pragma("GCC diagnostic pop")
     if(fiszero(x)) {
         if(!fisneg(y)) {

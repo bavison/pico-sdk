@@ -121,7 +121,7 @@ int test_fcmple_gt(float a, float b, int expected) {
                a, b, a <= b, expected);
         return failure();
     }
-    if ((a > b) == expected && !isnanf(a) && !isnanf(b)) {
+    if ((a > b) == expected && !isnan(a) && !isnan(b)) {
         printf("error in fcmpgt(%f, %f) => %d, expected %d\n",
                a, b, a > b, !expected);
         return failure();
@@ -135,7 +135,7 @@ int test_fcmplt_ge(float a, float b, int expected) {
                a, b, a < b, expected);
         return failure();
     }
-    if ((a >= b) == expected && !isnanf(a) && !isnanf(b)) {
+    if ((a >= b) == expected && !isnan(a) && !isnan(b)) {
         printf("error in fcmpge(%f, %f) => %d, expected %d\n",
                a, b, a >= b, !expected);
         return failure();
@@ -303,7 +303,7 @@ int test_fcmpun() {
     return 0;
 }
 
-#define assert_nan(a) test_assert(isnanf(a))
+#define assert_nan(a) test_assert(isnan(a))
 #define check_nan(a) ({ assert_nan(a); a; })
 
 float __attribute__((pcs("aapcs"))) __aeabi_i2f(int32_t);
@@ -354,11 +354,8 @@ float REAL_FUNC(fmodf)(float, float);
 #define allowed_range_fma(a) allowed_range(a)
 #endif
 
-#ifdef LLVM_LIBC_MATH_H
-#define isinff isinf
-#endif
-#define assert_close(a, b) test_assert((fabsf(a - b) <= allowed_range(a) || ({ printf("  error: %f != %f\n", a, b); 0; })) || (isinff(a) && isinff(b) && (a < 0) == (b < 0)))
-#define assert_close_fma(a, b) test_assert((fabsf(a - b) <= allowed_range_fma(a) || ({ printf("  error: %f != %f\n", a, b); 0; })) || (isinff(a) && isinff(b) && (a < 0) == (b < 0)))
+#define assert_close(a, b) test_assert((fabsf(a - b) <= allowed_range(a) || ({ printf("  error: %f != %f\n", a, b); 0; })) || (isinf(a) && isinf(b) && (a < 0) == (b < 0)))
+#define assert_close_fma(a, b) test_assert((fabsf(a - b) <= allowed_range_fma(a) || ({ printf("  error: %f != %f\n", a, b); 0; })) || (isinf(a) && isinf(b) && (a < 0) == (b < 0)))
 #define check1(func,p0) ({ typeof(p0) r = func(p0), r2 = XREAL_FUNC(func)(p0); test_assert(r == r2); r; })
 #if !LIB_PICO_FLOAT_PICO_VFP
 #define check1_vfp_unwrapped(func,p0) ({ typeof(p0) r = func(p0), r2 = XREAL_FUNC(func)(p0); test_assert(r == r2); r; })
@@ -367,9 +364,9 @@ float REAL_FUNC(fmodf)(float, float);
 #define check1_vfp_unwrapped(func,p0) ({ typeof(p0) r = func(p0), r2 = func(p0); test_assert(r == r2); r; })
 #define check2_vfp_unwrapped(func,p0,p1) ({ typeof(p0) r = func(p0,p1), r2 = func(p0,p1); test_assert(r == r2); r; })
 #endif
-#define check_close1(func,p0) ({ typeof(p0) r = func(p0), r2 = XREAL_FUNC(func)(p0); if (isnanf(p0)) assert_nan(r); else assert_close(r, r2); r; })
-#define check_close2(func,p0,p1) ({ typeof(p0) r = func(p0,p1), r2 = XREAL_FUNC(func)(p0,p1); if (isnanf(p0) || isnanf(p1)) assert_nan(r); else assert_close(r, r2); r; })
-#define check_close3_fma(func,p0,p1,p2) ({ typeof(p0) r = func(p0,p1,p2), r2 = XREAL_FUNC(func)(p0,p1,p2); if (isnanf(p0) || isnanf(p1) || isnanf(p2)) assert_nan(r); else assert_close_fma(r, r2); r; })
+#define check_close1(func,p0) ({ typeof(p0) r = func(p0), r2 = XREAL_FUNC(func)(p0); if (isnan(p0)) assert_nan(r); else assert_close(r, r2); r; })
+#define check_close2(func,p0,p1) ({ typeof(p0) r = func(p0,p1), r2 = XREAL_FUNC(func)(p0,p1); if (isnan(p0) || isnan(p1)) assert_nan(r); else assert_close(r, r2); r; })
+#define check_close3_fma(func,p0,p1,p2) ({ typeof(p0) r = func(p0,p1,p2), r2 = XREAL_FUNC(func)(p0,p1,p2); if (isnan(p0) || isnan(p1) || isnan(p2)) assert_nan(r); else assert_close_fma(r, r2); r; })
 #else
 #define check1(func,p0) func(p0)
 #define check1_vfp_unwrapped(func,p0) func(p0)

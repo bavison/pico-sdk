@@ -57,14 +57,8 @@ static inline ui64 double2ui64(double d) {
 }
 
 #if PICO_DOUBLE_PROPAGATE_NANS
-static inline bool disnan(double x) {
-    ui64 ix= double2ui64(x);
-    // checks the top bit of the low 32 bit of the NAN, but it I think that is ok
-    return ((uint32_t)(ix >> 31)) > 0xffe00000u;
-}
-
-#define check_nan_d1(x) if (disnan((x))) return (x)
-#define check_nan_d2(x,y) if (disnan((x))) return (x); else if (disnan((y))) return (y);
+#define check_nan_d1(x) if (isnan((x))) return (x)
+#define check_nan_d2(x,y) if (isnan((x))) return (x); else if (isnan((y))) return (y);
 #else
 #define check_nan_d1(x) ((void)0)
 #define check_nan_d2(x,y) ((void)0)
@@ -111,7 +105,6 @@ double WRAPPER_FUNC(copysign)(double x, double y) {
 static inline int diszero(double x)  { return dgetexp    (x)==0; }
 //static inline int dispzero(double x) { return dgetsignexp(x)==0; }
 //static inline int dismzero(double x) { return dgetsignexp(x)==0x800; }
-static inline int disinf(double x)   { return dgetexp    (x)==0x7ff; }
 static inline int dispinf(double x)  { return dgetsignexp(x)==0x7ff; }
 static inline int disminf(double x)  { return dgetsignexp(x)==0xfff; }
 
@@ -161,7 +154,7 @@ static inline double dneg(double x) {
 static inline int dispo2(double x) {
     ui64 ix=double2ui64(x);
     if(diszero(x)) return 0;
-    if(disinf(x)) return 0;
+    if(isinf(x)) return 0;
     ix&=0x000fffffffffffffULL;
     return ix==0;
 }
@@ -475,7 +468,7 @@ double WRAPPER_FUNC(pow)(double x,double y) {
 
     if(x==1.0||diszero(y)) return 1;
     check_nan_d2(x, y);
-    if(x==-1.0&&disinf(y)) return 1;
+    if(x==-1.0&&isinf(y)) return 1;
     GCC_Like_Pragma("GCC diagnostic pop")
 
     if(diszero(x)) {
