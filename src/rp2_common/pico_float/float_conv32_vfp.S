@@ -19,6 +19,9 @@ pico_default_asm_setup
 .endm
 
 float_section int2float
+#if PICO_ASSEMBLER_IS_IAR
+ wrapper_func __aeabi_i2f
+#endif
 regular_func int2float
     vmov s0, r0
     vcvt.f32.s32 s0, s0
@@ -28,6 +31,9 @@ regular_func int2float
 	bx lr
 
 float_section uint2float
+#if PICO_ASSEMBLER_IS_IAR
+ wrapper_func __aeabi_ui2f
+#endif
 regular_func uint2float
 	vmov s0, r0
 	vcvt.f32.u32 s0, s0
