@@ -42,7 +42,7 @@ static inline int failure(void) {
 }
 #endif
 
-#if __arm__
+#if __ARM_ARCH
 
 #include "call_apsr.h"
 
@@ -62,7 +62,7 @@ int test__aeabi_cfcmpeq(float a, float b, int expected) {
 #endif
 
 int test_cfcmpeq() {
-#if __arm__
+#if __ARM_ARCH
     if (test__aeabi_cfcmpeq(1.0, 1.0, 1))
         return failure();
     if (test__aeabi_cfcmpeq(1234.567, 765.4321, 0))
@@ -109,7 +109,7 @@ int test_cfcmpeq() {
     return 0;
 }
 
-#if __arm__
+#if __ARM_ARCH
 
 extern __attribute__((pcs("aapcs"))) void __aeabi_cfcmple(float a, float b);
 
@@ -190,7 +190,7 @@ int test__aeabi_cfcmple(float a, float b, int expected) {
 #endif
 
 int test_cfcmple() {
-#if __arm__
+#if __ARM_ARCH
     if (test__aeabi_cfcmple(1.0, 1.0, 0))
         return failure();
     if (test__aeabi_cfcmple(1234.567, 765.4321, 1))

@@ -33,7 +33,7 @@
 
 extern __attribute__((pcs("aapcs"))) int __aeabi_dcmpun(double a, double b);
 
-#if __arm__
+#if __ARM_ARCH
 
 #include "call_apsr.h"
 
@@ -53,7 +53,7 @@ int test__aeabi_cdcmpeq(double a, double b, int expected) {
 #endif
 
 int test_cdcmpeq() {
-#if __arm__
+#if __ARM_ARCH
     if (test__aeabi_cdcmpeq(1.0, 1.0, 1))
         return 1;
     if (test__aeabi_cdcmpeq(1234.567, 765.4321, 0))
@@ -100,7 +100,7 @@ int test_cdcmpeq() {
     return 0;
 }
 
-#if __arm__
+#if __ARM_ARCH
 
 extern __attribute__((pcs("aapcs"))) void __aeabi_cdcmple(double a, double b);
 
@@ -181,7 +181,7 @@ int test__aeabi_cdcmple(double a, double b, int expected) {
 #endif
 
 int test_cdcmple() {
-#if __arm__
+#if __ARM_ARCH
     if (test__aeabi_cdcmple(1.0, 1.0, 0))
         return 1;
     if (test__aeabi_cdcmple(1234.567, 765.4321, 1))
