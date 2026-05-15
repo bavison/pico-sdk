@@ -70,7 +70,9 @@ int main(void) {
     puts("Hello Everything!");
     puts("Hello Everything2!");
 
+#if !PICO_C_COMPILER_IS_IAR
     printf("main at %p\n", (void *)main);
+#endif
     static uint x[2];
     printf("x[0] = %p, x[1] = %p\n", x, x+1);
 #ifdef __riscv
