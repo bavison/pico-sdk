@@ -5,6 +5,8 @@
 #else
 #include "RP2350.h"
 #endif
+#include "pico/platform/compiler.h"
+IAR_Pragma("diag_suppress=Pa181") // don't complain about incompatible macro redefinitions
 #include "pico/stdlib.h"
 #include "hardware/irq.h"
 
