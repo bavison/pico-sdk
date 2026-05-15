@@ -436,7 +436,7 @@ static void fill_stack(int val) {
 // aon_timer_get_time called aon_timer_get_time_calendar which called datetime_to_tm
 // which didn't initialise tm_isdst
 static int issue_2374_test(void) {
-#if HAS_RP2040_RTC && !__clang__
+#if HAS_RP2040_RTC && PICO_C_COMPILER_IS_GNU
     PICOTEST_START_SECTION("Issue #2374 defect - time goes backwards");
     setenv("TZ", "PST8PDT7,M3.2.0/2,M11.1.0/02:00:00", 1);
     tzset();

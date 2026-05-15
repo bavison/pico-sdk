@@ -176,6 +176,7 @@ void aon_timer_disable_alarm(void) {
 #endif
 }
 
+#if !PICO_C_COMPILER_IS_ARMCLANG && !PICO_C_COMPILER_IS_IAR
 void aon_timer_start_with_timeofday(void) {
     struct timeval tv;
     gettimeofday(&tv, NULL);
@@ -184,6 +185,7 @@ void aon_timer_start_with_timeofday(void) {
     ts.tv_nsec = tv.tv_usec * 1000;
     aon_timer_start(&ts);
 }
+#endif
 
 bool aon_timer_start(const struct timespec *ts) {
 #if HAS_RP2040_RTC
