@@ -7,8 +7,6 @@
 #include "pico/asm_helper.S"
 
 #ifdef PICO_PANIC_FUNCTION
-#define	__CONCAT1(x,y)	x ## y
-#define	__CONCAT(x,y)	__CONCAT1(x,y)
 
 #define PICO_PANIC_FUNCTION_IS_EMPTY (__CONCAT(PICO_PANIC_FUNCTION, 1))
 
