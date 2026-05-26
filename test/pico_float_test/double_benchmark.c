@@ -25,10 +25,6 @@ static void init_systick() {
     __opaque_ptr; \
 })
 
-static __force_inline uint32_t systick_value() {
-    return systick_hw->cvr;
-}
-
 static __force_inline io_ro_32 *systick_value_ptr() {
     return __get_opaque_ptr(&systick_hw->cvr);
 }
