@@ -243,7 +243,9 @@ void test_nesting() {
     }
     done = true;
     cancel_repeating_timer(&timer);
-    printf("%d: %d %d %d\n", count_local, (int)count[0], (int)count[1], (int)count[2]);
+    printf("%d: %d ", count_local, (int)count[0]);
+    printf("%d ", (int)count[1]);
+    printf("%d\n", (int)count[2]);
     printf("%d\n", z);
     // make sure all the IRQs ran
     if (!(count_local && count[0] && count[1] && count[2])) {
