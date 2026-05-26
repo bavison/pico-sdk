@@ -54,8 +54,10 @@ __force_inline int something_inlined(int x) {
     return x * 2;
 }
 
+IAR_Pragma("diag_suppress=Be006") // we're OK with mixing mutex types in the same section
 auto_init_mutex(mutex);
 auto_init_recursive_mutex(recursive_mutex);
+IAR_Pragma("diag_default=Be006")
 
 float __attribute__((noinline)) foox(float x, float b) {
     return x * b;
