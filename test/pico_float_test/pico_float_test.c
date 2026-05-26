@@ -460,7 +460,7 @@ int main() {
 #if !(__clang__ && __PICOLIBC__) // seems to be a buf with wrapping the extern inline trunc
         printf("TRUNCF %10.18f\n", check1(truncf, x));
 #endif
-        printf("LDEXPF %10.18f\n", check_close2(ldexpf, x, x));
+        printf("LDEXPF %10.18f\n", check_close2(ldexpf, x, (int) x));
         printf("FMODF %10.18f\n", check_close2(fmodf, x, 3.0f));
 #if !PICO_C_COMPILER_IS_IAR
         sincosf(x, &s, &c);
@@ -498,7 +498,7 @@ int main() {
         printf("FLN %10.18f\n", logf(x));
         printf("POWF %10.18f\n", powf(x, x));
         printf("TRUNCF %10.18f\n", truncf(x));
-        printf("LDEXPF %10.18f\n", ldexpf(x, x));
+        printf("LDEXPF %10.18f\n", ldexpf(x, 0));
         printf("FMODF %10.18f\n", fmodf(x, 3.0f));
 #if !PICO_C_COMPILER_IS_IAR
         float s, c;

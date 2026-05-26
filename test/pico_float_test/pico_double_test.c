@@ -394,7 +394,7 @@ int main() {
 #else
         printf("TRUNC %10.18f\n", check_close1(trunc, x));
 #endif
-        printf("LDEXP %10.18f\n", check_close2(ldexp, x, x));
+        printf("LDEXP %10.18f\n", check_close2(ldexp, x, (int) x));
         // todo come pack
     //    printf("FMOD %10.18f\n", check_close2(fmod, x, 3.0f));
 #if !PICO_C_COMPILER_IS_IAR
@@ -421,7 +421,7 @@ int main() {
         printf("LN %10.18g\n", check_close1(log, x));
         printf("POW %10.18f\n", check_nan(pow(x, x)));
         printf("TRUNC %10.18f\n", check_nan(trunc(x)));
-        printf("LDEXP %10.18f\n", check_nan(ldexp(x, x)));
+        printf("LDEXP %10.18f\n", check_nan(ldexp(x, 0)));
         printf("FMOD %10.18f\n", check_nan(fmod(x, 3.0f)));
 #if !PICO_C_COMPILER_IS_IAR
         double s, c;
