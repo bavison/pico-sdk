@@ -120,16 +120,16 @@ void test_irq_handler1() {
     for (int i=0; i<130;i++) {
 #if !DOUBLE_ONLY
         z += 47;
-        uint a = z / -13;
-        uint b = z % -13;
-        if (z != a * -13 + b) {
+        uint a = z / (uint) -13;
+        uint b = z % (uint) -13;
+        if (z != a * (uint) -13 + b) {
             FAILED();
         }
         static uint64_t z64;
         z64 -= 47;
-        uint64_t a64 = z64 / -13;
-        uint64_t b64 = z64 % -13;
-        if (z64 != a64 * -13 + b64) {
+        uint64_t a64 = z64 / (uint) -13;
+        uint64_t b64 = z64 % (uint) -13;
+        if (z64 != a64 * (uint) -13 + b64) {
             FAILED();
         }
 #else
@@ -196,9 +196,9 @@ void test_nesting() {
             }
             static uint64_t z64;
             z64 -= 47;
-            uint64_t a64 = z64 / -13635;
-            uint64_t b64 = z64 % -13635;
-            if (z64 != a64 * -13635 + b64) {
+            uint64_t a64 = z64 / (uint64_t) -13635;
+            uint64_t b64 = z64 % (uint64_t) -13635;
+            if (z64 != a64 * (uint64_t) -13635 + b64) {
                 FAILED();
             }
             // specifically check 64/32 divide
