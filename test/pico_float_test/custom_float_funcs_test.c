@@ -250,11 +250,11 @@ int test() {
 
     printf("ufix2float_N\n");
     test_checkf(ufix2float_8(128), 0.5f, "ufix2float_8_1");
-    test_checkf(ufix2float_8(-128), 16777216.f, "ufix2float_8_2");
+    test_checkf(ufix2float_8((uint32_t) -128), 16777216.f, "ufix2float_8_2");
     test_checkf(ufix2float_16(8192), 0.125f, "ufix2floa4t_8_3");
-    test_checkf(ufix2float_16(-8192), 65535.875f, "ufix2float_8_4");
+    test_checkf(ufix2float_16((uint32_t) -8192), 65535.875f, "ufix2float_8_4");
     test_checkf(ufix2float_24(3<<23), 1.5f, "ufix2float_8_5");
-    test_checkf(ufix2float_24(-(3<<23)), 254.5f, "ufix2float_8_6");
+    test_checkf(ufix2float_24((uint32_t) -(3<<23)), 254.5f, "ufix2float_8_6");
 
 #endif
 
