@@ -130,7 +130,7 @@ int dma_check(int expected, ...) {
             );
             head = &irq_handler_chain_slots[head[SLOT_LINK_OFFSET] * SLOT_SIZE];
         }
-        printf("Handlers at: %p, %p, %p\n", handler1, handler2, handler3);
+        printf("Handlers at: %p, %p, %p\n", (void *) handler1, (void *) handler2, (void *) handler3);
         return -1;
     }
     return 0;
