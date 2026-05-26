@@ -155,11 +155,11 @@ int test() {
     test_checkd(fix2double_24(-(3<<23)), -1.5, "fix2double_8_6");
 
     test_checkd(ufix2double_8(128), 0.5, "fix2double_8_1");
-    test_checkd(ufix2double_8(-128), 16777215.5, "ufix2double_8_2");
+    test_checkd(ufix2double_8((uint32_t) -128), 16777215.5, "ufix2double_8_2");
     test_checkd(ufix2double_16(8192), 0.125, "ufix2double_8_3");
-    test_checkd(ufix2double_16(-8192), 65535.875, "ufix2double_8_4");
+    test_checkd(ufix2double_16((uint32_t) -8192), 65535.875, "ufix2double_8_4");
     test_checkd(ufix2double_24(3<<23), 1.5, "ufix2double_8_5");
-    test_checkd(ufix2double_24(-(3<<23)), 254.5, "ufix2double_8_6");
+    test_checkd(ufix2double_24((uint32_t) -(3<<23)), 254.5, "ufix2double_8_6");
 #endif
 
 #if PICO_DOUBLE_HAS_FIX64_TO_DOUBLE_CONVERSIONS
