@@ -68,14 +68,15 @@ void main() {
 #ifndef PICO_PANIC_FUNCTION
     printf("Using default panic function...\n");
     panic("PASSED"); // should be printed
-#else
-    #if PICO_PANIC_FUNCTION_IS_EMPTY
+#elif PICO_PANIC_FUNCTION_IS_EMPTY
     printf("Using empty (bkpt only) panic function...\n");
     printf("PASSED\n"); // we should breakpoint next
     panic(MAGIC1, MAGIC2, MAGIC3, MAGIC4, MAGIC5, MAGIC6, MAGIC7);
-    #endif
+#else
     printf("Using custom panic function '" __XSTRING(PICO_PANIC_FUNCTION) "'...\n");
     panic(MAGIC1, MAGIC2, MAGIC3, MAGIC4, MAGIC5, MAGIC6, MAGIC7);
 #endif
+IAR_Pragma("diag_suppress=Pe111") // the point of the following is to detect nonconformance to noreturn attribute
     printf("FAILED: expected panic not to return");
+IAR_Pragma("diag_default=Pe111")
 }
