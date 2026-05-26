@@ -541,7 +541,7 @@ timer_func_def(float2fix_z)(volatile float a, volatile int32_t nn) {
     register io_ro_32 *systick_ptr = systick_value_ptr();
     int n = nn; pico_default_asm_volatile( "" : : "r" (n) : "memory");
     uint32_t t0 = *systick_ptr;
-    volatile int32_t x = float2fix_z(a, nn);
+    volatile int32_t x = float2fix_z(a, n);
     uint32_t t1 = *systick_ptr;
     return cycle_diff(t0, t1) - FLOAT_INPUT_COST - INT_OUTPUT_COST;
 #else
