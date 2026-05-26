@@ -144,10 +144,10 @@ int main() {
         PICOTEST_CHECK(timeouts[i].fired_count, "Timer should have fired");
         PICOTEST_CHECK(timeouts[i].fired_count < 2, "Timer should only have fired once");
         uint64_t fired_at = to_us_since_boot(timeouts[i].fired_at);
-        PICOTEST_CHECK(timeouts[i].fired_count != 1 || fired_at >= MAX(RESOLUTION_ALLOWANCE,
-                                                                       to_us_since_boot(timeouts[i].target)) - RESOLUTION_ALLOWANCE, "Timer fired early");
+        PICOTEST_CHECK(timeouts[i].fired_count != 1 || fired_at >= MAX(to_us_since_boot(timeouts[i].target),
+                                                                       RESOLUTION_ALLOWANCE) - RESOLUTION_ALLOWANCE, "Timer fired early");
         // we need to be in order unless the targets are the same in which case order is arbitrary
-        PICOTEST_CHECK(timeouts[i].fired_count != 1 || fired_at > MAX(RESOLUTION_ALLOWANCE, last_fired_at[timeouts[i].pool]) - RESOLUTION_ALLOWANCE ||
+        PICOTEST_CHECK(timeouts[i].fired_count != 1 || fired_at > MAX(last_fired_at[timeouts[i].pool], RESOLUTION_ALLOWANCE) - RESOLUTION_ALLOWANCE ||
                                to_us_since_boot(timeouts[i].target) == last_target[timeouts[i].pool], "Timer fired out of order");
         last_fired_at[timeouts[i].pool] = fired_at;
         last_target[timeouts[i].pool] = to_us_since_boot(timeouts[i].target);
