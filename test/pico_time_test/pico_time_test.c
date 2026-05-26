@@ -428,10 +428,12 @@ static int issue_2148_test(void) {
     return 0;
 }
 
+#if HAS_RP2040_RTC && PICO_C_COMPILER_IS_GNU
 static void fill_stack(int val) {
     uint8_t array[50];
     memset(array, val, sizeof(array));
 }
+#endif
 
 // aon_timer_get_time called aon_timer_get_time_calendar which called datetime_to_tm
 // which didn't initialise tm_isdst

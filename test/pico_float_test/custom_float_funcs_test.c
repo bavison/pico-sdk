@@ -28,8 +28,8 @@ static inline float ufix2float_8(uint32_t m) { return ufix2float(m, 8); }
 static inline float ufix2float_16(uint32_t m) { return ufix2float(m, 16); }
 static inline float ufix2float_24(uint32_t m) { return ufix2float(m, 24); }
 
-static inline float float2fix_12(int32_t m) { return float2fix(m, 12); }
-static inline float float2ufix_12(int32_t m) { return float2ufix(m, 12); }
+//static inline float float2fix_12(int32_t m) { return float2fix(m, 12); }
+//static inline float float2ufix_12(int32_t m) { return float2ufix(m, 12); }
 #endif
 
 #if LIB_PICO_FLOAT_COMPILER || defined(__riscv)
@@ -201,10 +201,15 @@ int test() {
     test_checkf(uint642float(UINT64_MAX), 18446744073709551615.0f, "uint642float7");
 #endif
 
+#if PICO_FLOAT_HAS_FLOAT_TO_FIX32_M_CONVERSIONS || \
+    PICO_FLOAT_HAS_FLOAT_TO_FIX64_M_CONVERSIONS || \
+    PICO_FLOAT_HAS_FLOAT_TO_FIX32_Z_CONVERSIONS || \
+    PICO_FLOAT_HAS_FLOAT_TO_FIX64_Z_CONVERSIONS
     union {
         uint32_t u;
         float f;
     } u32f;
+#endif
 
 #if PICO_FLOAT_HAS_FIX32_TO_FLOAT_CONVERSIONS
     printf("fix2float\n");

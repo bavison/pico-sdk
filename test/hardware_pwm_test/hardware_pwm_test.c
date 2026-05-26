@@ -153,8 +153,6 @@ int main() {
         pwm_set_mask_enabled((1 << NUM_PWM_SLICES) - 1);
         sleep_ms(1000);
 
-        int err = 0;
-
         for (int p = 0; p < NUM_PWM_SLICES; p++) {
             PICOTEST_CHECK_CHANNEL(p, interrupt_states[p].count != 0, "No interrupts detected from PWM\n");
         }
