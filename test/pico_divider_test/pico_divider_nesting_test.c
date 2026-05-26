@@ -95,7 +95,6 @@ void test_irq_handler0() {
     count[1]++;
     dma_hw->ints0 |= 1u;
     static uint z;
-    static uint dz;
     for (int i=0; i<80;i++) {
 #if !DOUBLE_ONLY
         z += 31;
