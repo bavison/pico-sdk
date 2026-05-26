@@ -170,7 +170,9 @@ static float time_unary_int64_n_func(int (*timer)(int64_t, int32_t), int64_t *i6
 timer_func_def(fadd)(volatile float a, volatile float b) {
     register io_ro_32 *systick_ptr = systick_value_ptr();
     uint32_t t0 = *systick_ptr;
-    volatile float x = a + b;
+    float a2 = a;
+    float b2 = b;
+    volatile float x = a2 + b2;
     uint32_t t1 = *systick_ptr;
     return cycle_diff(t0, t1) - FLOAT_INPUT_COST * 2 - FLOAT_OUTPUT_COST;
 }
@@ -178,7 +180,9 @@ timer_func_def(fadd)(volatile float a, volatile float b) {
 timer_func_def(fsub)(volatile float a, volatile float b) {
     register io_ro_32 *systick_ptr = systick_value_ptr();
     uint32_t t0 = *systick_ptr;
-    volatile float x = a - b;
+    float a2 = a;
+    float b2 = b;
+    volatile float x = a2 - b2;
     uint32_t t1 = *systick_ptr;
     return cycle_diff(t0, t1) - FLOAT_INPUT_COST * 2 - FLOAT_OUTPUT_COST;
 }
@@ -186,7 +190,9 @@ timer_func_def(fsub)(volatile float a, volatile float b) {
 timer_func_def(fmul)(volatile float a, volatile float b) {
     register io_ro_32 *systick_ptr = systick_value_ptr();
     uint32_t t0 = *systick_ptr;
-    volatile float x = a * b;
+    float a2 = a;
+    float b2 = b;
+    volatile float x = a2 * b2;
     uint32_t t1 = *systick_ptr;
     return cycle_diff(t0, t1) - FLOAT_INPUT_COST * 2 - FLOAT_OUTPUT_COST;
 }
@@ -194,7 +200,9 @@ timer_func_def(fmul)(volatile float a, volatile float b) {
 timer_func_def(fdiv)(volatile float a, volatile float b) {
     register io_ro_32 *systick_ptr = systick_value_ptr();
     uint32_t t0 = *systick_ptr;
-    volatile float x = a / b;
+    float a2 = a;
+    float b2 = b;
+    volatile float x = a2 / b2;
     uint32_t t1 = *systick_ptr;
     return cycle_diff(t0, t1) - FLOAT_INPUT_COST * 2 - FLOAT_OUTPUT_COST;
 }
@@ -203,7 +211,9 @@ timer_func_def(fdiv_fast)(volatile float a, volatile float b) {
 #if PICO_FLOAT_HAS_FDIV_FAST
     register io_ro_32 *systick_ptr = systick_value_ptr();
     uint32_t t0 = *systick_ptr;
-    volatile float x = fdiv_fast(a,b);
+    float a2 = a;
+    float b2 = b;
+    volatile float x = fdiv_fast(a2, b2);
     uint32_t t1 = *systick_ptr;
     return cycle_diff(t0, t1) - FLOAT_INPUT_COST * 2 - FLOAT_OUTPUT_COST;
 #else
@@ -234,7 +244,10 @@ timer_func_def(fsqrt_fast)(volatile float a) {
 timer_func_def(ffma)(volatile float a, volatile float b, volatile float c) {
     register io_ro_32 *systick_ptr = systick_value_ptr();
     uint32_t t0 = *systick_ptr;
-    volatile float x = fmaf(a, b, c);
+    float a2 = a;
+    float b2 = b;
+    float c2 = c;
+    volatile float x = fmaf(a2, b2, c2);
     uint32_t t1 = *systick_ptr;
     return cycle_diff(t0, t1) - FLOAT_INPUT_COST * 3 - FLOAT_OUTPUT_COST;
 }
@@ -243,7 +256,9 @@ timer_func_def(ffma)(volatile float a, volatile float b, volatile float c) {
 timer_func_def(fcmpeq)(volatile float a, volatile float b) {
     register io_ro_32 *systick_ptr = systick_value_ptr();
     uint32_t t0 = *systick_ptr;
-    volatile bool v = a == b;
+    float a2 = a;
+    float b2 = b;
+    volatile bool v = a2 == b2;
     uint32_t t1 = *systick_ptr;
     return cycle_diff(t0, t1) - FLOAT_INPUT_COST * 2 - DCMP_OVERHEAD;
 }
@@ -251,7 +266,9 @@ timer_func_def(fcmpeq)(volatile float a, volatile float b) {
 timer_func_def(fcmplt)(volatile float a, volatile float b) {
     register io_ro_32 *systick_ptr = systick_value_ptr();
     uint32_t t0 = *systick_ptr;
-    volatile bool v = a < b;
+    float a2 = a;
+    float b2 = b;
+    volatile bool v = a2 < b2;
     uint32_t t1 = *systick_ptr;
     return cycle_diff(t0, t1) - FLOAT_INPUT_COST * 2 - DCMP_OVERHEAD;
 }
@@ -259,7 +276,9 @@ timer_func_def(fcmplt)(volatile float a, volatile float b) {
 timer_func_def(fcmple)(volatile float a, volatile float b) {
     register io_ro_32 *systick_ptr = systick_value_ptr();
     uint32_t t0 = *systick_ptr;
-    volatile bool v = a <= b;
+    float a2 = a;
+    float b2 = b;
+    volatile bool v = a2 <= b2;
     uint32_t t1 = *systick_ptr;
     return cycle_diff(t0, t1) - FLOAT_INPUT_COST * 2 - DCMP_OVERHEAD;
 }
@@ -267,7 +286,9 @@ timer_func_def(fcmple)(volatile float a, volatile float b) {
 timer_func_def(fcmpgt)(volatile float a, volatile float b) {
     register io_ro_32 *systick_ptr = systick_value_ptr();
     uint32_t t0 = *systick_ptr;
-    volatile bool v = a > b;
+    float a2 = a;
+    float b2 = b;
+    volatile bool v = a2 > b2;
     uint32_t t1 = *systick_ptr;
     return cycle_diff(t0, t1) - FLOAT_INPUT_COST * 2 - DCMP_OVERHEAD;
 }
@@ -275,7 +296,9 @@ timer_func_def(fcmpgt)(volatile float a, volatile float b) {
 timer_func_def(fcmpge)(volatile float a, volatile float b) {
     register io_ro_32 *systick_ptr = systick_value_ptr();
     uint32_t t0 = *systick_ptr;
-    volatile bool v = a >= b;
+    float a2 = a;
+    float b2 = b;
+    volatile bool v = a2 >= b2;
     uint32_t t1 = *systick_ptr;
     return cycle_diff(t0, t1) - FLOAT_INPUT_COST * 2 - DCMP_OVERHEAD;
 }
@@ -284,7 +307,9 @@ timer_func_def(fcmpge)(volatile float a, volatile float b) {
 timer_func_def(fcmpun)(volatile float a, volatile float b) {
     register io_ro_32 *systick_ptr = systick_value_ptr();
     uint32_t t0 = *systick_ptr;
-    volatile bool v = __builtin_isunordered(a, b);
+    float a2 = a;
+    float b2 = b;
+    volatile bool v = __builtin_isunordered(a2, b2);
     uint32_t t1 = *systick_ptr;
     return cycle_diff(t0, t1) - FLOAT_INPUT_COST * 2 - DCMP_OVERHEAD;
 }
@@ -868,7 +893,9 @@ timer_func_def(ftan)(volatile float a) {
 timer_func_def(fatan2)(volatile float a, volatile float b) {
     register io_ro_32 *systick_ptr = systick_value_ptr();
     uint32_t t0 = *systick_ptr;
-    volatile float x = atan2f(a, b);
+    float a2 = a;
+    float b2 = b;
+    volatile float x = atan2f(a2, b2);
     uint32_t t1 = *systick_ptr;
     return cycle_diff(t0, t1) - FLOAT_INPUT_COST * 2 - FLOAT_OUTPUT_COST;
 }
@@ -904,7 +931,9 @@ timer_func_def(fpowint)(volatile float a, int32_t pow) {
 timer_func_def(fcopysign)(volatile float a, volatile float b) {
     register io_ro_32 *systick_ptr = systick_value_ptr();
     uint32_t t0 = *systick_ptr;
-    volatile float x = copysignf(a, b);
+    float a2 = a;
+    float b2 = b;
+    volatile float x = copysignf(a2, b2);
     uint32_t t1 = *systick_ptr;
     return cycle_diff(t0, t1) - FLOAT_INPUT_COST - FLOAT_OUTPUT_COST;
 }
@@ -944,7 +973,9 @@ timer_func_def(fround)(volatile float a) {
 timer_func_def(ffmod)(volatile float a, volatile float b) {
     register io_ro_32 *systick_ptr = systick_value_ptr();
     uint32_t t0 = *systick_ptr;
-    volatile float x = fmodf(a, b);
+    float a2 = a;
+    float b2 = b;
+    volatile float x = fmodf(a2, b2);
     uint32_t t1 = *systick_ptr;
     return cycle_diff(t0, t1) - FLOAT_INPUT_COST - FLOAT_OUTPUT_COST;
 }
@@ -957,7 +988,9 @@ timer_func_def(fdrem)(volatile float a, volatile float b) {
 #else
     register io_ro_32 *systick_ptr = systick_value_ptr();
     uint32_t t0 = *systick_ptr;
-    volatile float x = dremf(a, b);
+    float a2 = a;
+    float b2 = b;
+    volatile float x = dremf(a2, b2);
     uint32_t t1 = *systick_ptr;
     return cycle_diff(t0, t1) - FLOAT_INPUT_COST - FLOAT_OUTPUT_COST;
 #endif
@@ -967,7 +1000,9 @@ timer_func_def(fdrem)(volatile float a, volatile float b) {
 timer_func_def(fremainder)(volatile float a, volatile float b) {
     register io_ro_32 *systick_ptr = systick_value_ptr();
     uint32_t t0 = *systick_ptr;
-    volatile float x = remainderf(a, b);
+    float a2 = a;
+    float b2 = b;
+    volatile float x = remainderf(a2, b2);
     uint32_t t1 = *systick_ptr;
     return cycle_diff(t0, t1) - FLOAT_INPUT_COST - FLOAT_OUTPUT_COST;
 }
@@ -976,7 +1011,9 @@ timer_func_def(fremquo)(volatile float a, volatile float b) {
     register io_ro_32 *systick_ptr = systick_value_ptr();
     int c;
     uint32_t t0 = *systick_ptr;
-    volatile float x = remquof(a, b, &c);
+    float a2 = a;
+    float b2 = b;
+    volatile float x = remquof(a2, b2, &c);
     uint32_t t1 = *systick_ptr;
     return cycle_diff(t0, t1) - FLOAT_INPUT_COST - FLOAT_OUTPUT_COST;
 }
@@ -1042,7 +1079,9 @@ timer_func_def(flog1p)(volatile float a) {
 timer_func_def(fpow)(volatile float a, volatile float b) {
     register io_ro_32 *systick_ptr = systick_value_ptr();
     uint32_t t0 = *systick_ptr;
-    volatile float x = powf(a, b);
+    float a2 = a;
+    float b2 = b;
+    volatile float x = powf(a2, b2);
     uint32_t t1 = *systick_ptr;
     return cycle_diff(t0, t1) - FLOAT_INPUT_COST - FLOAT_OUTPUT_COST;
 }
@@ -1074,7 +1113,9 @@ timer_func_def(fatanh)(volatile float a) {
 timer_func_def(fhypot)(volatile float a, volatile float b) {
     register io_ro_32 *systick_ptr = systick_value_ptr();
     uint32_t t0 = *systick_ptr;
-    volatile float x = hypotf(a, b);
+    float a2 = a;
+    float b2 = b;
+    volatile float x = hypotf(a2, b2);
     uint32_t t1 = *systick_ptr;
     return cycle_diff(t0, t1) - FLOAT_INPUT_COST - FLOAT_OUTPUT_COST;
 }

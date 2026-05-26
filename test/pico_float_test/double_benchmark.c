@@ -170,7 +170,9 @@ static double time_unary_int64_n_func(int (*timer)(int64_t, int32_t), int64_t *i
 timer_func_def(dadd)(volatile double a, volatile double b) {
     register io_ro_32 *systick_ptr = systick_value_ptr();
     uint32_t t0 = *systick_ptr;
-    volatile double x = a + b;
+    double a2 = a;
+    double b2 = b;
+    volatile double x = a2 + b2;
     uint32_t t1 = *systick_ptr;
     return cycle_diff(t0, t1) - DOUBLE_INPUT_COST * 2 - DOUBLE_OUTPUT_COST;
 }
@@ -178,7 +180,9 @@ timer_func_def(dadd)(volatile double a, volatile double b) {
 timer_func_def(dsub)(volatile double a, volatile double b) {
     register io_ro_32 *systick_ptr = systick_value_ptr();
     uint32_t t0 = *systick_ptr;
-    volatile double x = a - b;
+    double a2 = a;
+    double b2 = b;
+    volatile double x = a2 - b2;
     uint32_t t1 = *systick_ptr;
     return cycle_diff(t0, t1) - DOUBLE_INPUT_COST * 2 - DOUBLE_OUTPUT_COST;
 }
@@ -186,7 +190,9 @@ timer_func_def(dsub)(volatile double a, volatile double b) {
 timer_func_def(dmul)(volatile double a, volatile double b) {
     register io_ro_32 *systick_ptr = systick_value_ptr();
     uint32_t t0 = *systick_ptr;
-    volatile double x = a * b;
+    double a2 = a;
+    double b2 = b;
+    volatile double x = a2 * b2;
     uint32_t t1 = *systick_ptr;
     return cycle_diff(t0, t1) - DOUBLE_INPUT_COST * 2 - DOUBLE_OUTPUT_COST;
 }
@@ -194,7 +200,9 @@ timer_func_def(dmul)(volatile double a, volatile double b) {
 timer_func_def(ddiv)(volatile double a, volatile double b) {
     register io_ro_32 *systick_ptr = systick_value_ptr();
     uint32_t t0 = *systick_ptr;
-    volatile double x = a / b;
+    double a2 = a;
+    double b2 = b;
+    volatile double x = a2 / b2;
     uint32_t t1 = *systick_ptr;
     return cycle_diff(t0, t1) - DOUBLE_INPUT_COST * 2 - DOUBLE_OUTPUT_COST;
 }
@@ -203,7 +211,9 @@ timer_func_def(ddiv_fast)(volatile double a, volatile double b) {
 #if PICO_DOUBLE_HAS_DDIV_FAST
     register io_ro_32 *systick_ptr = systick_value_ptr();
     uint32_t t0 = *systick_ptr;
-    volatile double x = ddiv_fast(a,b);
+    double a2 = a;
+    double b2 = b;
+    volatile double x = ddiv_fast(a2, b2);
     uint32_t t1 = *systick_ptr;
     return cycle_diff(t0, t1) - DOUBLE_INPUT_COST * 2 - DOUBLE_OUTPUT_COST;
 #else
@@ -234,7 +244,10 @@ timer_func_def(dsqrt_fast)(volatile double a) {
 timer_func_def(dfma)(volatile double a, volatile double b, volatile double c) {
     register io_ro_32 *systick_ptr = systick_value_ptr();
     uint32_t t0 = *systick_ptr;
-    volatile double x = fma(a, b, c);
+    double a2 = a;
+    double b2 = b;
+    double c2 = c;
+    volatile double x = fma(a2, b2, c2);
     uint32_t t1 = *systick_ptr;
     return cycle_diff(t0, t1) - DOUBLE_INPUT_COST * 3 - DOUBLE_OUTPUT_COST;
 }
@@ -243,7 +256,10 @@ timer_func_def(dfma_fast)(volatile double a, volatile double b, volatile double 
 #if PICO_DOUBLE_HAS_FMA_FAST
     register io_ro_32 *systick_ptr = systick_value_ptr();
     uint32_t t0 = *systick_ptr;
-    volatile double x = fma_fast(a, b, c);
+    double a2 = a;
+    double b2 = b;
+    double c2 = c;
+    volatile double x = fma_fast(a2, b2, c2);
     uint32_t t1 = *systick_ptr;
     return cycle_diff(t0, t1) - DOUBLE_INPUT_COST * 3 - DOUBLE_OUTPUT_COST;
 #else
@@ -256,7 +272,9 @@ timer_func_def(dfma_fast)(volatile double a, volatile double b, volatile double 
 timer_func_def(dcmpeq)(volatile double a, volatile double b) {
     register io_ro_32 *systick_ptr = systick_value_ptr();
     uint32_t t0 = *systick_ptr;
-    volatile bool v = a == b;
+    double a2 = a;
+    double b2 = b;
+    volatile bool v = a2 == b2;
     uint32_t t1 = *systick_ptr;
     return cycle_diff(t0, t1) - DOUBLE_INPUT_COST * 2 - DCMP_OVERHEAD;
 }
@@ -264,7 +282,9 @@ timer_func_def(dcmpeq)(volatile double a, volatile double b) {
 timer_func_def(dcmplt)(volatile double a, volatile double b) {
     register io_ro_32 *systick_ptr = systick_value_ptr();
     uint32_t t0 = *systick_ptr;
-    volatile bool v = a < b;
+    double a2 = a;
+    double b2 = b;
+    volatile bool v = a2 < b2;
     uint32_t t1 = *systick_ptr;
     return cycle_diff(t0, t1) - DOUBLE_INPUT_COST * 2 - DCMP_OVERHEAD;
 }
@@ -272,7 +292,9 @@ timer_func_def(dcmplt)(volatile double a, volatile double b) {
 timer_func_def(dcmple)(volatile double a, volatile double b) {
     register io_ro_32 *systick_ptr = systick_value_ptr();
     uint32_t t0 = *systick_ptr;
-    volatile bool v = a <= b;
+    double a2 = a;
+    double b2 = b;
+    volatile bool v = a2 <= b2;
     uint32_t t1 = *systick_ptr;
     return cycle_diff(t0, t1) - DOUBLE_INPUT_COST * 2 - DCMP_OVERHEAD;
 }
@@ -280,7 +302,9 @@ timer_func_def(dcmple)(volatile double a, volatile double b) {
 timer_func_def(dcmpgt)(volatile double a, volatile double b) {
     register io_ro_32 *systick_ptr = systick_value_ptr();
     uint32_t t0 = *systick_ptr;
-    volatile bool v = a > b;
+    double a2 = a;
+    double b2 = b;
+    volatile bool v = a2 > b2;
     uint32_t t1 = *systick_ptr;
     return cycle_diff(t0, t1) - DOUBLE_INPUT_COST * 2 - DCMP_OVERHEAD;
 }
@@ -288,7 +312,9 @@ timer_func_def(dcmpgt)(volatile double a, volatile double b) {
 timer_func_def(dcmpge)(volatile double a, volatile double b) {
     register io_ro_32 *systick_ptr = systick_value_ptr();
     uint32_t t0 = *systick_ptr;
-    volatile bool v = a >= b;
+    double a2 = a;
+    double b2 = b;
+    volatile bool v = a2 >= b2;
     uint32_t t1 = *systick_ptr;
     return cycle_diff(t0, t1) - DOUBLE_INPUT_COST * 2 - DCMP_OVERHEAD;
 }
@@ -297,7 +323,9 @@ timer_func_def(dcmpge)(volatile double a, volatile double b) {
 timer_func_def(dcmpun)(volatile double a, volatile double b) {
     register io_ro_32 *systick_ptr = systick_value_ptr();
     uint32_t t0 = *systick_ptr;
-    volatile bool v = __builtin_isunordered(a, b);
+    double a2 = a;
+    double b2 = b;
+    volatile bool v = __builtin_isunordered(a2, b2);
     uint32_t t1 = *systick_ptr;
     return cycle_diff(t0, t1) - DOUBLE_INPUT_COST * 2 - DCMP_OVERHEAD;
 }
@@ -879,7 +907,9 @@ timer_func_def(dtan)(volatile double a) {
 timer_func_def(datan2)(volatile double a, volatile double b) {
     register io_ro_32 *systick_ptr = systick_value_ptr();
     uint32_t t0 = *systick_ptr;
-    volatile double x = atan2(a, b);
+    double a2 = a;
+    double b2 = b;
+    volatile double x = atan2(a2, b2);
     uint32_t t1 = *systick_ptr;
     return cycle_diff(t0, t1) - DOUBLE_INPUT_COST * 2 - DOUBLE_OUTPUT_COST;
 }
@@ -915,7 +945,9 @@ timer_func_def(dpowint)(volatile double a, int32_t pow) {
 timer_func_def(dcopysign)(volatile double a, volatile double b) {
     register io_ro_32 *systick_ptr = systick_value_ptr();
     uint32_t t0 = *systick_ptr;
-    volatile double x = copysign(a, b);
+    double a2 = a;
+    double b2 = b;
+    volatile double x = copysign(a2, b2);
     uint32_t t1 = *systick_ptr;
     return cycle_diff(t0, t1) - DOUBLE_INPUT_COST - DOUBLE_OUTPUT_COST;
 }
@@ -955,7 +987,9 @@ timer_func_def(dround)(volatile double a) {
 timer_func_def(dfmod)(volatile double a, volatile double b) {
     register io_ro_32 *systick_ptr = systick_value_ptr();
     uint32_t t0 = *systick_ptr;
-    volatile double x = fmod(a, b);
+    double a2 = a;
+    double b2 = b;
+    volatile double x = fmod(a2, b2);
     uint32_t t1 = *systick_ptr;
     return cycle_diff(t0, t1) - DOUBLE_INPUT_COST - DOUBLE_OUTPUT_COST;
 }
@@ -968,7 +1002,9 @@ timer_func_def(ddrem)(volatile double a, volatile double b) {
 #else
     register io_ro_32 *systick_ptr = systick_value_ptr();
     uint32_t t0 = *systick_ptr;
-    volatile double x = drem(a, b);
+    double a2 = a;
+    double b2 = b;
+    volatile double x = drem(a2, b2);
     uint32_t t1 = *systick_ptr;
     return cycle_diff(t0, t1) - DOUBLE_INPUT_COST - DOUBLE_OUTPUT_COST;
 #endif
@@ -978,7 +1014,9 @@ timer_func_def(ddrem)(volatile double a, volatile double b) {
 timer_func_def(dremainder)(volatile double a, volatile double b) {
     register io_ro_32 *systick_ptr = systick_value_ptr();
     uint32_t t0 = *systick_ptr;
-    volatile double x = remainder(a, b);
+    double a2 = a;
+    double b2 = b;
+    volatile double x = remainder(a2, b2);
     uint32_t t1 = *systick_ptr;
     return cycle_diff(t0, t1) - DOUBLE_INPUT_COST - DOUBLE_OUTPUT_COST;
 }
@@ -987,7 +1025,9 @@ timer_func_def(dremquo)(volatile double a, volatile double b) {
     register io_ro_32 *systick_ptr = systick_value_ptr();
     int c;
     uint32_t t0 = *systick_ptr;
-    volatile double x = remquo(a, b, &c);
+    double a2 = a;
+    double b2 = b;
+    volatile double x = remquo(a2, b2, &c);
     uint32_t t1 = *systick_ptr;
     return cycle_diff(t0, t1) - DOUBLE_INPUT_COST - DOUBLE_OUTPUT_COST;
 }
@@ -1053,7 +1093,9 @@ timer_func_def(dlog1p)(volatile double a) {
 timer_func_def(dpow)(volatile double a, volatile double b) {
     register io_ro_32 *systick_ptr = systick_value_ptr();
     uint32_t t0 = *systick_ptr;
-    volatile double x = pow(a, b);
+    double a2 = a;
+    double b2 = b;
+    volatile double x = pow(a2, b2);
     uint32_t t1 = *systick_ptr;
     return cycle_diff(t0, t1) - DOUBLE_INPUT_COST - DOUBLE_OUTPUT_COST;
 }
@@ -1095,7 +1137,9 @@ timer_func_def(datanh)(volatile double a) {
 timer_func_def(dhypot)(volatile double a, volatile double b) {
     register io_ro_32 *systick_ptr = systick_value_ptr();
     uint32_t t0 = *systick_ptr;
-    volatile double x = hypot(a, b);
+    double a2 = a;
+    double b2 = b;
+    volatile double x = hypot(a2, b2);
     uint32_t t1 = *systick_ptr;
     return cycle_diff(t0, t1) - DOUBLE_INPUT_COST - DOUBLE_OUTPUT_COST;
 }
