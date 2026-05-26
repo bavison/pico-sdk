@@ -356,17 +356,17 @@ float REAL_FUNC(fmodf)(float, float);
 
 #define assert_close(a, b) test_assert((fabsf(a - b) <= allowed_range(a) || ({ printf("  error: %f != %f\n", a, b); 0; })) || (isinf(a) && isinf(b) && (a < 0) == (b < 0)))
 #define assert_close_fma(a, b) test_assert((fabsf(a - b) <= allowed_range_fma(a) || ({ printf("  error: %f != %f\n", a, b); 0; })) || (isinf(a) && isinf(b) && (a < 0) == (b < 0)))
-#define check1(func,p0) ({ typeof(p0) r = func(p0), r2 = XREAL_FUNC(func)(p0); test_assert(r == r2); r; })
+#define check1(func,p0) ({ typeof(func(p0)) r = func(p0), r2 = XREAL_FUNC(func)(p0); test_assert(r == r2); r; })
 #if !LIB_PICO_FLOAT_PICO_VFP
-#define check1_vfp_unwrapped(func,p0) ({ typeof(p0) r = func(p0), r2 = XREAL_FUNC(func)(p0); test_assert(r == r2); r; })
-#define check2_vfp_unwrapped(func,p0,p1) ({ typeof(p0) r = func(p0,p1), r2 = XREAL_FUNC(func)(p0,p1); test_assert(r == r2); r; })
+#define check1_vfp_unwrapped(func,p0) ({ typeof(func(p0)) r = func(p0), r2 = XREAL_FUNC(func)(p0); test_assert(r == r2); r; })
+#define check2_vfp_unwrapped(func,p0,p1) ({ typeof(func(p0,p1)) r = func(p0,p1), r2 = XREAL_FUNC(func)(p0,p1); test_assert(r == r2); r; })
 #else
-#define check1_vfp_unwrapped(func,p0) ({ typeof(p0) r = func(p0), r2 = func(p0); test_assert(r == r2); r; })
-#define check2_vfp_unwrapped(func,p0,p1) ({ typeof(p0) r = func(p0,p1), r2 = func(p0,p1); test_assert(r == r2); r; })
+#define check1_vfp_unwrapped(func,p0) ({ typeof(func(p0)) r = func(p0), r2 = func(p0); test_assert(r == r2); r; })
+#define check2_vfp_unwrapped(func,p0,p1) ({ typeof(func(p0,p1)) r = func(p0,p1), r2 = func(p0,p1); test_assert(r == r2); r; })
 #endif
-#define check_close1(func,p0) ({ typeof(p0) r = func(p0), r2 = XREAL_FUNC(func)(p0); if (isnan(p0)) assert_nan(r); else assert_close(r, r2); r; })
-#define check_close2(func,p0,p1) ({ typeof(p0) r = func(p0,p1), r2 = XREAL_FUNC(func)(p0,p1); if (isnan(p0) || isnan(p1)) assert_nan(r); else assert_close(r, r2); r; })
-#define check_close3_fma(func,p0,p1,p2) ({ typeof(p0) r = func(p0,p1,p2), r2 = XREAL_FUNC(func)(p0,p1,p2); if (isnan(p0) || isnan(p1) || isnan(p2)) assert_nan(r); else assert_close_fma(r, r2); r; })
+#define check_close1(func,p0) ({ typeof(func(p0)) r = func(p0), r2 = XREAL_FUNC(func)(p0); if (isnan(p0)) assert_nan(r); else assert_close(r, r2); r; })
+#define check_close2(func,p0,p1) ({ typeof(func(p0,p1)) r = func(p0,p1), r2 = XREAL_FUNC(func)(p0,p1); if (isnan(p0) || isnan(p1)) assert_nan(r); else assert_close(r, r2); r; })
+#define check_close3_fma(func,p0,p1,p2) ({ typeof(func(p0,p1,p2)) r = func(p0,p1,p2), r2 = XREAL_FUNC(func)(p0,p1,p2); if (isnan(p0) || isnan(p1) || isnan(p2)) assert_nan(r); else assert_close_fma(r, r2); r; })
 #else
 #define check1(func,p0) func(p0)
 #define check1_vfp_unwrapped(func,p0) func(p0)
