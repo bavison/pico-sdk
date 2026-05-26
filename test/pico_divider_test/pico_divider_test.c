@@ -192,7 +192,9 @@ void test_random() {
 }
 #endif
 
-uint32_t __attribute__((naked)) time_32(uint32_t a, uint32_t b, uint32_t (*func)(uint32_t a, uint32_t b)) {
+IAR_Pragma("diag_suppress=Pe940")
+
+uint32_t __attribute__((noinline, naked)) time_32(uint32_t a, uint32_t b, uint32_t (*func)(uint32_t a, uint32_t b)) {
 #ifndef __riscv
     pico_default_asm (
         "push {r4, r5, lr}\n"
@@ -212,7 +214,7 @@ uint32_t __attribute__((naked)) time_32(uint32_t a, uint32_t b, uint32_t (*func)
 #endif
 }
 
-uint32_t __attribute__((naked)) time_64(uint64_t a, uint64_t b, uint64_t (*func64)(uint64_t a, uint64_t b)) {
+uint32_t __attribute__((noinline, naked)) time_64(uint64_t a, uint64_t b, uint64_t (*func64)(uint64_t a, uint64_t b)) {
 #ifndef __riscv
     pico_default_asm (
     "push {r4-r6, lr}\n"
@@ -232,6 +234,8 @@ uint32_t __attribute__((naked)) time_64(uint64_t a, uint64_t b, uint64_t (*func6
             );
 #endif
 }
+
+IAR_Pragma("diag_default=Pe940")
 
 uint32_t compiler_div_s32(uint32_t a, uint32_t b) {
     return ((int32_t)a) / (int32_t)b;
