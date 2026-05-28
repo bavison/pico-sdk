@@ -20,7 +20,7 @@
 #include "hardware/regs/addressmap.h"
 #include "hardware/regs/ssi.h"
 
-pico_default_asm_setup
+ pico_default_asm_setup
 
 // ----------------------------------------------------------------------------
 // Config section
@@ -70,7 +70,7 @@ pico_default_asm_setup
 // from there, and the boot_stage2 should just return normally.
 //
 // r3 holds SSI base, r0...2 used as temporaries. Other GPRs not used.
-regular_func _stage2_boot
+ regular_func _stage2_boot
     push {lr}
 
     ldr r3, =XIP_SSI_BASE                // Use as base address where possible
@@ -105,8 +105,6 @@ regular_func _stage2_boot
 // Pull in standard exit routine
 #include "boot2_helpers/exit_from_boot2.S"
 
-.global literals
+ public literals
 literals:
-.ltorg
-
-.end
+ ltorg

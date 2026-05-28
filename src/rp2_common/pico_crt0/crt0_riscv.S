@@ -34,13 +34,13 @@
 // preloaded by _reset_handler (assuming this is not a loaded-in-place
 // binary).
 #if PICO_NO_RAM_VECTOR_TABLE || PICO_NO_FLASH
-.section .vectors, "ax"
+ section `.vectors`:CODE:ROOT(2)
 #else
-.section .data
+ section `.data`:DATA:NOROOT(2)
 #endif
 
-.p2align 6
-.global __vectors, __VECTOR_TABLE
+ alignrom 6
+ public __vectors, __VECTOR_TABLE
 __VECTOR_TABLE:
 __vectors:
 
@@ -50,23 +50,23 @@ __vectors:
 .option norvc
 .option norelax
 j isr_riscv_machine_exception
-.word 0
-.word 0
+    dc32 0
+    dc32 0
 j isr_riscv_machine_soft_irq
-.word 0
-.word 0
-.word 0
+    dc32 0
+    dc32 0
+    dc32 0
 j isr_riscv_machine_timer
-.word 0
-.word 0
-.word 0
+    dc32 0
+    dc32 0
+    dc32 0
 // j isr_riscv_machine_external_irq -> inlined below
 .option pop
 
 // External IRQ dispatch, inlined into the last vector table slot. Note if
 // this code is modified, the VTABLE_FIRST_IRQ define in platform_defs.h also
 // needs to be modified (it identifies the beginning of the soft vector table)
-.global isr_riscv_machine_external_irq
+ public isr_riscv_machine_external_irq
 .weak isr_riscv_machine_external_irq
 isr_riscv_machine_external_irq:
     // Save caller saves and exception return state whilst IRQs are disabled.
@@ -164,72 +164,70 @@ check_irq_before_exit:
 // Default software vector table for system interrupts, routed through
 // mip.meip. Note this is assumed in e.g. hardware_irq to begin exactly 0x34
 // words after the hardware vector table indicated by mtvec (defined above).
-.p2align 4
-.global __soft_vector_table
+ alignrom 4
+ public __soft_vector_table
 __soft_vector_table:
-.macro vtable_irq_n n
-.word isr_irq\n
-.endm
+vtable_irq_n macro n
+    dc32 __CONCAT(isr_irq,n)
+ endm
 
 .altmacro
-.set IRQN, 0
-.rept PICO_NUM_VTABLE_IRQS
-vtable_irq_n %IRQN
-.set IRQN, IRQN + 1
-.endr
+IRQN set 0
+ rept PICO_NUM_VTABLE_IRQS
+ vtable_irq_n %IRQN
+IRQN set IRQN + 1
+ endr
 .noaltmacro
 
 // all default trap handlers do nothing, and we can check for them being set to our
 // default values by seeing if they point to somewhere between __defaults_isrs_start and __default_isrs_end
-.global __default_isrs_start
+ public __default_isrs_start
 __default_isrs_start:
 
 // Declare a weak symbol for each ISR.
 // By default, they will fall through to the undefined IRQ handler below (breakpoint),
 // but can be overridden by C functions with correct name.
 
-.macro decl_isr name
-.weak \name
-\name:
-.endm
+decl_isr macro name
+.weak name
+name:
+ endm
 
-.macro decl_isr_bkpt name
-.weak \name
-\name:
+decl_isr_bkpt macro name
+.weak name
+name:
     ebreak
-.endm
+ endm
 
 // hardware_exception on RISC-V defines its own weak handler
 #if !PICO_CRT0_NO_ISR_RISCV_MACHINE_EXCEPTION
 // Breakpoint will just cause another exception and trash the exception
 // state, since there is no double fault lockup on RISC-V. Instead, just
 // sleep the core indefinitely, or until debugger connects.
-decl_isr isr_riscv_machine_exception
+ decl_isr isr_riscv_machine_exception
 #endif
 
 // Note the mip.mtip is also available as SIO_IRQ_MTIMECMP, and this may be a
 // better option, because it plays nicely with interrupt preemption.
-decl_isr_bkpt isr_riscv_machine_timer
-decl_isr_bkpt isr_riscv_machine_soft_irq
+ decl_isr_bkpt isr_riscv_machine_timer
+ decl_isr_bkpt isr_riscv_machine_soft_irq
 
 // Declare all the ISR labels
-.macro decl_isr_n n
-.if \n < PICO_NUM_VTABLE_IRQS
-    decl_isr isr_irq\n
-.elseif \n < NUM_IRQS
+decl_isr_n macro n
+ if n < PICO_NUM_VTABLE_IRQS
+    decl_isr __CONCAT(isr_irq,n)
+ elseif n < NUM_IRQS
     // We declare a strong label, so user can't override, since there is no vtable entry
-    .type isr_irq\n,%function
-    .thumb_func
-    isr_irq\n:
-.endif
-.endm
+    local_func __CONCAT(isr_irq,n)
+ endif
+ endm
 
 .altmacro
-.set IRQN, 0
-.rept PICO_NUM_VTABLE_IRQS
-decl_isr_n %IRQN
-.set IRQN, IRQN + 1
-.endr
+IRQN set 0
+ rept PICO_NUM_VTABLE_IRQS
+ decl_isr_n %IRQN
+IRQN set IRQN + 1
+ endr
 .noaltmacro
     // fall through
 
@@ -237,21 +235,21 @@ decl_isr_n %IRQN
 // the "current exception" on RISC-V (as there is no such thing -- the
 // hardware does not model the exception lifecycle like on Arm) so instead we
 // just pass the IRQ number into the IRQ handler in a0.
-.global __unhandled_user_irq
+ public __unhandled_user_irq
 __unhandled_user_irq:
-.global unhandled_user_irq_num_in_a0
+ public unhandled_user_irq_num_in_a0
 unhandled_user_irq_num_in_a0:
     // The dispatch code will have left IRQ << 2 in a0 from its meinext read,
     // so just need to shift it back down
     srli a0, a0, 2
     ebreak
 
-.global __default_isrs_end
+ public __default_isrs_end
 __default_isrs_end:
 
 // ----------------------------------------------------------------------------
 
-.section .binary_info_header, "a"
+ section `.binary_info_header`:CONST:ROOT(2)
 
 // Header must be in first 256 bytes of main image (i.e. excluding flash boot2).
 // For flash builds we put it immediately after vector table; for NO_FLASH the
@@ -260,18 +258,18 @@ __default_isrs_end:
 
 #if !PICO_NO_BINARY_INFO
 binary_info_header:
-.word BINARY_INFO_MARKER_START
-.word __binary_info_start
-.word __binary_info_end
-.word data_cpy_table // we may need to decode pointers that are in RAM at runtime.
-.word BINARY_INFO_MARKER_END
+    dc32 BINARY_INFO_MARKER_START
+    dc32 __binary_info_start
+    dc32 __binary_info_end
+    dc32 data_cpy_table // we may need to decode pointers that are in RAM at runtime.
+    dc32 BINARY_INFO_MARKER_END
 #endif
 
 #include "embedded_start_block.inc.S"
 
 // ----------------------------------------------------------------------------
 
-.section .reset, "ax"
+ section `.reset`:CODE:ROOT(2)
 
 // On flash builds, the vector table comes first in the image (conventional).
 // On NO_FLASH builds, the reset handler section comes first, as the entry
@@ -286,7 +284,7 @@ binary_info_header:
 //   must then be sent back round the boot sequence to properly initialise flash
 
 // ELF entry point:
-.global _entry_point
+ public _entry_point
 _entry_point:
 
 #if PICO_NO_FLASH
@@ -392,31 +390,31 @@ data_cpy:
     bltu a2, a3, data_cpy_loop
     ret
 
-.align 2
+ alignrom 2
 data_cpy_table:
 #if PICO_RP2350 && PICO_EMBED_XIP_SETUP && !PICO_NO_FLASH
-.word __boot2_start__
-.word BOOTRAM_BASE
-.word BOOTRAM_BASE + 256
+    dc32 __boot2_start__
+    dc32 BOOTRAM_BASE
+    dc32 BOOTRAM_BASE + 256
 #endif
 #if PICO_COPY_TO_RAM
-.word __ram_text_source__
-.word __ram_text_start__
-.word __ram_text_end__
+    dc32 __ram_text_source__
+    dc32 __ram_text_start__
+    dc32 __ram_text_end__
 #endif
-.word __etext
-.word __data_start__
-.word __data_end__
+    dc32 __etext
+    dc32 __data_start__
+    dc32 __data_end__
 
-.word __scratch_x_source__
-.word __scratch_x_start__
-.word __scratch_x_end__
+    dc32 __scratch_x_source__
+    dc32 __scratch_x_start__
+    dc32 __scratch_x_end__
 
-.word __scratch_y_source__
-.word __scratch_y_start__
-.word __scratch_y_end__
+    dc32 __scratch_y_source__
+    dc32 __scratch_y_start__
+    dc32 __scratch_y_end__
 
-.word 0 // null terminator
+    dc32 0 // null terminator
 
 // ----------------------------------------------------------------------------
 // Provide safe defaults for _exit and runtime_init
@@ -444,7 +442,7 @@ reenter_bootrom:
     csrw mtvec, a1
     jr a0
     // Go here if we trapped:
-.p2align 2
+ alignrom 2
 1:
 #endif
 
@@ -462,8 +460,8 @@ reenter_bootrom:
 // user code in a COPY_TO_RAM binary. Note because of this we don't call this
 // function here in crt0 until after the flash-to-RAM copying is finished.
 
-.section .text
-.global runtime_init_per_core_h3_irq_registers
+ section `.text`:CODE:NOROOT(2)
+ public runtime_init_per_core_h3_irq_registers
 runtime_init_per_core_h3_irq_registers:
     // First clear all IRQ force array bits. Iterate over array registers 0
     // through 3 inclusive, allowing for up to 64 IRQs. Don't clear the
@@ -497,24 +495,25 @@ runtime_init_per_core_h3_irq_registers:
 // works correctly for both GCC and Clang, however doing so may break anyone who already has custom linker scripts without
 // the KEEP. Therefore we will only add the "a" on Clang, but will also use KEEP to our own linker scripts.
 
-.macro spacer_section name
+spacer_section macro name
 #if PICO_ASSEMBLER_IS_CLANG
-.section \name, "a"
+ section BACKTICK_QUOTED(name):DATA:ROOT(align)
 #else
-.section \name
+ section BACKTICK_QUOTED(name):DATA:NOROOT(align)
 #endif
-.endm
+ endm
 
-spacer_section .stack
+ spacer_section .stack
 // align to allow for memory protection (although this alignment is pretty much ignored by linker script)
-.p2align 5
-    .equ StackSize, PICO_STACK_SIZE
-.space StackSize
+ alignrom 5
+StackSize equ PICO_STACK_SIZE
+ ds StackSize
 
-spacer_section .heap
-.p2align 2
-    .equ HeapSize, PICO_HEAP_SIZE
-.space HeapSize
+ spacer_section .heap
+ alignrom 2
+HeapSize equ PICO_HEAP_SIZE
+ ds HeapSize
 
 #include "embedded_end_block.inc.S"
 
+ end

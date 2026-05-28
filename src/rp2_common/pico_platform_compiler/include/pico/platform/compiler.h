@@ -245,6 +245,9 @@ __force_inline static void __compiler_memory_barrier(void) {
 #error Unsupported toolchain
 #endif
 
+#define __CONCAT1(a, b) a ## b
+#define __CONCAT(a, b)  __CONCAT1(a, b)
+
 #if defined(__IASMARM__) || defined(PICO_USE_ARM_LINK)
 #define WRAPPER_FUNC_NAME(x) $Sub$$##x
 #else

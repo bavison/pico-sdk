@@ -85,7 +85,7 @@
 // Start of 2nd Stage Boot Code
 // ----------------------------------------------------------------------------
 
-pico_default_asm_setup
+ pico_default_asm_setup
 
 #ifdef __IASMARM__
  // Ensure there's a reference to __checksum to keep IAR ELF Tool happy
@@ -96,7 +96,7 @@ pico_default_asm_setup
 #endif
 
 // On RP2350 boot stage2 is always called as a regular function, and should return normally
-regular_func _stage2_boot
+ regular_func _stage2_boot
 #ifdef __riscv
     mv t0, ra
     li a3, XIP_QMI_BASE
@@ -121,7 +121,7 @@ regular_func _stage2_boot
 #include "boot2_helpers/exit_from_boot2.S"
 
 #ifndef __riscv
-.global literals
+ public literals
 literals:
-.ltorg
+ ltorg
 #endif

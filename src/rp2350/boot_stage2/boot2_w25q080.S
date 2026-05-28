@@ -140,7 +140,7 @@
 // Start of 2nd Stage Boot Code
 // ----------------------------------------------------------------------------
 
-pico_default_asm_setup
+ pico_default_asm_setup
 
 #ifdef __IASMARM__
  // Ensure there's a reference to __checksum to keep IAR ELF Tool happy
@@ -156,7 +156,7 @@ pico_default_asm_setup
 #ifdef __riscv
 
 // On RP2350 boot stage2 is always called as a regular function, and should return normally
-regular_func _stage2_boot
+ regular_func _stage2_boot
     mv t0, ra
 _pad_config:
     li a3, PADS_QSPI_BASE
@@ -242,7 +242,7 @@ _qmi_config:
 #else
 
 // On RP2350 boot stage2 is always called as a regular function, and should return normally
-regular_func _stage2_boot
+ regular_func _stage2_boot
     push {lr}
 _pad_config:
     ldr r3, =PADS_QSPI_BASE
@@ -271,10 +271,10 @@ program_sregs:
     // Need to poll for the cooldown on the last XIP transfer to expire
     // (via direct-mode BUSY flag) before it is safe to perform the first
     // direct-mode operation
-1:
+label_1:
     ldr r0, [r3, #QMI_DIRECT_CSR_OFFSET]
     tst r0, #QMI_DIRECT_CSR_BUSY_BITS
-    bne 1b
+    bne label_1
 
     // Check whether SR needs updating
     movs r0, #CMD_READ_STATUS2
@@ -301,11 +301,11 @@ program_sregs:
     ldr r0, [r3, #QMI_DIRECT_RX_OFFSET]
 
     // Poll status register for write completion
-1:
+label_2:
     movs r0, #CMD_READ_STATUS
     bl read_flash_sreg
-    lsrs r0, #1
-    bcs 1b
+    lsrs r0, r0, #1
+    bcs label_2
 
 _skip_sreg_programming:
     // Disable direct mode
@@ -323,7 +323,7 @@ _qmi_config:
     str r0, [r3, #QMI_M0_RFMT_OFFSET]
 
     // Dummy transfer
-    mov r1, #XIP_NOCACHE_NOALLOC_BASE
+    movs r1, #XIP_NOCACHE_NOALLOC_BASE
     ldrb r1, [r1]
 
     // Set prefix length to 0, as flash no longer expects to see commands
@@ -344,7 +344,7 @@ _qmi_config:
 #endif
 
 #ifndef __riscv
-.global literals
+ public literals
 literals:
-.ltorg
+ ltorg
 #endif

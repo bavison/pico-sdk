@@ -12,11 +12,12 @@
 
 #include "pico.h"
 
-# note we don't do this by default in this file for backwards comaptibility with user code
-# that may include this file, but not use unified syntax. Note that this macro does equivalent
-# setup to the pico_default_asm macro for inline assembly in C code.
+// note we don't do this by default in this file for backwards comaptibility with user code
+// that may include this file, but not use unified syntax. Note that this macro does equivalent
+// setup to the pico_default_asm macro for inline assembly in C code.
 .macro pico_default_asm_setup
 .text
+.altmacro
 .syntax unified
 .cpu cortex-m0plus
 .thumb
@@ -25,6 +26,12 @@
 // do not put align in here as it is used mid function sometimes
 .macro regular_func x
 .global \x
+.type \x,%function
+.thumb_func
+\x:
+.endm
+
+.macro local_func x
 .type \x,%function
 .thumb_func
 \x:
@@ -56,7 +63,7 @@ regular_func WRAPPER_FUNC_NAME(\x)
 weak_func WRAPPER_FUNC_NAME(\x)
 .endm
 
-# backwards compatibility
+// backwards compatibility
 .macro __pre_init func, priority_string
 .section .preinit_array.\priority_string
 .p2align 2
@@ -90,6 +97,11 @@ pico_default_asm_setup          macro
 // do not put align in here as it is used mid function sometimes
 regular_func                    macro           x
                                 public          x
+                                thumb
+x:
+                                endm
+
+local_func                      macro           x
                                 thumb
 x:
                                 endm
@@ -134,6 +146,18 @@ __pre_init                      macro           func, priority_string
 
 #error Unsupported toolchain
 
+
+#endif
+
+#if PICO_C_COMPILER_IS_ARMCLANG
+
+#define DECLARE_LOCAL_LABEL(l)
+#define LOCAL_LABEL(l) local_##l##_\@
+
+#else
+
+#define DECLARE_LOCAL_LABEL(l) local local_##l
+#define LOCAL_LABEL(l) local_##l
 
 #endif
 

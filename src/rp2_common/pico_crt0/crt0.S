@@ -62,8 +62,8 @@ __StackTop           set    `SCRATCH_Y$$Limit`
 
 #endif
 
- .extern exit
- .extern main
+ extern exit
+ extern main
 
 // PICO_CONFIG: PICO_CRT0_NEAR_CALLS, Whether calls from crt0 into the binary are near (<16M away) - ignored for PICO_COPY_TO_RAM, default=0, type=bool, group=pico_crt0
 #ifndef PICO_CRT0_NEAR_CALLS
@@ -76,7 +76,7 @@ __StackTop           set    `SCRATCH_Y$$Limit`
 #endif
 #endif
 
-pico_default_asm_setup
+ pico_default_asm_setup
 
 // PICO_CONFIG: PICO_CRT0_NO_RESET_SECTION, Omit .reset section contents containing the startup code. This must be set if you want to replace the startup code while still keeping the rest of pico_crt0 as the reset section define here is not garbage collected, type=bool, default=0, advanced=true, group=pico_crt0
 #ifndef PICO_CRT0_NO_RESET_SECTION
@@ -87,11 +87,11 @@ pico_default_asm_setup
 #warning PICO_NO_STORED_VECTOR_TABLE is no longer used. PICO_MINIMAL_STORED_VECTOR_TABLE is not identical but usually serves the same purpose
 #endif
 
-.section .vectors, "ax"
-.align 2
+ section `.vectors`:CODE:ROOT(2)
+ alignrom 2
     data_in_code_area
 
-.global __vectors, __VECTOR_TABLE, __vectors_end
+ public __vectors, __VECTOR_TABLE, __vectors_end
 __VECTOR_TABLE:
 __vectors:
 #ifdef __IASMARM__
@@ -100,129 +100,129 @@ __vectors:
  public __vector_table
 __vector_table:
 #endif
-.word __StackTop
-.word _reset_handler
+    dc32 __StackTop
+    dc32 _reset_handler
 
 #if PICO_MINIMAL_STORED_VECTOR_TABLE
-.word isr_invalid   // NMI
-.word isr_invalid   // HardFault
+    dc32 isr_invalid   // NMI
+    dc32 isr_invalid   // HardFault
 #else
-.word isr_nmi
-.word isr_hardfault
+    dc32 isr_nmi
+    dc32 isr_hardfault
 #if PICO_RP2040
-.word isr_invalid // Reserved, should never fire
-.word isr_invalid // Reserved, should never fire
-.word isr_invalid // Reserved, should never fire
-.word isr_invalid // Reserved, should never fire
+    dc32 isr_invalid // Reserved, should never fire
+    dc32 isr_invalid // Reserved, should never fire
+    dc32 isr_invalid // Reserved, should never fire
+    dc32 isr_invalid // Reserved, should never fire
 #else
-.word isr_memmanage
-.word isr_busfault
-.word isr_usagefault
-.word isr_securefault
+    dc32 isr_memmanage
+    dc32 isr_busfault
+    dc32 isr_usagefault
+    dc32 isr_securefault
 #endif
-.word isr_invalid // Reserved, should never fire
-.word isr_invalid // Reserved, should never fire
-.word isr_invalid // Reserved, should never fire
-.word isr_svcall
+    dc32 isr_invalid // Reserved, should never fire
+    dc32 isr_invalid // Reserved, should never fire
+    dc32 isr_invalid // Reserved, should never fire
+    dc32 isr_svcall
 #if PICO_RP2040
-.word isr_invalid // Reserved, should never fire
+    dc32 isr_invalid // Reserved, should never fire
 #else
-.word isr_debugmonitor
+    dc32 isr_debugmonitor
 #endif
-.word isr_invalid // Reserved, should never fire
-.word isr_pendsv
-.word isr_systick
+    dc32 isr_invalid // Reserved, should never fire
+    dc32 isr_pendsv
+    dc32 isr_systick
 
-.macro if_irq_word num func
-.if \num < PICO_NUM_VTABLE_IRQS
-.word \func
-.endif
-.endm
+if_irq_word macro num, func
+ if num < PICO_NUM_VTABLE_IRQS
+    dc32 func
+ endif
+ endm
 
 // we include a lot of these to allow for different number of IRQs.
 // if_irq_word will only include IRQs that are valid, but we can't
 // use a macro loop because isr_irqx MUST appear in the source
 // as CMSIS rename exceptions #defines it to another value
-if_irq_word 0 isr_irq0
-if_irq_word 1 isr_irq1
-if_irq_word 2 isr_irq2
-if_irq_word 3 isr_irq3
-if_irq_word 4 isr_irq4
-if_irq_word 5 isr_irq5
-if_irq_word 6 isr_irq6
-if_irq_word 7 isr_irq7
-if_irq_word 8 isr_irq8
-if_irq_word 9 isr_irq9
-if_irq_word 10 isr_irq10
-if_irq_word 11 isr_irq11
-if_irq_word 12 isr_irq12
-if_irq_word 13 isr_irq13
-if_irq_word 14 isr_irq14
-if_irq_word 15 isr_irq15
-if_irq_word 16 isr_irq16
-if_irq_word 17 isr_irq17
-if_irq_word 18 isr_irq18
-if_irq_word 19 isr_irq19
-if_irq_word 20 isr_irq20
-if_irq_word 21 isr_irq21
-if_irq_word 22 isr_irq22
-if_irq_word 23 isr_irq23
-if_irq_word 24 isr_irq24
-if_irq_word 25 isr_irq25
-if_irq_word 26 isr_irq26
-if_irq_word 27 isr_irq27
-if_irq_word 28 isr_irq28
-if_irq_word 29 isr_irq29
-if_irq_word 30 isr_irq30
-if_irq_word 31 isr_irq31
-if_irq_word 32 isr_irq32
-if_irq_word 33 isr_irq33
-if_irq_word 34 isr_irq34
-if_irq_word 35 isr_irq35
-if_irq_word 36 isr_irq36
-if_irq_word 37 isr_irq37
-if_irq_word 38 isr_irq38
-if_irq_word 39 isr_irq39
-if_irq_word 40 isr_irq40
-if_irq_word 41 isr_irq41
-if_irq_word 42 isr_irq42
-if_irq_word 43 isr_irq43
-if_irq_word 44 isr_irq44
-if_irq_word 45 isr_irq45
-if_irq_word 46 isr_irq46
-if_irq_word 47 isr_irq47
-if_irq_word 48 isr_irq48
-if_irq_word 49 isr_irq49
-if_irq_word 50 isr_irq50
-if_irq_word 51 isr_irq51
-if_irq_word 52 isr_irq52
-if_irq_word 53 isr_irq53
-if_irq_word 54 isr_irq54
-if_irq_word 55 isr_irq55
-if_irq_word 56 isr_irq56
-if_irq_word 57 isr_irq57
-if_irq_word 58 isr_irq58
-if_irq_word 59 isr_irq59
-if_irq_word 60 isr_irq60
-if_irq_word 61 isr_irq61
-if_irq_word 62 isr_irq62
-if_irq_word 63 isr_irq63
-if_irq_word 64 isr_irq64
-if_irq_word 65 isr_irq65
-if_irq_word 66 isr_irq66
-if_irq_word 67 isr_irq67
-if_irq_word 68 isr_irq68
-if_irq_word 69 isr_irq69
-if_irq_word 70 isr_irq70
-if_irq_word 71 isr_irq71
-if_irq_word 72 isr_irq72
-if_irq_word 73 isr_irq73
-if_irq_word 74 isr_irq74
-if_irq_word 75 isr_irq75
-if_irq_word 76 isr_irq76
-if_irq_word 77 isr_irq77
-if_irq_word 78 isr_irq78
-if_irq_word 79 isr_irq79
+ if_irq_word 0, isr_irq0
+ if_irq_word 1, isr_irq1
+ if_irq_word 2, isr_irq2
+ if_irq_word 3, isr_irq3
+ if_irq_word 4, isr_irq4
+ if_irq_word 5, isr_irq5
+ if_irq_word 6, isr_irq6
+ if_irq_word 7, isr_irq7
+ if_irq_word 8, isr_irq8
+ if_irq_word 9, isr_irq9
+ if_irq_word 10, isr_irq10
+ if_irq_word 11, isr_irq11
+ if_irq_word 12, isr_irq12
+ if_irq_word 13, isr_irq13
+ if_irq_word 14, isr_irq14
+ if_irq_word 15, isr_irq15
+ if_irq_word 16, isr_irq16
+ if_irq_word 17, isr_irq17
+ if_irq_word 18, isr_irq18
+ if_irq_word 19, isr_irq19
+ if_irq_word 20, isr_irq20
+ if_irq_word 21, isr_irq21
+ if_irq_word 22, isr_irq22
+ if_irq_word 23, isr_irq23
+ if_irq_word 24, isr_irq24
+ if_irq_word 25, isr_irq25
+ if_irq_word 26, isr_irq26
+ if_irq_word 27, isr_irq27
+ if_irq_word 28, isr_irq28
+ if_irq_word 29, isr_irq29
+ if_irq_word 30, isr_irq30
+ if_irq_word 31, isr_irq31
+ if_irq_word 32, isr_irq32
+ if_irq_word 33, isr_irq33
+ if_irq_word 34, isr_irq34
+ if_irq_word 35, isr_irq35
+ if_irq_word 36, isr_irq36
+ if_irq_word 37, isr_irq37
+ if_irq_word 38, isr_irq38
+ if_irq_word 39, isr_irq39
+ if_irq_word 40, isr_irq40
+ if_irq_word 41, isr_irq41
+ if_irq_word 42, isr_irq42
+ if_irq_word 43, isr_irq43
+ if_irq_word 44, isr_irq44
+ if_irq_word 45, isr_irq45
+ if_irq_word 46, isr_irq46
+ if_irq_word 47, isr_irq47
+ if_irq_word 48, isr_irq48
+ if_irq_word 49, isr_irq49
+ if_irq_word 50, isr_irq50
+ if_irq_word 51, isr_irq51
+ if_irq_word 52, isr_irq52
+ if_irq_word 53, isr_irq53
+ if_irq_word 54, isr_irq54
+ if_irq_word 55, isr_irq55
+ if_irq_word 56, isr_irq56
+ if_irq_word 57, isr_irq57
+ if_irq_word 58, isr_irq58
+ if_irq_word 59, isr_irq59
+ if_irq_word 60, isr_irq60
+ if_irq_word 61, isr_irq61
+ if_irq_word 62, isr_irq62
+ if_irq_word 63, isr_irq63
+ if_irq_word 64, isr_irq64
+ if_irq_word 65, isr_irq65
+ if_irq_word 66, isr_irq66
+ if_irq_word 67, isr_irq67
+ if_irq_word 68, isr_irq68
+ if_irq_word 69, isr_irq69
+ if_irq_word 70, isr_irq70
+ if_irq_word 71, isr_irq71
+ if_irq_word 72, isr_irq72
+ if_irq_word 73, isr_irq73
+ if_irq_word 74, isr_irq74
+ if_irq_word 75, isr_irq75
+ if_irq_word 76, isr_irq76
+ if_irq_word 77, isr_irq77
+ if_irq_word 78, isr_irq78
+ if_irq_word 79, isr_irq79
 #if PICO_NUM_VTABLE_IRQS > 80
 #error more IRQ entries required
 #endif
@@ -231,174 +231,162 @@ __vectors_end:
 
 // all default exception handlers do nothing, and we can check for them being set to our
 // default values by seeing if they point to somewhere between __defaults_isrs_start and __default_isrs_end
-.global __default_isrs_start
+ public __default_isrs_start
 __default_isrs_start:
 
 // Declare a weak symbol for each ISR.
 // By default, they will fall through to the undefined IRQ handler below (breakpoint),
 // but can be overridden by C functions with correct name.
 
-.macro decl_isr_bkpt name
-.weak \name
-.type \name,%function
-.thumb_func
-\name:
+decl_isr_bkpt macro name
+ weak_func name
     bkpt #0
-.endm
+ endm
 
-.altmacro
-.macro decl_isr name
+decl_isr macro name
 #if !PICO_MINIMAL_STORED_VECTOR_TABLE | PICO_NO_FLASH
 // We declare a weak label, so user can override
-.weak \name
+ weak_func name
 #else
 // We declare a strong global label, so user can't override (their version would not automatically be used)
-.global \name
+ regular_func name
 #endif
-.type \name,%function
-.thumb_func
-\name:
-.endm
+ endm
 
-.macro if_irq_decl num func
-.if \num < PICO_NUM_VTABLE_IRQS
-decl_isr \func
-.elseif \num < NUM_IRQS
+if_irq_decl macro num, func
+ if num < PICO_NUM_VTABLE_IRQS
+ decl_isr func
+ elseif num < NUM_IRQS
 // We declare a strong global label, so user can't override (their version would not automatically be used)
-.global \func
-.type \func,%function
-.thumb_func
-\func:
-.endif
-.endm
+ regular_func func
+ endif
+ endm
 
-if_irq_decl 0 isr_irq0
-if_irq_decl 1 isr_irq1
-if_irq_decl 2 isr_irq2
-if_irq_decl 3 isr_irq3
-if_irq_decl 4 isr_irq4
-if_irq_decl 5 isr_irq5
-if_irq_decl 6 isr_irq6
-if_irq_decl 7 isr_irq7
-if_irq_decl 8 isr_irq8
-if_irq_decl 9 isr_irq9
-if_irq_decl 10 isr_irq10
-if_irq_decl 11 isr_irq11
-if_irq_decl 12 isr_irq12
-if_irq_decl 13 isr_irq13
-if_irq_decl 14 isr_irq14
-if_irq_decl 15 isr_irq15
-if_irq_decl 16 isr_irq16
-if_irq_decl 17 isr_irq17
-if_irq_decl 18 isr_irq18
-if_irq_decl 19 isr_irq19
-if_irq_decl 20 isr_irq20
-if_irq_decl 21 isr_irq21
-if_irq_decl 22 isr_irq22
-if_irq_decl 23 isr_irq23
-if_irq_decl 24 isr_irq24
-if_irq_decl 25 isr_irq25
-if_irq_decl 26 isr_irq26
-if_irq_decl 27 isr_irq27
-if_irq_decl 28 isr_irq28
-if_irq_decl 29 isr_irq29
-if_irq_decl 30 isr_irq30
-if_irq_decl 31 isr_irq31
-if_irq_decl 32 isr_irq32
-if_irq_decl 33 isr_irq33
-if_irq_decl 34 isr_irq34
-if_irq_decl 35 isr_irq35
-if_irq_decl 36 isr_irq36
-if_irq_decl 37 isr_irq37
-if_irq_decl 38 isr_irq38
-if_irq_decl 39 isr_irq39
-if_irq_decl 40 isr_irq40
-if_irq_decl 41 isr_irq41
-if_irq_decl 42 isr_irq42
-if_irq_decl 43 isr_irq43
-if_irq_decl 44 isr_irq44
-if_irq_decl 45 isr_irq45
-if_irq_decl 46 isr_irq46
-if_irq_decl 47 isr_irq47
-if_irq_decl 48 isr_irq48
-if_irq_decl 49 isr_irq49
-if_irq_decl 50 isr_irq50
-if_irq_decl 51 isr_irq51
-if_irq_decl 52 isr_irq52
-if_irq_decl 53 isr_irq53
-if_irq_decl 54 isr_irq54
-if_irq_decl 55 isr_irq55
-if_irq_decl 56 isr_irq56
-if_irq_decl 57 isr_irq57
-if_irq_decl 58 isr_irq58
-if_irq_decl 59 isr_irq59
-if_irq_decl 60 isr_irq60
-if_irq_decl 61 isr_irq61
-if_irq_decl 62 isr_irq62
-if_irq_decl 63 isr_irq63
-if_irq_decl 64 isr_irq64
-if_irq_decl 65 isr_irq65
-if_irq_decl 66 isr_irq66
-if_irq_decl 67 isr_irq67
-if_irq_decl 68 isr_irq68
-if_irq_decl 69 isr_irq69
-if_irq_decl 70 isr_irq70
-if_irq_decl 71 isr_irq71
-if_irq_decl 72 isr_irq72
-if_irq_decl 73 isr_irq73
-if_irq_decl 74 isr_irq74
-if_irq_decl 75 isr_irq75
-if_irq_decl 76 isr_irq76
-if_irq_decl 77 isr_irq77
-if_irq_decl 78 isr_irq78
-if_irq_decl 79 isr_irq79
+ if_irq_decl 0, isr_irq0
+ if_irq_decl 1, isr_irq1
+ if_irq_decl 2, isr_irq2
+ if_irq_decl 3, isr_irq3
+ if_irq_decl 4, isr_irq4
+ if_irq_decl 5, isr_irq5
+ if_irq_decl 6, isr_irq6
+ if_irq_decl 7, isr_irq7
+ if_irq_decl 8, isr_irq8
+ if_irq_decl 9, isr_irq9
+ if_irq_decl 10, isr_irq10
+ if_irq_decl 11, isr_irq11
+ if_irq_decl 12, isr_irq12
+ if_irq_decl 13, isr_irq13
+ if_irq_decl 14, isr_irq14
+ if_irq_decl 15, isr_irq15
+ if_irq_decl 16, isr_irq16
+ if_irq_decl 17, isr_irq17
+ if_irq_decl 18, isr_irq18
+ if_irq_decl 19, isr_irq19
+ if_irq_decl 20, isr_irq20
+ if_irq_decl 21, isr_irq21
+ if_irq_decl 22, isr_irq22
+ if_irq_decl 23, isr_irq23
+ if_irq_decl 24, isr_irq24
+ if_irq_decl 25, isr_irq25
+ if_irq_decl 26, isr_irq26
+ if_irq_decl 27, isr_irq27
+ if_irq_decl 28, isr_irq28
+ if_irq_decl 29, isr_irq29
+ if_irq_decl 30, isr_irq30
+ if_irq_decl 31, isr_irq31
+ if_irq_decl 32, isr_irq32
+ if_irq_decl 33, isr_irq33
+ if_irq_decl 34, isr_irq34
+ if_irq_decl 35, isr_irq35
+ if_irq_decl 36, isr_irq36
+ if_irq_decl 37, isr_irq37
+ if_irq_decl 38, isr_irq38
+ if_irq_decl 39, isr_irq39
+ if_irq_decl 40, isr_irq40
+ if_irq_decl 41, isr_irq41
+ if_irq_decl 42, isr_irq42
+ if_irq_decl 43, isr_irq43
+ if_irq_decl 44, isr_irq44
+ if_irq_decl 45, isr_irq45
+ if_irq_decl 46, isr_irq46
+ if_irq_decl 47, isr_irq47
+ if_irq_decl 48, isr_irq48
+ if_irq_decl 49, isr_irq49
+ if_irq_decl 50, isr_irq50
+ if_irq_decl 51, isr_irq51
+ if_irq_decl 52, isr_irq52
+ if_irq_decl 53, isr_irq53
+ if_irq_decl 54, isr_irq54
+ if_irq_decl 55, isr_irq55
+ if_irq_decl 56, isr_irq56
+ if_irq_decl 57, isr_irq57
+ if_irq_decl 58, isr_irq58
+ if_irq_decl 59, isr_irq59
+ if_irq_decl 60, isr_irq60
+ if_irq_decl 61, isr_irq61
+ if_irq_decl 62, isr_irq62
+ if_irq_decl 63, isr_irq63
+ if_irq_decl 64, isr_irq64
+ if_irq_decl 65, isr_irq65
+ if_irq_decl 66, isr_irq66
+ if_irq_decl 67, isr_irq67
+ if_irq_decl 68, isr_irq68
+ if_irq_decl 69, isr_irq69
+ if_irq_decl 70, isr_irq70
+ if_irq_decl 71, isr_irq71
+ if_irq_decl 72, isr_irq72
+ if_irq_decl 73, isr_irq73
+ if_irq_decl 74, isr_irq74
+ if_irq_decl 75, isr_irq75
+ if_irq_decl 76, isr_irq76
+ if_irq_decl 77, isr_irq77
+ if_irq_decl 78, isr_irq78
+ if_irq_decl 79, isr_irq79
 #if PICO_NUM_VTABLE_IRQS > 80
 #error more IRQ entries required
 #endif
 #if !PICO_RP2040
 // since these are disabled by default, map them all to __unhandled_user_irq (will have
 // a negative number
-decl_isr isr_memmanage
-decl_isr isr_busfault
-decl_isr isr_usagefault
-decl_isr isr_securefault
-decl_isr isr_debugmonitor
+ decl_isr isr_memmanage
+ decl_isr isr_busfault
+ decl_isr isr_usagefault
+ decl_isr isr_securefault
+ decl_isr isr_debugmonitor
 #endif
 
 // All unhandled USER IRQs fall through to here.
 // Additionally, if the Armv9-M MemManage/BusFault/UsageFault/SecureFault/DebugMonitor exceptions
 // are enabled, but the handlers are not defined, then unhandled_user_irq_num_in_r0 will
 // also be reached, but with a negative exception number (e.g. MemManage == -12)
-.global __unhandled_user_irq
-.thumb_func
-__unhandled_user_irq:
+ regular_func __unhandled_user_irq
 // if we include the implementation if there could be a valid IRQ hanler in the vtable that uses it
 #if !(PICO_NO_RAM_VECTOR_TABLE && PICO_MINIMAL_STORED_VECTOR_TABLE)
     mrs  r0, ipsr
     subs r0, #16
-.global unhandled_user_irq_num_in_r0
+ public unhandled_user_irq_num_in_r0
 unhandled_user_irq_num_in_r0:
 #endif
     // note the next instruction is a breakpoint too, however we have a 2 byte alignment hole
     // and it is preferrable to have distinct labels, to inform the user what has happened in the debugger.
     bkpt #0
 
-decl_isr_bkpt isr_invalid
+ decl_isr_bkpt isr_invalid
 #if !PICO_MINIMAL_STORED_VECTOR_TABLE
 // these are separated out into individual BKPT instructions with label for clarity
-decl_isr_bkpt isr_nmi
-decl_isr_bkpt isr_hardfault
-decl_isr_bkpt isr_svcall
-decl_isr_bkpt isr_pendsv
-decl_isr_bkpt isr_systick
+ decl_isr_bkpt isr_nmi
+ decl_isr_bkpt isr_hardfault
+ decl_isr_bkpt isr_svcall
+ decl_isr_bkpt isr_pendsv
+ decl_isr_bkpt isr_systick
 #endif
 
-.global __default_isrs_end
+ public __default_isrs_end
 __default_isrs_end:
 
 // ----------------------------------------------------------------------------
 
-.section .binary_info_header, "a"
+ section `.binary_info_header`:CONST:ROOT(2)
 
 // Header must be in first 256 bytes of main image (i.e. excluding flash boot2).
 // For flash builds we put it immediately after vector table; for NO_FLASH the
@@ -407,11 +395,11 @@ __default_isrs_end:
 
 #if !PICO_NO_BINARY_INFO
 binary_info_header:
-.word BINARY_INFO_MARKER_START
-.word __binary_info_start
-.word __binary_info_end
-.word data_cpy_table // we may need to decode pointers that are in RAM at runtime.
-.word BINARY_INFO_MARKER_END
+    dc32 BINARY_INFO_MARKER_START
+    dc32 __binary_info_start
+    dc32 __binary_info_end
+    dc32 data_cpy_table // we may need to decode pointers that are in RAM at runtime.
+    dc32 BINARY_INFO_MARKER_END
 #endif
 
 #include "embedded_start_block.inc.S"
@@ -419,7 +407,7 @@ binary_info_header:
 // ----------------------------------------------------------------------------
 
 #if !PICO_CRT0_NO_RESET_SECTION
-.section .reset, "ax"
+ section `.reset`:CODE:ROOT(2)
 
 // On flash builds, the vector table comes first in the image (conventional).
 // On NO_FLASH builds, the reset handler section comes first, as the entry
@@ -434,10 +422,7 @@ binary_info_header:
 //   must then be sent back round the boot sequence to properly initialise flash
 
 // ELF entry point:
-.type _entry_point,%function
-.thumb_func
-.global _entry_point
-_entry_point:
+ regular_func _entry_point
 
 #if PICO_NO_FLASH
     // on the NO_FLASH case, we do not do a rest thru bootrom below, so the RCP may or may not have been initialized:
@@ -454,13 +439,13 @@ _entry_point:
     str r1, [r0]
     // only initialize canary seeds if they haven't been (as to do so twice is a fault)
     mrc p7, #1, apsr_nzcv, c0, c0, #0
-    bmi 1f
+    bmi label_1
     // i dont think it much matters what we initialized to, as to have gotten here we must have not
     // gone thru the bootrom (which a secure boot would have)
     mcrr p7, #8, r0, r0, c0
     mcrr p7, #8, r0, r0, c1
     sev
-1:
+label_1:
 #endif
 #if !__ARM_ARCH_6M__
     // Make sure stack limit is 0 if we came in thru the debugger; we do not know what it should be
@@ -491,9 +476,7 @@ _enter_vtable_in_r0:
 // - calls main
 // - calls exit (which should eventually hang the processor via _exit)
 
-.type _reset_handler,%function
-.thumb_func
-_reset_handler:
+ local_func _reset_handler
     // Note if we entered thru here on core 0, then we should have gone thru bootrom, so SP (and MSPLIM) on Armv8-M
     // should already be set
 
@@ -504,15 +487,15 @@ _reset_handler:
     ldr r0, [r0]
 #if __ARM_ARCH_6M__
     cmp r0, #0
-    beq 1f
+    beq label_2
 #else
-    cbz r0, 1f
+    cbz r0, label_2
 #endif
 hold_non_core0_in_bootrom:
     // Send back to the ROM to wait for core 0 to launch it.
     ldr r0, =BOOTROM_VTABLE_OFFSET
     b _enter_vtable_in_r0
-1:
+label_2:
 
 #if !PICO_RP2040 && PICO_EMBED_XIP_SETUP && !PICO_NO_FLASH
     // Execute boot2 on the core 0 stack (it also gets copied into BOOTRAM due
@@ -547,13 +530,13 @@ _call_xip_setup:
     adr r4, data_cpy_table
 
     // assume there is at least one entry
-1:
+label_3:
     ldmia r4!, {r1-r3}
     cmp r1, #0
-    beq 2f
+    beq label_4
     bl data_cpy
-    b 1b
-2:
+    b label_3
+label_4:
 #endif
 
     // Zero out the BSS
@@ -585,9 +568,10 @@ platform_entry: // symbol for stack traces
     blx r1
 #endif
     // exit should not return.  If it does, hang the core.
-1: // separate label because _exit can be moved out of branch range
+label_5:
+   // separate label because _exit can be moved out of branch range
     bkpt #0
-    b 1b
+    b label_5
 
 
 #if !defined(__IASMARM__) && !PICO_NO_FLASH
@@ -603,42 +587,39 @@ data_cpy:
 // Note the data copy table is still included for NO_FLASH builds, even though
 // we skip the copy, because it is listed in binary info
 
-.p2align 2
+ alignrom 2
     data_in_code_area
 data_cpy_table:
 #if PICO_RP2350 && PICO_EMBED_XIP_SETUP && !PICO_NO_FLASH
-.word __boot2_start__
-.word BOOTRAM_BASE
-.word BOOTRAM_BASE + 256
+    dc32 __boot2_start__
+    dc32 BOOTRAM_BASE
+    dc32 BOOTRAM_BASE + 256
 #endif
 
 #if PICO_COPY_TO_RAM
-.word __ram_text_source__
-.word __ram_text_start__
-.word __ram_text_end__
+    dc32 __ram_text_source__
+    dc32 __ram_text_start__
+    dc32 __ram_text_end__
 #endif
-.word __etext
-.word __data_start__
-.word __data_end__
+    dc32 __etext
+    dc32 __data_start__
+    dc32 __data_end__
 
-.word __scratch_x_source__
-.word __scratch_x_start__
-.word __scratch_x_end__
+    dc32 __scratch_x_source__
+    dc32 __scratch_x_start__
+    dc32 __scratch_x_end__
 
-.word __scratch_y_source__
-.word __scratch_y_start__
-.word __scratch_y_end__
+    dc32 __scratch_y_source__
+    dc32 __scratch_y_start__
+    dc32 __scratch_y_end__
 
-.word 0 // null terminator
+    dc32 0 // null terminator
 
 // ----------------------------------------------------------------------------
 // Provide safe defaults for _exit and runtime_init
 // Full implementations usually provided by platform.c
 
-.weak runtime_init
-.type runtime_init,%function
-.thumb_func
-runtime_init:
+ weak_func runtime_init
     bx lr
 
 #endif // PICO_CRT0_NO_RESET_SECTION
@@ -659,26 +640,28 @@ runtime_init:
 #define PICO_CRT0_ALLOCATE_SPACERS 1
 #endif
 
-.macro spacer_section name, align
+spacer_section macro name, align
 #if PICO_CRT0_ALLOCATE_SPACERS
-.section \name, "a"
+ section BACKTICK_QUOTED(name):DATA:ROOT(align)
 #else
-.section \name
+ section BACKTICK_QUOTED(name):DATA:NOROOT(align)
 #endif
 // align to allow for memory protection (although this alignment is pretty much ignored by linker script)
-.p2align \align
-.endm
+ alignrom align
+ endm
 
-spacer_section .stack, 5
-    .equ StackSize, PICO_STACK_SIZE
-.if StackSize != 0
-.space StackSize
-.endif
+ spacer_section .stack, 5
+StackSize equ PICO_STACK_SIZE
+ if StackSize != 0
+ ds StackSize
+ endif
 
-spacer_section .heap, 2
-    .equ HeapSize, PICO_HEAP_SIZE
-.if HeapSize != 0
-.space HeapSize
-.endif
+ spacer_section .heap, 2
+HeapSize equ PICO_HEAP_SIZE
+ if HeapSize != 0
+ ds HeapSize
+ endif
 
 #include "embedded_end_block.inc.S"
+
+ end

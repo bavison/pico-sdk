@@ -25,6 +25,7 @@
 // setup to the pico_default_asm macro for inline assembly in C code.
 .macro pico_default_asm_setup
 .text
+.altmacro
 #ifndef __riscv
 .syntax unified
 .cpu cortex-m33
@@ -36,6 +37,14 @@
 // do not put align in here as it is used mid function sometimes
 .macro regular_func x
 .global \x
+.type \x,%function
+#ifndef __riscv
+.thumb_func
+#endif
+\x:
+.endm
+
+.macro local_func x
 .type \x,%function
 #ifndef __riscv
 .thumb_func
@@ -113,6 +122,11 @@ regular_func                    macro           x
 x:
                                 endm
 
+local_func                      macro           x
+                                thumb
+x:
+                                endm
+
 weak_func                       macro           x
                                 pubweak         x
                                 thumb
@@ -153,6 +167,18 @@ __pre_init                      macro           func, priority_string
 
 #error Unsupported toolchain
 
+
+#endif
+
+#if PICO_C_COMPILER_IS_ARMCLANG
+
+#define DECLARE_LOCAL_LABEL(l)
+#define LOCAL_LABEL(l) local_##l##_\@
+
+#else
+
+#define DECLARE_LOCAL_LABEL(l) local local_##l
+#define LOCAL_LABEL(l) local_##l
 
 #endif
 
