@@ -8,7 +8,7 @@
 #include "pico/double.h"
 #include "pico/bootrom/sf_table.h"
 
-pico_default_asm_setup
+ pico_default_asm_setup
 
     wrapper_func __aeabi_dadd
     wrapper_func __aeabi_ddiv
@@ -84,4 +84,6 @@ pico_default_asm_setup
 
 str:
     data_in_code_area
-    .asciz "double support is disabled"
+    dc8 "double support is disabled", 0
+
+ end

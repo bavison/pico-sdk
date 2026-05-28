@@ -10,46 +10,45 @@
 #endif
 #include "pico/runtime_init.h"
 
- .extern rom_funcs_lookup
+ extern rom_funcs_lookup
 
-pico_default_asm_setup
+ pico_default_asm_setup
 
-.macro bits_section name
+bits_section macro name
 #if PICO_BITS_IN_RAM
-.section RAM_SECTION_NAME(\name), "ax"
+ section BACKTICK_QUOTED(RAM_SECTION_NAME(name)):CODE:NOROOT(2)
 #else
-.section SECTION_NAME(\name), "ax"
+ section BACKTICK_QUOTED(SECTION_NAME(name)):CODE:NOROOT(2)
 #endif
-.endm
+ endm
 
 #if PICO_RP2040
-PICO_RUNTIME_INIT_FUNC_RUNTIME(__aeabi_bits_init, PICO_RUNTIME_INIT_AEABI_BIT_OPS)
+ PICO_RUNTIME_INIT_FUNC_RUNTIME(__aeabi_bits_init, PICO_RUNTIME_INIT_AEABI_BIT_OPS)
 
-.section .data.aeabi_bits_funcs
-.global aeabi_bits_funcs, aeabi_bits_funcs_end
-.equ BITS_FUNC_COUNT, 4
-.align 4
+ section `.data.aeabi_bits_funcs`:DATA:NOROOT(4)
+ public aeabi_bits_funcs, aeabi_bits_funcs_end
+BITS_FUNC_COUNT equ 4
+ alignrom 4
 aeabi_bits_funcs:
-    .word ROM_FUNC_POPCOUNT32
-    .word ROM_FUNC_CLZ32
-    .word ROM_FUNC_CTZ32
-    .word ROM_FUNC_REVERSE32
+    dc32 ROM_FUNC_POPCOUNT32
+    dc32 ROM_FUNC_CLZ32
+    dc32 ROM_FUNC_CTZ32
+    dc32 ROM_FUNC_REVERSE32
 aeabi_bits_funcs_end:
 
-.section .text
-.thumb_func
-__aeabi_bits_init:
+ section `.text`:CODE:NOROOT(2)
+ local_func __aeabi_bits_init
     ldr r0, =aeabi_bits_funcs
     movs r1, #BITS_FUNC_COUNT
     ldr r3, =rom_funcs_lookup
     bx r3
 
-.equ POPCOUNT32, 0
-.equ CLZ32, 4
-.equ CTZ32, 8
-.equ REVERSE32, 12
+POPCOUNT32 equ 0
+CLZ32 equ 4
+CTZ32 equ 8
+REVERSE32 equ 12
 
-bits_section clzsi
+ bits_section clzsi
  gnu_func __clz
  gnu_func __clzl
  gnu_func __clzsi2
@@ -57,88 +56,88 @@ bits_section clzsi
     ldr r3, [r3, #CLZ32]
     bx r3
 
-bits_section ctzsi
+ bits_section ctzsi
  gnu_func __ctzsi2
     ldr r3, =aeabi_bits_funcs
     ldr r3, [r3, #CTZ32]
     bx r3
 
-bits_section popcountsi
+ bits_section popcountsi
  gnu_func __popcountsi2
     ldr r3, =aeabi_bits_funcs
     ldr r3, [r3, #POPCOUNT32]
     bx r3
 
-bits_section clzdi
+ bits_section clzdi
  gnu_func __clzll
  gnu_func __clzdi2
     ldr r3, =aeabi_bits_funcs
     ldr r3, [r3, #CLZ32]
     cmp r1, #0
-    bne 1f
+    bne label_1
     push {lr}
     blx r3
     adds r0, #32
     pop {pc}
-1:
+label_1:
     mov r0, r1
     bx r3
 
-bits_section ctzdi
+ bits_section ctzdi
  gnu_func __ctzdi2
     ldr r3, =aeabi_bits_funcs
     ldr r3, [r3, #CTZ32]
     cmp r0, #0
-    beq 1f
+    beq label_2
     bx r3
-1:
+label_2:
     push {lr}
     mov r0, r1
     blx r3
     adds r0, #32
     pop {pc}
 
-bits_section popcountdi
+ bits_section popcountdi
  gnu_func __popcountdi2
     ldr r3, =aeabi_bits_funcs
     ldr r3, [r3, #POPCOUNT32]
     push {r1, r3, lr}
     blx r3
-    mov ip, r0
+    mov r12, r0
     pop {r0, r3}
     blx r3
-    mov r1, ip
+    mov r1, r12
     add r0, r1
     pop {pc}
 
-bits_section __rev
-regular_func __rev
-regular_func __revl
-regular_func reverse32
+ bits_section __rev
+ regular_func __rev
+ regular_func __revl
+ regular_func reverse32
     ldr r3, =aeabi_bits_funcs
     ldr r3, [r3, #REVERSE32]
     bx r3
 
-bits_section __revll
-regular_func __revll
-regular_func reverse64
+ bits_section __revll
+ regular_func __revll
+ regular_func reverse64
     push {lr}
     ldr r3, =aeabi_bits_funcs
     ldr r3, [r3, #REVERSE32]
     push {r1, r3}
     blx r3
-    mov ip, r0 // reverse32 preserves ip
+    mov r12, r0 // reverse32 preserves r12
     pop {r0, r3}
     blx r3
-    mov r1, ip
+    mov r1, r12
     pop {pc}
 
 #else // RP2350
 
-bits_section __rev
-regular_func __rev
-regular_func __revl
-regular_func reverse32
+ bits_section __rev
+ regular_func __rev
+ regular_func __revl
+ regular_func reverse32
 #ifdef __riscv
     rev8 a0, a0
     brev8 a0, a0
@@ -148,9 +147,9 @@ regular_func reverse32
     bx lr
 #endif
 
-bits_section __revll
-regular_func __revll
-regular_func reverse64
+ bits_section __revll
+ regular_func __revll
+ regular_func reverse64
 #ifdef __riscv
     rev8 a0, a0
     brev8 a0, a0
@@ -169,8 +168,8 @@ regular_func reverse64
 
 // todo gcc riscv version is nuts; we'll provide both versions for simplicity in CMakeLists.txt
 //  (also gcc arm version is a bit pants)
-bits_section ctzdi
-wrapper_func __ctzdi2
+ bits_section ctzdi
+ wrapper_func __ctzdi2
 #ifdef __riscv
     beqz a0, 1f
     ctz a0, a0
@@ -180,11 +179,11 @@ wrapper_func __ctzdi2
     addi a0, a0, 32
     ret
 #else
-    cbz r0, 1f
+    cbz r0, label_3
     rbit r0, r0
     clz r0, r0
     bx	lr
-1:
+label_3:
     rbit r0, r1
     clz r0, r0
     adds r0, #32
@@ -192,3 +191,5 @@ wrapper_func __ctzdi2
 #endif
 
 #endif
+
+ end

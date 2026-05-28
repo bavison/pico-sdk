@@ -82,7 +82,7 @@
 // Start of 2nd Stage Boot Code
 // ----------------------------------------------------------------------------
 
-pico_default_asm_setup
+ pico_default_asm_setup
 
 #ifdef __IASMARM__
  // Ensure there's a reference to __checksum to keep IAR ELF Tool happy
@@ -93,7 +93,7 @@ pico_default_asm_setup
 #endif
 
 // On RP2350 boot stage2 is always called as a regular function, and should return normally
-regular_func _stage2_boot
+ regular_func _stage2_boot
     push {lr}
 
     ldr r3, =XIP_SSI_BASE                // Use as base address where possible
@@ -147,12 +147,12 @@ program_sregs:
     ldr r1, [r3, #SSI_DR0_OFFSET]
 
     // Poll status register for write completion
-1:
+label_1:
     ldr r0, =CMD_READ_STATUS
     bl read_flash_sreg
     movs r1, #1
     tst r0, r1
-    bne 1b
+    bne label_1
 
 skip_sreg_programming:
 
@@ -260,8 +260,6 @@ configure_ssi:
 #include "boot2_helpers/read_flash_sreg.S"
 #endif
 
-.global literals
+ public literals
 literals:
-.ltorg
-
-.end
+ ltorg

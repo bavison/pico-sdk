@@ -12,10 +12,10 @@
 // Pass status read cmd into r0/a0.
 // Returns status value in r0/a0.
 
-.global read_flash_sreg
-.type read_flash_sreg,%function
+ regular_func read_flash_sreg
+
 #ifdef __riscv
-read_flash_sreg:
+
     // wait_qmi_ready does not clobber t1, so use this rather than stack.
     mv t1, ra
     sw a0, QMI_DIRECT_TX_OFFSET(a3)
@@ -30,8 +30,6 @@ read_flash_sreg:
 
 #else
 
-.thumb_func
-read_flash_sreg:
     push {lr}
     str r0, [r3, #QMI_DIRECT_TX_OFFSET]
     // Dummy byte:

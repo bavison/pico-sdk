@@ -5,33 +5,33 @@
 // for incrementing `mepc` before return, if it intends to return to the
 // instruction after the one that caused the exception.
 
-.macro decl_isr name
-.weak \name
-\name:
-.endm
+decl_isr macro name
+.weak name
+name:
+ endm
 
 // must be in RAM due to branches from vector table
-.section .time_critical.hardware_exception
+ section `.time_critical.hardware_exception`:CODE:NOROOT(2)
 
-.p2align 2
-.global __riscv_exception_table
+ alignrom 2
+ public __riscv_exception_table
 __riscv_exception_table:
-.word isr_riscv_machine_instr_align_exception
-.word isr_riscv_machine_instr_fault_exception
-.word isr_riscv_machine_instr_illegal_exception
-.word isr_riscv_machine_ebreak_exception
-.word isr_riscv_machine_load_align_exception
-.word isr_riscv_machine_load_fault_exception
-.word isr_riscv_machine_store_align_exception
-.word isr_riscv_machine_store_fault_exception
-.word isr_riscv_machine_ecall_umode_exception
-.word isr_riscv_machine_ecall_smode_exception
-.word __unhandled_exception // reserved
-.word isr_riscv_machine_ecall_mmode_exception
+    dc32 isr_riscv_machine_instr_align_exception
+    dc32 isr_riscv_machine_instr_fault_exception
+    dc32 isr_riscv_machine_instr_illegal_exception
+    dc32 isr_riscv_machine_ebreak_exception
+    dc32 isr_riscv_machine_load_align_exception
+    dc32 isr_riscv_machine_load_fault_exception
+    dc32 isr_riscv_machine_store_align_exception
+    dc32 isr_riscv_machine_store_fault_exception
+    dc32 isr_riscv_machine_ecall_umode_exception
+    dc32 isr_riscv_machine_ecall_smode_exception
+    dc32 __unhandled_exception // reserved
+    dc32 isr_riscv_machine_ecall_mmode_exception
 
 // mscratch = 0 outside of exception handler. mscratch = user ra during
 // exception handler. Assume 0 is not a valid ra.
-.global isr_riscv_machine_exception
+ public isr_riscv_machine_exception
 // still allow override just in case hardware_exception is pulled in by a library
 // note: that when LIX_HARDWARE_EXCEPTION=1, crt0_riscv.S does not define its own weak method
 .weak isr_riscv_machine_exception
@@ -94,17 +94,17 @@ isr_riscv_machine_exception:
     csrrw ra, mscratch, zero
     mret
 
-decl_isr isr_riscv_machine_instr_align_exception
-decl_isr isr_riscv_machine_instr_fault_exception
-decl_isr isr_riscv_machine_instr_illegal_exception
-decl_isr isr_riscv_machine_ebreak_exception
-decl_isr isr_riscv_machine_load_align_exception
-decl_isr isr_riscv_machine_load_fault_exception
-decl_isr isr_riscv_machine_store_align_exception
-decl_isr isr_riscv_machine_store_fault_exception
-decl_isr isr_riscv_machine_ecall_umode_exception
-decl_isr isr_riscv_machine_ecall_smode_exception
-decl_isr isr_riscv_machine_ecall_mmode_exception
+ decl_isr isr_riscv_machine_instr_align_exception
+ decl_isr isr_riscv_machine_instr_fault_exception
+ decl_isr isr_riscv_machine_instr_illegal_exception
+ decl_isr isr_riscv_machine_ebreak_exception
+ decl_isr isr_riscv_machine_load_align_exception
+ decl_isr isr_riscv_machine_load_fault_exception
+ decl_isr isr_riscv_machine_store_align_exception
+ decl_isr isr_riscv_machine_store_fault_exception
+ decl_isr isr_riscv_machine_ecall_umode_exception
+ decl_isr isr_riscv_machine_ecall_smode_exception
+ decl_isr isr_riscv_machine_ecall_mmode_exception
     // fall through
 
 // Reach here when executing an exception that did not have a non-default
@@ -112,7 +112,7 @@ decl_isr isr_riscv_machine_ecall_mmode_exception
 // debugger is not connected, we can't have an ebreak here. Just spin the
 // core forever. You can check `mcause` and `mepc` to see what happened and
 // where.
-.global __unhandled_exception
+ public __unhandled_exception
 __unhandled_exception:
     // Restore original registers and stack pointer so debugger can backtrace
     csrr ra, mscratch
@@ -121,7 +121,7 @@ __unhandled_exception:
     // Second symbol here just to make it clearer in the debugger why you got
     // here; the entry point can appear labelled with the name of any one of the
     // unhandled exceptions, which is less clear.
-.global __halt_on_unhandled_exception
+ public __halt_on_unhandled_exception
 __halt_on_unhandled_exception:
 1:
     j 1b
@@ -133,3 +133,4 @@ __nested_exception:
 1:
     j 1b
 
+ end

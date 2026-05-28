@@ -10,13 +10,11 @@
 
 #define PICO_PANIC_FUNCTION_IS_EMPTY (__CONCAT(PICO_PANIC_FUNCTION, 1))
 
- .extern PICO_PANIC_FUNCTION
+ extern PICO_PANIC_FUNCTION
 
-.text
+ section `.text`:CODE:NOROOT(2)
 // Use a forwarding method here as it is a little simpler than renaming the symbol as it is used from assembler
-.weak panic // also allow override
-.type panic,%function
-panic:
+ weak_func panic // also allow override
 #ifdef __riscv
     // we seem to need to help gdb out with call frame on RISC-V
     .cfi_sections .debug_frame
@@ -49,8 +47,9 @@ panic:
     .cfi_endproc
 #else
     #if PICO_PANIC_FUNCTION_IS_EMPTY
-        1:  bkpt #0
-            b 1b
+label_1:
+            bkpt #0
+            b label_1
     #elif PICO_PANIC_FUNCTION_DOES_NOT_RETURN
         // if you get an undefined reference here, you didn't define your PICO_PANIC_FUNCTION!
         ldr r4, =PICO_PANIC_FUNCTION
@@ -65,8 +64,9 @@ panic:
         // if you get an undefined reference here, you didn't define your PICO_PANIC_FUNCTION!
         bl PICO_PANIC_FUNCTION
         #if !PICO_PANIC_FUNCTION_DOES_NOT_RETURN
-        1:  bkpt #0
-            b 1b
+label_2:
+            bkpt #0
+            b label_2
         #endif
     #endif
 #endif
@@ -74,3 +74,4 @@ panic:
 #endif // PICO_PANIC_FUNCTION
 
 
+ end

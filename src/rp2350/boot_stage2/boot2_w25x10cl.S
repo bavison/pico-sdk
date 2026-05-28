@@ -40,7 +40,7 @@
 #define PICO_FLASH_SPI_CLKDIV 4
 #endif
 
-pico_default_asm_setup
+ pico_default_asm_setup
 
 // todo port to QMI
 
@@ -50,14 +50,14 @@ pico_default_asm_setup
 // fixed addresses in the address map of every Cortex-M0+ system.
 // ----------------------------------------------------------------------------
 
-.equ SCB_VTOR,          0xE000ED08      // RW Vector Table Offset Register
+SCB_VTOR equ 0xE000ED08      // RW Vector Table Offset Register
 
 // ----------------------------------------------------------------------------
 // Winbond W25X10CL Supported Commands
 // Taken from "w25x10cl_reg_021714.pdf"
 // ----------------------------------------------------------------------------
 
-.equ W25X10CL_CMD_READ_DATA_FAST_DUAL_IO, 0xbb
+W25X10CL_CMD_READ_DATA_FAST_DUAL_IO equ 0xbb
 
 // ----------------------------------------------------------------------------
 // Winbond W25X10CL "Mode bits" are 8 special bits sent immediately after
@@ -67,13 +67,12 @@ pico_default_asm_setup
 // to M[5:4] = 2'b10 to enable continuous read mode.
 // ----------------------------------------------------------------------------
 
-.equ W25X10CL_MODE_CONTINUOUS_READ,        0x20
+W25X10CL_MODE_CONTINUOUS_READ equ 0x20
 
 // ----------------------------------------------------------------------------
 // Start of 2nd Stage Boot Code
 // ----------------------------------------------------------------------------
 
-.org 0
 
 #ifdef __IASMARM__
  // Ensure there's a reference to __checksum to keep IAR ELF Tool happy
@@ -84,7 +83,7 @@ pico_default_asm_setup
 #endif
 
 // On RP2350 boot stage2 is always called as a regular function, and should return normally
-regular_func _stage2_boot
+ regular_func _stage2_boot
     push {lr}
     ldr r3, =XIP_SSI_BASE                // Use as base address where possible
 
@@ -146,10 +145,10 @@ regular_func _stage2_boot
 // status register and checking for the "RX FIFO Not Empty" flag to assert.
 
     movs r1, #SSI_SR_RFNE_BITS
-00:
+label_1:
     ldr r0, [r3, #SSI_SR_OFFSET]    // Read status register
     tst r0, r1                      // RFNE status flag set?
-    beq 00b                         // If not then wait
+    beq label_1                     // If not then wait
 
 // At this point CN# will be deasserted and the SPI clock will not be running.
 // The Winbond WX25X10CL device will be in continuous read, dual I/O mode and
@@ -192,8 +191,6 @@ regular_func _stage2_boot
 // Pull in standard exit routine
 #include "boot2_helpers/exit_from_boot2.S"
 
-.global literals
+ public literals
 literals:
-.ltorg
-
-.end
+ ltorg

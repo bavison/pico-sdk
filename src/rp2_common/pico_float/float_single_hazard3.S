@@ -15,22 +15,22 @@
 // Subnormal values are always flushed to zero on both input and output.
 // Rounding is always to nearest (even on tie).
 
-pico_default_asm_setup
+ pico_default_asm_setup
 
-.macro float_section name
+float_section macro name
 #if PICO_FLOAT_IN_RAM
-.section RAM_SECTION_NAME(\name), "ax"
+ section BACKTICK_QUOTED(RAM_SECTION_NAME(name)):CODE:NOROOT(2)
 #else
-.section SECTION_NAME(\name), "ax"
+ section BACKTICK_QUOTED(SECTION_NAME(name)):CODE:NOROOT(2)
 #endif
-.endm
+ endm
 
-float_section __addsf3
-.global __subsf3
-.p2align 2
+ float_section __addsf3
+ public __subsf3
+ alignrom 2
 __subsf3:
     binvi a1, a1, 31
-.global __addsf3
+ public __addsf3
 __addsf3:
     // Unpack exponent:
     h3.bextmi a2, a0, 23, 8
@@ -59,85 +59,85 @@ __addsf3:
     // Negate if sign bit is set
     bgez a0, 1f
     neg a4, a4
-1:
+label_1:
     // (tuck this 16-bit here to avoid alignment penalty)
     li t1, 25
     bgez a1, 1f
     neg a5, a5
-1:
+label_2:
 
     bltu a2, a3, __addsf_ye_gt_xe
 
     // The main body is repeated twice with different register assignments.
     // lhs is the more-significant addend:
-.macro addsf_core packed_lhs, packed_rhs, sig_lhs, sig_rhs, exp_lhs, exp_rhs, rhs_is_x
-    sub \packed_rhs, \exp_lhs, \exp_rhs
+addsf_core macro packed_lhs, packed_rhs, sig_lhs, sig_rhs, exp_lhs, exp_rhs, rhs_is_x
+    sub packed_rhs, exp_lhs, exp_rhs
     // If there is a large exponent difference then there is no effect on lhs
-.if \rhs_is_x
-    bgeu \packed_rhs, t1, __addsf_return_y
-.else
-    bgeu \packed_rhs, t1, __addsf_return_x
-.endif
+ if rhs_is_x
+    bgeu packed_rhs, t1, __addsf_return_y
+ else
+    bgeu packed_rhs, t1, __addsf_return_x
+ endif
     // Shift rhs down to correct relative significance
-    sra \packed_lhs, \sig_rhs, \packed_rhs
+    sra packed_lhs, sig_rhs, packed_rhs
     // Set sticky bit if ones were shifted out
-    sll \packed_rhs, \packed_lhs, \packed_rhs
-    sltu \packed_rhs, \packed_rhs, \sig_rhs
-    or \packed_lhs, \packed_lhs, \packed_rhs
+    sll packed_rhs, packed_lhs, packed_rhs
+    sltu packed_rhs, packed_rhs, sig_rhs
+    or packed_lhs, packed_lhs, packed_rhs
     // Add significands
-    add \sig_lhs, \sig_lhs, \packed_lhs
+    add sig_lhs, sig_lhs, packed_lhs
     // Detect exact cancellation (may be beyond max normalisation shift; also
     // IEEE 754 requires +0 for exact cancellation, no matter input signs)
-    beqz \sig_lhs, __addsf_return_0
+    beqz sig_lhs, __addsf_return_0
     // Convert two's complement back to sign + magnitude
-    srai \exp_rhs, \sig_lhs, 31
-    xor \sig_lhs, \sig_lhs, \exp_rhs
-    sub \sig_lhs, \sig_lhs, \exp_rhs
+    srai exp_rhs, sig_lhs, 31
+    xor sig_lhs, sig_lhs, exp_rhs
+    sub sig_lhs, sig_lhs, exp_rhs
     // Renormalise significand: bit 31 is now implicit one
-    clz \packed_lhs, \sig_lhs
-    sll \sig_lhs, \sig_lhs, \packed_lhs
+    clz packed_lhs, sig_lhs
+    sll sig_lhs, sig_lhs, packed_lhs
     // Adjust exponent
-    addi \packed_lhs, \packed_lhs, -5
-    sub \exp_lhs, \exp_lhs, \packed_lhs
+    addi packed_lhs, packed_lhs, -5
+    sub exp_lhs, exp_lhs, packed_lhs
 
     // Round to nearest, even on tie (bias upward if above odd number)
-    bexti \packed_lhs, \sig_lhs, 8
-    addi \sig_lhs, \sig_lhs, 127
-    add \sig_lhs, \sig_lhs, \packed_lhs
+    bexti packed_lhs, sig_lhs, 8
+    addi sig_lhs, sig_lhs, 127
+    add sig_lhs, sig_lhs, packed_lhs
     // Exponent may increase by one due to rounding up from all-ones; this is
     // detected by clearing of implicit one (there is a carry-out too)
-    bgez \sig_lhs, 3f
-4:
+    bgez sig_lhs, 3f
+label_3:
     // Detect underflow/overflow
-    bgeu \exp_lhs, t0, 1f
+    bgeu exp_lhs, t0, 1f
 
     // Pack and return
-    packh \exp_lhs, \exp_lhs, \exp_rhs
-    slli \exp_lhs, \exp_lhs, 23
-    slli \sig_lhs, \sig_lhs, 1
-    srli \sig_lhs, \sig_lhs, 9
-    add a0, \sig_lhs, \exp_lhs
+    packh exp_lhs, exp_lhs, exp_rhs
+    slli exp_lhs, exp_lhs, 23
+    slli sig_lhs, sig_lhs, 1
+    srli sig_lhs, sig_lhs, 9
+    add a0, sig_lhs, exp_lhs
     ret
-1:
-    bgez \exp_lhs, 2f
+label_4:
+    bgez exp_lhs, 2f
     // Signed zero on underflow
-    slli a0, \exp_rhs, 31
+    slli a0, exp_rhs, 31
     ret
-2:
+label_5:
     // Signed infinity on overflow
-    packh a0, t0, \exp_rhs
+    packh a0, t0, exp_rhs
     slli a0, a0, 23
     ret
-3:
+label_6:
     // Exponent increase due to rounding (uncommon)
-    srli \sig_lhs, \sig_lhs, 1
-    addi \exp_lhs, \exp_lhs, 1
+    srli sig_lhs, sig_lhs, 1
+    addi exp_lhs, exp_lhs, 1
     j 4b
-.endm
+ endm
 
 __addsf_xe_gte_ye:
     addsf_core a0, a1, a4, a5, a2, a3, 0
-.p2align 2
+ alignrom 2
 __addsf_ye_gt_xe:
     addsf_core a1, a0, a5, a4, a3, a2, 1
 
@@ -172,7 +172,7 @@ __addsf_return_y_flushed:
     bnez a3, 1f
     srli a1, a1, 23
     slli a1, a1, 23
-1:
+label_7:
 __addsf_return_y:
     mv a0, a1
 __addsf_return_x:
@@ -182,15 +182,15 @@ __addsf_return_0:
     ret
 
 
-float_section __mulsf3
-.global __mulsf3
-.p2align 2
+ float_section __mulsf3
+ public __mulsf3
+ alignrom 2
 __mulsf3:
     // Force y to be positive (by possibly negating x) *before* unpacking.
     // This allows many special cases to be handled without repacking.
     bgez a1, 1f
     binvi a0, a0, 31
-1:
+label_8:
     // Unpack exponent:
     h3.bextmi a2, a0, 23, 8
     h3.bextmi a3, a1, 23, 8
@@ -231,7 +231,7 @@ __mulsf3:
     addi a4, a4, 127
     // Check carry-out: exponent may increase due to rounding
     bgez a4, 2f
-1:
+label_9:
     bge a2, t0, __mulsf_overflow
     // Pack it and ship it
     packh a2, a2, a6
@@ -240,7 +240,7 @@ __mulsf3:
     srli a4, a4, 9
     add a0, a4, a2
     ret
-2:
+label_10:
     srli a4, a4, 1
     addi a2, a2, 1
     j 1b
@@ -266,7 +266,7 @@ __mulsf_x_0:
 __mulsf_return_y:
     mv a0, a1
     ret
-1:
+label_11:
     // Generate new nan
     li a0, -1
     ret
@@ -278,7 +278,7 @@ __mulsf_y_0:
     slli a1, a0, 9
     bnez a1, 1f
     li a0, -1
-1:
+label_12:
     ret
 
 __mulsf_return_flushed_x:
@@ -317,8 +317,10 @@ __mulsf_y_nan_inf:
 
 // This is a hack to improve soft float performance for the routines we don't
 // implement (e.g. libm) in libraries built against a non-Zbb ISA dialect:
-float_section __clz2si
-.global __clz2si
+ float_section __clz2si
+ public __clz2si
 __clz2si:
     clz a0, a0
     ret
+
+ end
