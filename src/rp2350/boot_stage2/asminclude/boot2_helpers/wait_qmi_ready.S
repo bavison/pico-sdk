@@ -22,10 +22,10 @@ wait_qmi_ready:
 #else
 
 wait_qmi_ready:
-1:
+label_1:
     ldr r0, [r3, #QMI_DIRECT_CSR_OFFSET]
     lsrs r0, r0, #QMI_DIRECT_CSR_BUSY_LSB + 1
-    bcs 1b
+    bcs label_1
 
     bx lr
 

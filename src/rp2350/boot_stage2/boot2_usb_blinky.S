@@ -21,7 +21,7 @@
 #define ACTIVITY_LED 0
 #define BOOT_MODE USB_BOOT_MSD_AND_PICOBOOT
 
-pico_default_asm_setup
+ pico_default_asm_setup
 
 #ifdef __IASMARM__
  // Ensure there's a reference to __checksum to keep IAR ELF Tool happy
@@ -32,7 +32,7 @@ pico_default_asm_setup
 #endif
 
 // On RP2350 boot stage2 is always called as a regular function, and should return normally
-regular_func _stage2_boot
+ regular_func _stage2_boot
     movs r7, #0x14               // Pointer to _well_known pointer table in ROM
     ldrh r0, [r7, #0]           // Offset 0 is 16 bit pointer to function table
     ldrh r7, [r7, #4]           // Offset 4 is 16 bit pointer to table lookup routine
@@ -50,8 +50,6 @@ dead:
     wfi
     b dead
 
-.global literals
+ public literals
 literals:
-.ltorg
-
-.end
+ ltorg
