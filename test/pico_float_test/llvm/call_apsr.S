@@ -14,25 +14,21 @@
 
 #include "pico/asm_helper.S"
 
-pico_default_asm_setup
+ pico_default_asm_setup
 
-.align 2
+ alignrom 2
 
-.global call_apsr_f
-.type call_apsr_f,%function
-.thumb_func
-call_apsr_f:
+ regular_func call_apsr_f
     push {lr}
     blx r2
     mrs r0, apsr
     pop {pc}
 
-.global call_apsr_d
-.type call_apsr_d,%function
-.thumb_func
-call_apsr_d:
+ regular_func call_apsr_d
     push {r4, lr}
     ldr r4, [sp, #8]
     blx r4
     mrs r0, apsr
     pop {r4, pc}
+
+ end
