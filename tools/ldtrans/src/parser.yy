@@ -114,7 +114,6 @@ yy::parser::symbol_type yylex();
                         LPAREN              "("
                         LT                  "<"
                         MINUS               "-"
-                        NEWLINE             "newline"
                         PLUS                "+"
                         QUERY               "?"
                         RBRACE              "}"
@@ -173,7 +172,6 @@ token:
     | LPAREN            { TRACE("LPAREN") }
     | LT                { TRACE("LT") }
     | MINUS             { TRACE("MINUS") }
-    | NEWLINE           { TRACE("NEWLINE") }
     | PLUS              { TRACE("PLUS") }
     | QUERY             { TRACE("QUERY") }
     | RBRACE            { TRACE("RBRACE") }

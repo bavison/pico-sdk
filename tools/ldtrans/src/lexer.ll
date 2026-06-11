@@ -437,10 +437,8 @@ SIZEOF {
 }
 
 \n {
-    TRACE("NEWLINE")
     ADVANCE();
     g_source_manager.addLine(current_location);
-    return yy::parser::make_NEWLINE(lexer_symbol_location);
 }
 
 <<EOF>> {
