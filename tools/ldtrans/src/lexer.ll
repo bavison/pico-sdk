@@ -114,6 +114,12 @@ SECTIONS {
     return yy::parser::make_SECTIONS(lexer_symbol_location);
 }
 
+REGION_ALIAS {
+    TRACE("REGION_ALIAS")
+    ADVANCE();
+    return yy::parser::make_REGION_ALIAS(lexer_symbol_location);
+}
+
 ASSERT {
     TRACE("ASSERT")
     ADVANCE();
@@ -172,6 +178,54 @@ SORT(_BY_NAME)? {
     TRACE("SORT_BY_NAME")
     ADVANCE();
     return yy::parser::make_SORT_BY_NAME(lexer_symbol_location);
+}
+
+ALIGNOF {
+    TRACE("ALIGNOF")
+    ADVANCE();
+    return yy::parser::make_ALIGNOF(lexer_symbol_location);
+}
+
+ALIGN {
+    TRACE("ALIGN")
+    ADVANCE();
+    return yy::parser::make_ALIGN(lexer_symbol_location);
+}
+
+DEFINED {
+    TRACE("DEFINED")
+    ADVANCE();
+    return yy::parser::make_DEFINED(lexer_symbol_location);
+}
+
+LENGTH {
+    TRACE("LENGTH")
+    ADVANCE();
+    return yy::parser::make_LENGTH(lexer_symbol_location);
+}
+
+LOADADDR {
+    TRACE("LOADADDR")
+    ADVANCE();
+    return yy::parser::make_LOADADDR(lexer_symbol_location);
+}
+
+MAX {
+    TRACE("MAX")
+    ADVANCE();
+    return yy::parser::make_MAX(lexer_symbol_location);
+}
+
+ORIGIN {
+    TRACE("ORIGIN")
+    ADVANCE();
+    return yy::parser::make_ORIGIN(lexer_symbol_location);
+}
+
+SIZEOF {
+    TRACE("SIZEOF")
+    ADVANCE();
+    return yy::parser::make_SIZEOF(lexer_symbol_location);
 }
 
 "=" {

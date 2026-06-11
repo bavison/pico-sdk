@@ -77,6 +77,7 @@ yy::parser::symbol_type yylex();
                         INCLUDE             "INCLUDE"
                         MEMORY              "MEMORY"
                         SECTIONS            "SECTIONS"
+                        REGION_ALIAS        "REGION_ALIAS"
 
     /* Keywords */
                         ASSERT              "ASSERT"
@@ -89,6 +90,16 @@ yy::parser::symbol_type yylex();
                         PROVIDE             "PROVIDE"
                         SORT_BY_ALIGNMENT   "SORT_BY_ALIGNMENT"
                         SORT_BY_NAME        "SORT_BY_NAME"
+
+    /* Built-in functions */
+                        ALIGNOF             "ALIGNOF"
+                        ALIGN               "ALIGN"
+                        DEFINED             "DEFINED"
+                        LENGTH              "LENGTH"
+                        LOADADDR            "LOADADDR"
+                        MAX                 "MAX"
+                        ORIGIN              "ORIGIN"
+                        SIZEOF              "SIZEOF"
 
     /* Symbolic operators */
                         ASSIGN              "="
@@ -116,39 +127,6 @@ yy::parser::symbol_type yylex();
     <IntegerToken>      INTEGER             "integer"
 ;
 
-
-
-
-/* Textual operators */
-/*
- TOK_AT_GT
- TOK_ALIGN
- TOK_ORIGIN
- TOK_LENGTH
- TOK_LOADADDR
- TOK_SIZEOF
-
- TOK_PLUS
- TOK_MINUS
- TOK_STAR
- TOK_SLASH
- TOK_GT
- TOK_LT
-
- TOK_DOT
-*/
-
-/* Punctuation */
-/*
- TOK_LPAREN
- TOK_RPAREN
- TOK_LBRACE
- TOK_RBRACE
- TOK_COLON
- TOK_SEMICOLON
- TOK_COMMA
-*/
-
 %%
 
 input:
@@ -161,6 +139,7 @@ token:
     | INCLUDE           { TRACE("INCLUDE") }
     | MEMORY            { TRACE("MEMORY") }
     | SECTIONS          { TRACE("SECTIONS") }
+    | REGION_ALIAS      { TRACE("REGION_ALIAS") }
 
     | ASSERT            { TRACE("ASSERT") }
     | AT                { TRACE("AT") }
@@ -172,6 +151,15 @@ token:
     | PROVIDE           { TRACE("PROVIDE") }
     | SORT_BY_ALIGNMENT { TRACE("SORT_BY_ALIGNMENT") }
     | SORT_BY_NAME      { TRACE("SORT_BY_NAME") }
+
+    | ALIGNOF           { TRACE("ALIGNOF") }
+    | ALIGN             { TRACE("ALIGN") }
+    | DEFINED           { TRACE("DEFINED") }
+    | LENGTH            { TRACE("LENGTH") }
+    | LOADADDR          { TRACE("LOADADDR") }
+    | MAX               { TRACE("MAX") }
+    | ORIGIN            { TRACE("ORIGIN") }
+    | SIZEOF            { TRACE("SIZEOF") }
 
     | ASSIGN            { TRACE("ASSIGN") }
     | BITWISE_AND       { TRACE("BITWISE_AND") }
