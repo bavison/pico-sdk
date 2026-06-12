@@ -46,13 +46,10 @@ yy::parser::symbol_type yylex();
 #include "lexer.h"
 #include "main.h"
 
-#define TRACE(msg) std::cout << "Consumed " << msg << std::endl;
-//#define TRACE(msg)
+//#define TRACE(msg) std::cout << "Consumed " << msg << std::endl;
+#define TRACE(msg)
 
 %}
-
-/* Track lines and columns (Bison machinery) */
-/*%locations*/
 
 /* Bison 3.2 allows semantic values to be held directly as C++ types via its
  * roll-your-own equivalent of std::variant. The main benefit over traditional
@@ -128,6 +125,90 @@ yy::parser::symbol_type yylex();
 
 %%
 
+command_list:
+    /* empty */
+    | command_list command
+    ;
+
+command:
+      entry_command
+    | include_command
+    | memory_command
+    | sections_command
+    | region_alias_command
+    | symbol_assignment
+    ;
+
+entry_command:
+    ENTRY LPAREN IDENTIFIER RPAREN   { std::cout << "entry command\n"; }
+    ;
+
+include_command:
+    INCLUDE IDENTIFIER
+    {
+        std::cout << "include command\n";
+        FileId include_file;
+        try {
+            include_file = g_source_manager.loadInclude(g_identifier_manager.toRaw($2.id));
+        }
+        catch (const std::exception& e) {
+            throw DiagnosticError($1, std::string("error: ") + e.what());
+        }
+        lexer_push_include(include_file);
+        DiagnosticError::push_include($1);
+    }
+    ;
+
+memory_command:
+    MEMORY LBRACE input RBRACE   { std::cout << "memory command\n"; }
+    ;
+
+sections_command:
+    SECTIONS LBRACE input RBRACE   { std::cout << "sections command\n"; }
+    ;
+
+region_alias_command:
+    REGION_ALIAS LPAREN IDENTIFIER COMMA IDENTIFIER RPAREN SEMICOLON   { std::cout << "region_alias command\n"; }
+    ;
+
+symbol_assignment:
+    IDENTIFIER ASSIGN expression SEMICOLON   { std::cout << "assignment\n"; }
+    ;
+
+expression:
+    /* empty */
+    | expression expression_element
+    ;
+
+expression_element:
+      ALIGNOF
+    | ALIGN
+    | DEFINED
+    | LENGTH
+    | LOADADDR
+    | MAX
+    | ORIGIN
+    | SIZEOF
+    | BITWISE_AND
+    | BITWISE_NOT
+    | COLON
+    | COMMA
+    | GE
+    | GT
+    | LBRACE
+    | LE
+    | LPAREN
+    | LT
+    | MINUS
+    | PLUS
+    | QUERY
+    | RBRACE
+    | RPAREN
+    | STAR
+    | IDENTIFIER
+    | INTEGER
+    ;
+
 input:
     /* empty */
     | input token
@@ -189,5 +270,5 @@ token:
 
 void yy::parser::error(const std::string& s)
 {
-    throw DiagnosticError(lexer_symbol_location, s);
+    throw DiagnosticError(lexer_symbol_location, "error: " + s);
 }

@@ -43,7 +43,12 @@ public:
         std::size_t column;
     };
 
-    FileId loadFile(const std::string& display_name);
+    FileId loadInclude(const std::string& display_name);
+
+    FileId loadFile(const std::string& display_name)
+    {
+        return loadFile(display_name, std::filesystem::weakly_canonical(display_name));
+    }
 
     FileId virtualFile(const std::string& display_name, const std::string& contents);
 
@@ -55,6 +60,11 @@ public:
     const File& file(FileId id) const
     {
         return m_file[id];
+    }
+
+    void addSearchPath(const std::string& path)
+    {
+        m_search_paths.push_back(path);
     }
 
     void addLine(SourceLocation location)
@@ -78,10 +88,13 @@ public:
     std::string toFileLineColumn(SourceLocation location) const;
 
 private:
+    FileId loadFile(const std::string& display_name, const std::filesystem::path& canonical);
+
     std::unordered_map<std::filesystem::path, StorageId> m_storage_cache;
     std::unordered_multimap<std::string, FileId> m_file_cache;
     std::vector<Storage> m_storage;
     std::vector<File> m_file;
+    std::vector<std::filesystem::path> m_search_paths;
 };
 
 extern SourceManager g_source_manager;

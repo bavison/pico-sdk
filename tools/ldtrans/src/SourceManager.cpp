@@ -12,13 +12,30 @@
 
 SourceManager g_source_manager;
 
-FileId SourceManager::loadFile(const std::string& display_name)
+FileId SourceManager::loadInclude(const std::string& display_name)
 {
+    auto p = std::filesystem::path(display_name);
+
+    if (p.is_absolute() || std::filesystem::exists(p))
+        return loadFile(display_name, std::filesystem::weakly_canonical(display_name));
+
+    for (const auto& dir : m_search_paths) {
+        auto candidate = dir / p;
+        if (std::filesystem::exists(candidate))
+            return loadFile(display_name, std::filesystem::weakly_canonical(candidate));
+    }
+
+    throw std::system_error(ENOENT, std::generic_category(), display_name);
+}
+
+FileId SourceManager::loadFile(const std::string& display_name, const std::filesystem::path& canonical)
+{
+    std::cout << "Loading " << canonical.generic_string() << std::endl;
+
     // First check if we match both display name and canonical name.
     // Search by display name first (removes most hits, but not necessarily unique)
     // then test canonical version matches. This is because we only map from
     // display name to canonical name.
-    auto canonical = std::filesystem::weakly_canonical(display_name);
     auto [start, end] = m_file_cache.equal_range(display_name);
     while (start != end) {
         if (m_storage[m_file[start->second].storage].canonical_path == canonical)
@@ -52,8 +69,10 @@ FileId SourceManager::loadFile(const std::string& display_name)
         );
 
     // Create Storage with a std::string allocated large enough to hold the whole file
+    // plus the two terminating bytes needed so that we can pass the buffer directly
+    // to the YY_BUFFER_STATE with zero copying
     ifs.seekg(0, std::ios::end);
-    Storage s{canonical, std::string(static_cast<std::size_t>(ifs.tellg()), '\0'), {0}};
+    Storage s{canonical, std::string(static_cast<std::size_t>(ifs.tellg()) + 2, '\0'), {0}};
 
     // Load into string
     ifs.seekg(0);
@@ -61,8 +80,11 @@ FileId SourceManager::loadFile(const std::string& display_name)
 
     // On Windows, tellg() gives the size including the CR part of CR-LF newlines,
     // but during the load process these will have been substituted for just LF
-    // so we need to truncate the string down to the in-memory lemgth
-    s.contents.resize(static_cast<std::size_t>(ifs.gcount()));
+    // so we need to truncate the string down to the in-memory length
+    s.contents.resize(static_cast<std::size_t>(ifs.gcount() + 2));
+
+    // Add the terminators that flex needs
+    s.contents.replace(s.contents.length() - 2, 2, 2, '\0');
 
     // Add to our databases and return
     StorageId sid = m_storage.size();
@@ -78,7 +100,7 @@ FileId SourceManager::loadFile(const std::string& display_name)
 FileId SourceManager::virtualFile(const std::string& display_name, const std::string& contents)
 {
     // This is simpler - no need for de-duplication
-    Storage s{"", contents};
+    Storage s{"", contents + std::string(2, '\0')};
     StorageId sid = m_storage.size();
     m_storage.push_back(s);
     // No need to enter into storage cache here as we will never search virtual files for duplicates

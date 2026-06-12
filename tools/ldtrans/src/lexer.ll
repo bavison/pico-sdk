@@ -30,8 +30,8 @@
 #include "lexer.h"
 #include "main.h"
 
-#define TRACE(msg) std::cout << "Lexed " << msg << std::endl;
-//#define TRACE(msg)
+//#define TRACE(msg) std::cout << "Lexed " << msg << std::endl;
+#define TRACE(msg)
 
 /* Current location */
 static SourceLocation current_location;
@@ -53,6 +53,8 @@ static std::vector<SourceLocation> resume_locations;
  * make_* factory functions.
  */
 #define YY_DECL yy::parser::symbol_type yylex()
+
+static YY_BUFFER_STATE my_scan_buffer(FileId id);
 
 %}
 
@@ -444,25 +446,31 @@ SIZEOF {
 <<EOF>> {
     g_source_manager.completeLineTable(current_location.file);
     if (!resume_locations.empty()) {
-        yypop_buffer_state();
+        yypop_buffer_state(); // auto-deletes the popped buffer
         current_location = resume_locations.back();
         resume_locations.pop_back();
+        DiagnosticError::pop_include();
+        /* no need for a return statement! */
     } else {
-        yy_delete_buffer(YY_CURRENT_BUFFER);
+        auto old_buffer = YY_CURRENT_BUFFER;
         g_input_queue.pop();
-        if (g_input_queue.empty())
+        if (g_input_queue.empty()) {
+            yy_delete_buffer(old_buffer);
             return yy::parser::make_YYEOF();
+        }
         auto& input = *g_input_queue.front();
         current_location.file = input.getFileId();
         current_location.offset = 0;
-        yy_switch_to_buffer(yy_scan_bytes(input.getContents().data(), input.getContents().size()));
+        yy_switch_to_buffer(my_scan_buffer(input.getFileId()));
+        yy_delete_buffer(old_buffer);
+        /* no need for a return statement! */
     }
 }
 
 . {
     static char buf[80];
-    if (yytext[0] < ' ' && yytext[0] >= 127)
-        sprintf(buf, "error: unexpected byte 0x%02X", yytext[0]);
+    if (yytext[0] < ' ' || yytext[0] >= 127)
+        sprintf(buf, "error: unexpected byte 0x%02X", (uint8_t) yytext[0]);
     else
         sprintf(buf, "error: unexpected byte '%c'", yytext[0]);
     throw DiagnosticError(current_location, buf);
@@ -471,18 +479,38 @@ SIZEOF {
 %%
 /* Literal insertions into lexer.cpp (near bottom) */
 
+/* This is an alternative to yy_scan_buffer(), because current versions of
+ * flex generate that function such that it automatically calls
+ * yy_switch_to_buffer() which swaps out whatever is at the top of the
+ * buffer stack for the newly-created buffer. That is absolutely not what
+ * want when doing inclusions! Note that yy_scan_bytes() and
+ * yy_scan_string() both use yy_scan_buffer() as a back-end and so are not
+ * suitable alternatives.
+ */
+static YY_BUFFER_STATE my_scan_buffer(FileId id)
+{
+    auto& contents = g_source_manager.storage(g_source_manager.file(id).storage).contents;
+    // Use yy_create_buffer to create a template that we override as necessary.
+    // Hopefully this will innoculate us a bit against structure changes in later versions of flex!
+    auto buffer = yy_create_buffer(NULL, 0);
+    yyfree((void*) buffer->yy_ch_buf); // we don't use the buffer allocated
+    buffer->yy_ch_buf = buffer->yy_buf_pos = const_cast<char*>(contents.data());
+    buffer->yy_buf_size = buffer->yy_n_chars = contents.size() - 2;
+    buffer->yy_is_our_buffer = 0;
+    buffer->yy_fill_buffer = 0;
+    return buffer;
+}
+
 void lexer_set_initial_input(const TopLevelSource& input)
 {
     current_location.file = input.getFileId();
     current_location.offset = 0;
-    yy_scan_bytes(input.getContents().data(), input.getContents().size());
+    yy_switch_to_buffer(my_scan_buffer(input.getFileId()));
 }
 
 void lexer_push_include(FileId new_file)
 {
-    auto contents = g_source_manager.storage(g_source_manager.file(new_file).storage).contents;
-    auto buffer = yy_scan_bytes(contents.data(), contents.size());
-    yypush_buffer_state(buffer);
+    yypush_buffer_state(my_scan_buffer(new_file));
     resume_locations.push_back(current_location);
     current_location.file = new_file;
     current_location.offset = 0;

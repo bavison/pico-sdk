@@ -118,6 +118,7 @@ invalid_defsym:
                 // Ignore
             } else if (auto a = option(arg, "-L")) {
                 // Handle search path
+                g_source_manager.addSearchPath(std::string(*a));
             } else if (auto a = option(arg, "-Map=")) {
                 // Ignore
             } else if(auto a = option(arg, "--script=")) {
