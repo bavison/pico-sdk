@@ -14,6 +14,7 @@
 #include <iterator>
 #include <string>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 #include "SourceLocation.h"
@@ -27,7 +28,8 @@ public:
     {
         std::filesystem::path canonical_path; // empty for virtual files
         std::string contents;
-        std::vector<std::size_t> line_starts; // unused for virtual files
+        std::string lexer_buffer;
+        std::vector<std::size_t> line_starts;
         bool line_table_complete = false; // guard in case we have multiple inclusion
     };
 
@@ -86,6 +88,8 @@ public:
     std::string toFileLine(SourceLocation location) const;
 
     std::string toFileLineColumn(SourceLocation location) const;
+
+    std::pair<std::string, std::size_t> toLineInfo(SourceLocation location) const;
 
 private:
     FileId loadFile(const std::string& display_name, const std::filesystem::path& canonical);

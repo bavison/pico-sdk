@@ -26,10 +26,14 @@ std::string DiagnosticError::format() const
 
     /* Add main diagnostic */
     msg += g_source_manager.toFileLineColumn(primary) + ": " + what() + "\n";
+    auto [ text, column ] = g_source_manager.toLineInfo(primary);
+    msg += text + "\n" + std::string(column - 1, ' ') + "^\n";
 
     /* Add any notes */
     for (const auto& note : notes) {
         msg += g_source_manager.toFileLineColumn(note.location) + ": note: " + note.message + "\n";
+        auto [ text, column ] = g_source_manager.toLineInfo(note.location);
+        msg += text + "\n" + std::string(column - 1, ' ') + "^\n";
     }
 
     return msg;

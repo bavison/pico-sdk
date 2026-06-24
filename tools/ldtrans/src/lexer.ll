@@ -278,6 +278,12 @@ SIZEOF {
     return yy::parser::make_LBRACE(lexer_symbol_location);
 }
 
+"!" {
+    TRACE("LOGICAL_NOT")
+    ADVANCE();
+    return yy::parser::make_LOGICAL_NOT(lexer_symbol_location);
+}
+
 "(" {
     TRACE("LPAREN")
     ADVANCE();
@@ -489,13 +495,13 @@ SIZEOF {
  */
 static YY_BUFFER_STATE my_scan_buffer(FileId id)
 {
-    auto& contents = g_source_manager.storage(g_source_manager.file(id).storage).contents;
+    auto& lexer_buffer = g_source_manager.storage(g_source_manager.file(id).storage).lexer_buffer;
     // Use yy_create_buffer to create a template that we override as necessary.
     // Hopefully this will innoculate us a bit against structure changes in later versions of flex!
     auto buffer = yy_create_buffer(NULL, 0);
     yyfree((void*) buffer->yy_ch_buf); // we don't use the buffer allocated
-    buffer->yy_ch_buf = buffer->yy_buf_pos = const_cast<char*>(contents.data());
-    buffer->yy_buf_size = buffer->yy_n_chars = contents.size() - 2;
+    buffer->yy_ch_buf = buffer->yy_buf_pos = const_cast<char*>(lexer_buffer.data());
+    buffer->yy_buf_size = buffer->yy_n_chars = lexer_buffer.size() - 2;
     buffer->yy_is_our_buffer = 0;
     buffer->yy_fill_buffer = 0;
     return buffer;
