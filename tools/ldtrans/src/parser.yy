@@ -14,342 +14,14 @@
 #include <unordered_map>
 #include <vector>
 
+#include "Expression.h"
 #include "Identifier.h"
 #include "lexer.h"
 #include "main.h"
+#include "MemoryRegion.h"
+#include "Script.h"
 #include "SourceLocation.h"
-
-struct IdentifierToken
-{
-    SourceLocation loc;
-    IdentifierId id;
-};
-
-struct IntegerToken
-{
-    SourceLocation loc;
-    uint64_t value; // future-proofing!
-};
-
-class Expression
-{
-public:
-    virtual ~Expression() = default;
-    virtual std::string dump() const = 0;
-};
-
-using ExpressionPtr = std::unique_ptr<Expression>;
-
-class SymbolExpression : public Expression
-{
-public:
-    SymbolExpression(IdentifierToken symbol) : m_symbol(symbol) {}
-    std::string dump() const override
-    {
-        return g_identifier_manager.toDisplayName(m_symbol.id);
-    }
-private:
-    IdentifierToken m_symbol;
-};
-
-class IntegerExpression : public Expression
-{
-public:
-    IntegerExpression(IntegerToken integer) : m_integer(integer) {}
-    std::string dump() const override
-    {
-        char buffer[2 + 16 + 1] = "0x"; // includes null terminator, wherever that is
-        auto [ptr, ec] = std::to_chars(buffer + 2, buffer + 2 + 16, m_integer.value, 16);
-        if (ec == std::errc{})
-            return buffer;
-        else
-            return "<invalid>";
-    }
-private:
-    IntegerToken m_integer;
-};
-
-enum class UnaryOperator
-{
-    Plus,
-    Minus,
-    BitwiseNot,
-    LogicalNot,
-    Align,
-};
-
-class UnaryExpression : public Expression
-{
-public:
-    UnaryExpression(SourceLocation location, UnaryOperator op, ExpressionPtr sub_expr) : m_location(location), m_op(op), m_sub_expr(std::move(sub_expr)) {}
-    std::string dump() const override
-    {
-        switch (m_op) {
-        case UnaryOperator::Plus:
-            return std::string("+(") + m_sub_expr->dump() + ")";
-        case UnaryOperator::Minus:
-            return std::string("-(") + m_sub_expr->dump() + ")";
-        case UnaryOperator::BitwiseNot:
-            return std::string("~(") + m_sub_expr->dump() + ")";
-        case UnaryOperator::LogicalNot:
-            return std::string("!(") + m_sub_expr->dump() + ")";
-        case UnaryOperator::Align:
-            return std::string("ALIGN(") + m_sub_expr->dump() + ")";
-        default:
-            return "<unknown unary op>";
-        }
-    }
-private:
-    SourceLocation m_location;
-    UnaryOperator m_op;
-    ExpressionPtr m_sub_expr;
-};
-
-enum class BinaryOperator
-{
-    Multiply,
-    Add,
-    Subtract,
-    GreaterOrEqual,
-    Greater,
-    LessOrEqual,
-    Less,
-    BitwiseAnd,
-    Max,
-};
-
-class BinaryExpression : public Expression
-{
-public:
-    BinaryExpression(SourceLocation location, BinaryOperator op, ExpressionPtr left_expr, ExpressionPtr right_expr) : m_location(location), m_op(op), m_left_expr(std::move(left_expr)), m_right_expr(std::move(right_expr)) {}
-    std::string dump() const override
-    {
-        switch (m_op) {
-        case BinaryOperator::Multiply:
-            return std::string("(") + m_left_expr->dump() + " * " + m_right_expr->dump() + ")";
-        case BinaryOperator::Add:
-            return std::string("(") + m_left_expr->dump() + " + " + m_right_expr->dump() + ")";
-        case BinaryOperator::Subtract:
-            return std::string("(") + m_left_expr->dump() + " - " + m_right_expr->dump() + ")";
-        case BinaryOperator::GreaterOrEqual:
-            return std::string("(") + m_left_expr->dump() + " >= " + m_right_expr->dump() + ")";
-        case BinaryOperator::Greater:
-            return std::string("(") + m_left_expr->dump() + " > " + m_right_expr->dump() + ")";
-        case BinaryOperator::LessOrEqual:
-            return std::string("(") + m_left_expr->dump() + " <= " + m_right_expr->dump() + ")";
-        case BinaryOperator::Less:
-            return std::string("(") + m_left_expr->dump() + " < " + m_right_expr->dump() + ")";
-        case BinaryOperator::BitwiseAnd:
-            return std::string("(") + m_left_expr->dump() + " & " + m_right_expr->dump() + ")";
-        case BinaryOperator::Max:
-            return std::string("MAX(") + m_left_expr->dump() + ", " + m_right_expr->dump() + ")";
-        default:
-            return "<unknown binary op>";
-        }
-    }
-private:
-    SourceLocation m_location;
-    BinaryOperator m_op;
-    ExpressionPtr m_left_expr;
-    ExpressionPtr m_right_expr;
-};
-
-class TernaryExpression : public Expression
-{
-public:
-    TernaryExpression(SourceLocation location, ExpressionPtr condition_expr, ExpressionPtr if_expr, ExpressionPtr else_expr) : m_location(location), m_condition_expr(std::move(condition_expr)), m_if_expr(std::move(if_expr)), m_else_expr(std::move(else_expr)) {}
-    std::string dump() const override
-    {
-        return std::string("(") + m_condition_expr->dump() + " ? " + m_if_expr->dump() + " ? " + m_else_expr->dump() + ")";
-    }
-private:
-    SourceLocation m_location;
-    ExpressionPtr m_condition_expr;
-    ExpressionPtr m_if_expr;
-    ExpressionPtr m_else_expr;
-};
-
-enum class SectionOperator
-{
-    AlignOf,
-    SizeOf,
-};
-
-class SectionExpression : public Expression
-{
-public:
-    SectionExpression(SourceLocation location, SectionOperator op, IdentifierId section) : m_location(location), m_op(op), m_section(section) {}
-    std::string dump() const override
-    {
-        switch (m_op) {
-        case SectionOperator::AlignOf:
-            return std::string("ALIGNOF(") + g_identifier_manager.toDisplayName(m_section) + ")";
-        case SectionOperator::SizeOf:
-            return std::string("SIZEOF(") + g_identifier_manager.toDisplayName(m_section) + ")";
-        default:
-            return "<unknown section op>";
-        }
-    }
-private:
-    SourceLocation m_location;
-    SectionOperator m_op;
-    IdentifierId m_section;
-};
-
-class DefinedExpression : public Expression
-{
-public:
-    DefinedExpression(SourceLocation location, IdentifierId symbol) : m_location(location), m_symbol(symbol) {}
-    std::string dump() const override
-    {
-        return std::string("DEFINED(") + g_identifier_manager.toDisplayName(m_symbol) + ")";
-    }
-private:
-    SourceLocation m_location;
-    IdentifierId m_symbol;
-};
-
-enum class MemoryOperator
-{
-    Length,
-    Origin,
-};
-
-class MemoryExpression : public Expression
-{
-public:
-    MemoryExpression(SourceLocation location, MemoryOperator op, IdentifierId memory) : m_location(location), m_op(op), m_memory(memory) {}
-    std::string dump() const override
-    {
-        switch (m_op) {
-        case MemoryOperator::Length:
-            return std::string("LENGTH(") + g_identifier_manager.toDisplayName(m_memory) + ")";
-        case MemoryOperator::Origin:
-            return std::string("ORIGIN(") + g_identifier_manager.toDisplayName(m_memory) + ")";
-        default:
-            return "<unknown memory region op>";
-        }
-    }
-private:
-    SourceLocation m_location;
-    MemoryOperator m_op;
-    IdentifierId m_memory;
-};
-
-enum class MemoryAttribute : uint8_t
-{
-    ReadOnly   = 1 << 0,
-    ReadWrite  = 1 << 1,
-    Executable = 1 << 2,
-    Alloc      = 1 << 3,
-    Init       = 1 << 4,
-};
-
-class MemoryAttributes
-{
-public:
-    constexpr MemoryAttributes() = default;
-    constexpr MemoryAttributes(char c)
-    {
-        switch (c) {
-        case 'R':
-        case 'r':
-            m_bits = (uint8_t) MemoryAttribute::ReadOnly;
-            break;
-        case 'W':
-        case 'w':
-            m_bits = (uint8_t) MemoryAttribute::ReadWrite;
-            break;
-        case 'X':
-        case 'x':
-            m_bits = (uint8_t) MemoryAttribute::Executable;
-            break;
-        case 'A':
-        case 'a':
-            m_bits = (uint8_t) MemoryAttribute::Alloc;
-            break;
-        case 'I':
-        case 'i':
-        case 'L':
-        case 'l':
-            m_bits = (uint8_t) MemoryAttribute::Init;
-            break;
-        default:
-            throw DiagnosticError(lexer_symbol_location, "error: invalid attribute specifier");
-        }
-    }
-    MemoryAttributes operator|(const MemoryAttributes& other) const
-    {
-        return MemoryAttributes{static_cast<uint8_t>(m_bits | other.m_bits)};
-    }
-    MemoryAttributes& operator|=(const MemoryAttributes& other)
-    {
-        m_bits |= other.m_bits;
-        return *this;
-    }
-    std::string dump() const
-    {
-        if (m_bits == 0)
-            return "<none>";
-        std::string result;
-        if (m_bits & (uint8_t) MemoryAttribute::ReadOnly)
-            result += "R";
-        if (m_bits & (uint8_t) MemoryAttribute::ReadWrite)
-            result += "W";
-        if (m_bits & (uint8_t) MemoryAttribute::Executable)
-            result += "X";
-        if (m_bits & (uint8_t) MemoryAttribute::Alloc)
-            result += "A";
-        if (m_bits & (uint8_t) MemoryAttribute::Init)
-            result += "I";
-        return result;
-    }
-private:
-    MemoryAttributes(uint8_t bits) : m_bits(bits) {}
-    uint8_t m_bits = 0;
-};
-
-struct MemoryAttributesRules
-{
-    MemoryAttributes required;
-    MemoryAttributes denied;
-    MemoryAttributesRules operator|(const MemoryAttributesRules& other) const
-    {
-        return MemoryAttributesRules{required | other.required, denied | other.denied};
-    }
-    std::string dump() const
-    {
-        return std::string("  required: ") + required.dump() + "\n  denied: " + denied.dump() + "\n";
-    }
-};
-
-struct MemoryRegion
-{
-    IdentifierId original_name;
-    MemoryAttributesRules rules;
-    ExpressionPtr origin;
-    ExpressionPtr length;
-    std::string dump() const
-    {
-        return std::string("MEMORY\n") +
-            "  name: " + g_identifier_manager.toDisplayName(original_name) + "\n" +
-            rules.dump() +
-            "  origin: " + origin->dump() + "\n"
-            "  length: " + length->dump() + "\n";
-    }
-};
-
-struct Script
-{
-    /* Image entry point */
-    std::optional<std::pair<SourceLocation,IdentifierId>> entry;
-    /* Memory regions (order is significant in case an output section has to match using attributes) */
-    std::vector<MemoryRegion> memory_regions;
-    /* Map from memory region and region alias names to memory regions */
-    std::unordered_map<IdentifierId, std::pair<SourceLocation,size_t>> memory_region_lookup;
-};
-
-extern Script g_script;
+#include "Symbol.h"
 
 }
 
@@ -375,8 +47,6 @@ yy::parser::symbol_type yylex();
 
 //#define TRACE(msg) std::cout << "Consumed " << msg << std::endl;
 #define TRACE(msg)
-
-Script g_script;
 
 static bool g_memory_region_attribute_sense_required = true;
 
@@ -560,7 +230,7 @@ include_command:
         std::cout << "include command\n";
         FileId include_file;
         try {
-            include_file = g_source_manager.loadInclude(g_identifier_manager.toRaw($2.id));
+            include_file = g_source_manager.loadInclude(g_script.identifiers.toRaw($2.id));
         }
         catch (const std::exception& e) {
             throw DiagnosticError($1, std::string("error: ") + e.what());
@@ -573,7 +243,7 @@ include_command:
 memory_attr:
       IDENTIFIER
         {
-            const auto& s = g_identifier_manager.toRaw($1.id);
+            const auto& s = g_script.identifiers.toRaw($1.id);
             $$ = MemoryAttributesRules();
             for (auto c : s) {
                 (g_memory_region_attribute_sense_required ? $$.required : $$.denied) |= MemoryAttributes(c);
@@ -602,11 +272,11 @@ memory_block:
             auto it = g_script.memory_region_lookup.find($1.id);
             if (it != g_script.memory_region_lookup.end()) {
                 auto const& previous = it->second;
-                throw DiagnosticError($1.loc, "error: redefinition of memory region or region alias", {{ previous.first, "previous definition was here" }});
+                throw DiagnosticError($1.loc, "error: redefinition of memory region or region alias", {{ g_script.memory_regions[previous].location, "previous definition was here" }});
             } 
-            g_script.memory_region_lookup[$1.id] = { $1.loc, g_script.memory_regions.size() };
-            g_script.memory_regions.emplace_back(MemoryRegion{$1.id, $2, std::move($6), std::move($10)});
-            std::cout << g_script.memory_regions.back().dump();
+            g_script.memory_region_lookup[$1.id] = g_script.memory_regions.size();
+            g_script.memory_regions.emplace_back(MemoryRegion{$1.loc, $1.id, $2, std::move($6), std::move($10)});
+            std::cout << g_script.memory_regions.back().dump(g_script.identifiers);
         }
     ;
 
@@ -638,17 +308,28 @@ region_alias_command:
             auto it = g_script.memory_region_lookup.find($3.id);
             if (it != g_script.memory_region_lookup.end()) {
                 auto const& previous = it->second;
-                throw DiagnosticError($3.loc, "error: redefinition of memory region or region alias", {{ previous.first, "previous definition was here" }});
+                throw DiagnosticError($3.loc, "error: redefinition of memory region or region alias", {{ g_script.memory_regions[previous].location, "previous definition was here" }});
             } 
             it = g_script.memory_region_lookup.find($5.id);
             if (it == g_script.memory_region_lookup.end())
                 throw DiagnosticError($5.loc, "error: unknown memory region");
-            g_script.memory_region_lookup[$3.id] = { $3.loc, g_script.memory_region_lookup[$5.id].second };
+            g_script.memory_region_lookup[$3.id] = g_script.memory_region_lookup[$5.id];
         }
     ;
 
 symbol_assignment:
-      IDENTIFIER ASSIGN expression SEMICOLON   { std::cout << "assignment\n"; }
+      IDENTIFIER ASSIGN expression SEMICOLON
+        {
+            std::cout << "assignment\n";
+            Symbol sym($1.loc, $1.id, std::move($3));
+            auto it = g_script.symbol_lookup.find($1.id);
+            if (it == g_script.symbol_lookup.end()) {
+                g_script.symbol_lookup[$1.id] = g_script.symbols.size();
+                g_script.symbols.emplace_back(std::move(sym));
+            } else
+               g_script.symbols[it->second] = std::move(sym);
+            std::cout << g_script.symbols[g_script.symbol_lookup.find($1.id)->second].dump(g_script.identifiers);
+        }
     ;
 
 
@@ -706,7 +387,7 @@ token:
     | SEMICOLON         { TRACE("SEMICOLON") }
     | STAR              { TRACE("STAR") }
 
-    | IDENTIFIER        { TRACE("IDENTIFIER: " << g_identifier_manager.toDisplayName($1.id)) }
+    | IDENTIFIER        { TRACE("IDENTIFIER: " << g_script.identifiers.toDisplayName($1.id)) }
 
     | INTEGER           { TRACE("INTEGER: " << $1.value) }
     ;

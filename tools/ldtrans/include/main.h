@@ -16,6 +16,5 @@
 #include "SourceManager.h"
 
 extern std::queue<std::unique_ptr<TopLevelSource>> g_input_queue;
-extern IdentifierManager g_identifier_manager;
 
 #endif /* sentry INCLUDE_MAIN_H_ */

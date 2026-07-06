@@ -346,9 +346,9 @@ SIZEOF {
 
 
 [A-Za-z_.][A-Za-z0-9_.-]* {
-    IdentifierToken tok{current_location, g_identifier_manager.toId(yytext)};
+    IdentifierToken tok{current_location, g_script.identifiers.toId(yytext)};
     ADVANCE();
-    auto regularised = g_identifier_manager.toDisplayName(tok.id);
+    auto regularised = g_script.identifiers.toDisplayName(tok.id);
     TRACE("IDENTIFIER: " << yytext << " regularised to " << regularised)
     return yy::parser::make_IDENTIFIER(tok);
 }
@@ -362,9 +362,9 @@ SIZEOF {
             ++i;
         unescaped.push_back(yytext[i]);
     }
-    IdentifierToken tok{current_location, g_identifier_manager.toId(unescaped)};
+    IdentifierToken tok{current_location, g_script.identifiers.toId(unescaped)};
     ADVANCE();
-    auto regularised = g_identifier_manager.toDisplayName(tok.id);
+    auto regularised = g_script.identifiers.toDisplayName(tok.id);
     TRACE("IDENTIFIER: " << yytext << " regularised to " << regularised)
     return yy::parser::make_IDENTIFIER(tok);
 }

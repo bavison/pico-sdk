@@ -21,8 +21,6 @@
 
 /* Queue of top-level files to process */
 std::queue<std::unique_ptr<TopLevelSource>> g_input_queue;
-/* Database of identifiers */
-IdentifierManager g_identifier_manager;
 
 int main(int argc, char* argv[])
 {
@@ -143,6 +141,9 @@ invalid_defsym:
         yy::parser parser;
         parser.parse();
         // Subsequent inputs are pulled from the queue during <<EOF>> handling within parser.parse()
+
+        // Analyse
+        g_script.SortSymbols();
 
         // Now emit the output file (TODO)
 
