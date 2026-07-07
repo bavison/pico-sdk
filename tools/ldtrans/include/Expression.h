@@ -65,6 +65,7 @@ class SymbolExpression : public Expression
 public:
     SymbolExpression(IdentifierToken symbol) : m_symbol(symbol) {}
     void accept(ExpressionVisitor& visitor) const override { visitor.visit(*this); }
+    SourceLocation location() const { return m_symbol.loc; }
     IdentifierId identifier() const { return m_symbol.id; }
 private:
     IdentifierToken m_symbol;

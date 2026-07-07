@@ -21,13 +21,6 @@ enum class SymbolKind
     Section,
 };
 
-enum class SymbolState
-{
-    Unvisited,
-    Visiting,
-    Visited,
-};
-
 class Symbol
 {
 public:
@@ -42,12 +35,15 @@ public:
             "  value: " + expression_dump.result() + "\n" +
             "  kind: " + (m_kind == SymbolKind::TopLevel ? "top-level\n" : "section\n");
     }
+    SourceLocation location() const { return m_location; }
+    IdentifierId name() const { return m_name; }
+    const Expression& expression() const { return *m_expression; }
+    SymbolKind kind() const { return m_kind; }
 private:
     SourceLocation m_location;
     IdentifierId m_name;
     ExpressionPtr m_expression;
     SymbolKind m_kind;
-    SymbolState m_state = SymbolState::Unvisited;
 };
 
 /* Symbol ID is an index into the symbol table */

@@ -79,7 +79,7 @@ static YY_BUFFER_STATE my_scan_buffer(FileId id);
 }
 
 <COMMENT><<EOF>> {
-    throw DiagnosticError(current_location, "Unterminated comment");
+    throw DiagnosticError(current_location, "error: unterminated comment");
 }
 
 <COMMENT>. {
@@ -374,19 +374,19 @@ SIZEOF {
     errno = 0;
     IntegerToken tok{current_location, strtoull(yytext, &endptr, 16)};
     if (tok.value == ULLONG_MAX && errno == ERANGE)
-        throw DiagnosticError(current_location, "Integer overflow");
+        throw DiagnosticError(current_location, "error: integer overflow");
     if (endptr < yytext + yyleng)
         switch (*endptr) {
         case 'M':
         case 'm':
             if (tok.value > (UINT64_MAX >> 10))
-                throw DiagnosticError(current_location, "Integer overflow");
+                throw DiagnosticError(current_location, "error: integer overflow");
             tok.value <<= 10;
             [[fallthrough]];
         case 'K':
         case 'k':
             if (tok.value > (UINT64_MAX >> 10))
-                throw DiagnosticError(current_location, "Integer overflow");
+                throw DiagnosticError(current_location, "error: integer overflow");
             tok.value <<= 10;
         }
     ADVANCE();
@@ -399,19 +399,19 @@ SIZEOF {
     errno = 0;
     IntegerToken tok{current_location, strtoull(yytext, &endptr, 8)};
     if (tok.value == ULLONG_MAX && errno == ERANGE)
-        throw DiagnosticError(current_location, "Integer overflow");
+        throw DiagnosticError(current_location, "error: integer overflow");
     if (endptr < yytext + yyleng)
         switch (*endptr) {
         case 'M':
         case 'm':
             if (tok.value > (UINT64_MAX >> 10))
-                throw DiagnosticError(current_location, "Integer overflow");
+                throw DiagnosticError(current_location, "error: integer overflow");
             tok.value <<= 10;
             [[fallthrough]];
         case 'K':
         case 'k':
             if (tok.value > (UINT64_MAX >> 10))
-                throw DiagnosticError(current_location, "Integer overflow");
+                throw DiagnosticError(current_location, "error: integer overflow");
             tok.value <<= 10;
         }
     ADVANCE();
@@ -424,19 +424,19 @@ SIZEOF {
     errno = 0;
     IntegerToken tok{current_location, strtoull(yytext, &endptr, 10)};
     if (tok.value == ULLONG_MAX && errno == ERANGE)
-        throw DiagnosticError(current_location, "Integer overflow");
+        throw DiagnosticError(current_location, "error: integer overflow");
     if (endptr < yytext + yyleng)
         switch (*endptr) {
         case 'M':
         case 'm':
             if (tok.value > (UINT64_MAX >> 10))
-                throw DiagnosticError(current_location, "Integer overflow");
+                throw DiagnosticError(current_location, "error: integer overflow");
             tok.value <<= 10;
             [[fallthrough]];
         case 'K':
         case 'k':
             if (tok.value > (UINT64_MAX >> 10))
-                throw DiagnosticError(current_location, "Integer overflow");
+                throw DiagnosticError(current_location, "error: integer overflow");
             tok.value <<= 10;
         }
     ADVANCE();
