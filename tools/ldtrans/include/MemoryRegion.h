@@ -11,6 +11,7 @@
 
 #include <string>
 
+#include "Definition.h"
 #include "Diagnostic.h"
 #include "Expression.h"
 #include "Identifier.h"
@@ -103,25 +104,34 @@ struct MemoryAttributesRules
     }
 };
 
-struct MemoryRegion
+class MemoryRegion
 {
-    SourceLocation location;
-    IdentifierId original_name;
-    MemoryAttributesRules rules;
-    ExpressionPtr origin;
-    ExpressionPtr length;
+public:
+    MemoryRegion(SourceLocation location, IdentifierId name, MemoryAttributesRules rules, Definition origin, Definition length) :
+        m_location(location), m_name(name), m_rules(rules), m_origin(std::move(origin)), m_length(std::move(length)) {}
     std::string dump(const IdentifierManager& ids) const
     {
         DumpVisitor origin_dump(ids), length_dump(ids);
-        origin->accept(origin_dump);
-        length->accept(length_dump);
+        m_origin.expression().accept(origin_dump);
+        m_length.expression().accept(length_dump);
         return std::string("MEMORY\n") +
-            "  location: " + g_source_manager.toFileLineColumn(location) + "\n" +
-            "  name: " + ids.toDisplayName(original_name) + "\n" +
-            rules.dump() +
+            "  location: " + g_source_manager.toFileLineColumn(m_location) + "\n" +
+            "  name: " + ids.toDisplayName(m_name) + "\n" +
+            m_rules.dump() +
             "  origin: " + origin_dump.result() + "\n" +
             "  length: " + length_dump.result() + "\n";
     }
+    SourceLocation location() const { return m_location; }
+    IdentifierId name() const { return m_name; }
+    MemoryAttributesRules rules() const { return m_rules; }
+    const Definition& origin() const { return m_origin; }
+    const Definition& length() const { return m_length; }
+private:
+    SourceLocation m_location;
+    IdentifierId m_name;
+    MemoryAttributesRules m_rules;
+    Definition m_origin;
+    Definition m_length;
 };
 
 #endif /* INCLUDE_MEMORYREGION_H_ */

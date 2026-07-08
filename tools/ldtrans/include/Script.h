@@ -35,10 +35,12 @@ struct Script
     std::vector<Symbol> symbols;
     /* Map from symbol to symbol index */
     std::unordered_map<IdentifierId, SymbolId> symbol_lookup;
+    /* Definitions in dependency order */
+    std::vector<const Definition*> definition_order;
     /* Symbols in output order (assume destination linker format doesn't allow forward references) */
     std::vector<SymbolId> symbol_order;
 
-    void SortSymbols();
+    void SortDefinitions();
 };
 
 extern Script g_script;

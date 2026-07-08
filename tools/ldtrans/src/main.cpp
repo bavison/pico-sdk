@@ -143,7 +143,7 @@ invalid_defsym:
         // Subsequent inputs are pulled from the queue during <<EOF>> handling within parser.parse()
 
         // Analyse
-        g_script.SortSymbols();
+        g_script.SortDefinitions();
 
         // Now emit the output file (TODO)
 

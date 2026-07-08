@@ -187,6 +187,7 @@ class MemoryExpression : public Expression
 public:
     MemoryExpression(SourceLocation location, MemoryOperator op, IdentifierId memory) : m_location(location), m_operation(op), m_memory(memory) {}
     void accept(ExpressionVisitor& visitor) const override { visitor.visit(*this); }
+    SourceLocation location() const { return m_location; }
     MemoryOperator operation() const { return m_operation; }
     IdentifierId memory() const { return m_memory; }
 private:

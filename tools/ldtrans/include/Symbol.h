@@ -8,8 +8,8 @@
 #define INCLUDE_SYMBOL_H_
 
 #include <string>
-#include <unordered_map>
 
+#include "Definition.h"
 #include "Expression.h"
 #include "Identifier.h"
 #include "SourceLocation.h"
@@ -18,35 +18,26 @@
 enum class SymbolKind
 {
     TopLevel,
-    Section,
+    SectionScope,
 };
 
-class Symbol
+class Symbol : public Definition
 {
 public:
-    Symbol(SourceLocation location, IdentifierId name, ExpressionPtr expression, SymbolKind kind = SymbolKind::TopLevel) : m_location(location), m_name(name), m_expression(std::move(expression)), m_kind(kind) {}
+    Symbol(SourceLocation location, IdentifierId name, ExpressionPtr expression, SymbolKind kind = SymbolKind::TopLevel) :
+        Definition(location, name, std::move(expression), kind == SymbolKind::TopLevel ? DefinitionKind::TopLevelSymbol : DefinitionKind::SectionScopeSymbol) {}
     std::string dump(const IdentifierManager& ids) const
     {
         DumpVisitor expression_dump(ids);
-        m_expression->accept(expression_dump);
+        expression().accept(expression_dump);
         return std::string("SYMBOL\n") +
-            "  location: " + g_source_manager.toFileLineColumn(m_location) + "\n" +
-            "  name: " + ids.toDisplayName(m_name) + "\n" +
+            "  location: " + g_source_manager.toFileLineColumn(location()) + "\n" +
+            "  name: " + ids.toDisplayName(name()) + "\n" +
             "  value: " + expression_dump.result() + "\n" +
-            "  kind: " + (m_kind == SymbolKind::TopLevel ? "top-level\n" : "section\n");
+            "  kind: " + (Definition::kind() == DefinitionKind::TopLevelSymbol ? "top-level\n" : "section\n");
     }
-    SourceLocation location() const { return m_location; }
-    IdentifierId name() const { return m_name; }
-    const Expression& expression() const { return *m_expression; }
-    SymbolKind kind() const { return m_kind; }
+    SymbolKind kind() const { return Definition::kind() == DefinitionKind::TopLevelSymbol ? SymbolKind::TopLevel : SymbolKind::SectionScope; }
 private:
-    SourceLocation m_location;
-    IdentifierId m_name;
-    ExpressionPtr m_expression;
-    SymbolKind m_kind;
 };
-
-/* Symbol ID is an index into the symbol table */
-using SymbolId = std::size_t;
 
 #endif /* sentry INCLUDE_SYMBOL_H_ */

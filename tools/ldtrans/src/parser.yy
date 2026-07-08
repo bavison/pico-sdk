@@ -14,6 +14,7 @@
 #include <unordered_map>
 #include <vector>
 
+#include "Definition.h"
 #include "Expression.h"
 #include "Identifier.h"
 #include "lexer.h"
@@ -272,10 +273,10 @@ memory_block:
             auto it = g_script.memory_region_lookup.find($1.id);
             if (it != g_script.memory_region_lookup.end()) {
                 auto const& previous = it->second;
-                throw DiagnosticError($1.loc, "error: redefinition of memory region or region alias", {{ g_script.memory_regions[previous].location, "previous definition was here" }});
+                throw DiagnosticError($1.loc, "error: redefinition of memory region or region alias", {{ g_script.memory_regions[previous].location(), "previous definition was here" }});
             } 
             g_script.memory_region_lookup[$1.id] = g_script.memory_regions.size();
-            g_script.memory_regions.emplace_back(MemoryRegion{$1.loc, $1.id, $2, std::move($6), std::move($10)});
+            g_script.memory_regions.emplace_back(MemoryRegion($1.loc, $1.id, $2, Definition($4, $1.id, std::move($6), DefinitionKind::MemoryRegionOrigin), Definition($8, $1.id, std::move($10), DefinitionKind::MemoryRegionLength)));
             std::cout << g_script.memory_regions.back().dump(g_script.identifiers);
         }
     ;
@@ -308,7 +309,7 @@ region_alias_command:
             auto it = g_script.memory_region_lookup.find($3.id);
             if (it != g_script.memory_region_lookup.end()) {
                 auto const& previous = it->second;
-                throw DiagnosticError($3.loc, "error: redefinition of memory region or region alias", {{ g_script.memory_regions[previous].location, "previous definition was here" }});
+                throw DiagnosticError($3.loc, "error: redefinition of memory region or region alias", {{ g_script.memory_regions[previous].location(), "previous definition was here" }});
             } 
             it = g_script.memory_region_lookup.find($5.id);
             if (it == g_script.memory_region_lookup.end())
