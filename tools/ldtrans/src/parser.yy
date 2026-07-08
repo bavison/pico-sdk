@@ -322,13 +322,13 @@ symbol_assignment:
       IDENTIFIER ASSIGN expression SEMICOLON
         {
             std::cout << "assignment\n";
-            Symbol sym($1.loc, $1.id, std::move($3));
+            Definition definition($1.loc, $1.id, std::move($3), DefinitionKind::TopLevelSymbol);
             auto it = g_script.symbol_lookup.find($1.id);
             if (it == g_script.symbol_lookup.end()) {
                 g_script.symbol_lookup[$1.id] = g_script.symbols.size();
-                g_script.symbols.emplace_back(std::move(sym));
+                g_script.symbols.emplace_back(Symbol(definition));
             } else
-               g_script.symbols[it->second] = std::move(sym);
+               g_script.symbols[it->second].redefine(definition);
             std::cout << g_script.symbols[g_script.symbol_lookup.find($1.id)->second].dump(g_script.identifiers);
         }
     ;

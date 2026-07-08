@@ -50,10 +50,6 @@ public:
         d->expression().accept(sort);
         // Once all referenced definitions are added to the sort order, we can add this one
         g_script.definition_order.push_back(d);
-        if (d->kind() == DefinitionKind::TopLevelSymbol || d->kind() == DefinitionKind::SectionScopeSymbol) {
-            auto symbol_id = static_cast<const Symbol*>(d) - &g_script.symbols[0];
-            g_script.symbol_order.push_back(symbol_id);
-        }
         // Pop stacks
         m_definition_stack.pop_back();
         m_reference_stack.pop_back();
@@ -62,13 +58,27 @@ public:
 
     void visit(const class SymbolExpression& expr) override
     {
-        if (auto it = g_script.symbol_lookup.find(expr.identifier()); it != g_script.symbol_lookup.end()) {
-            auto s = it->second;
-            auto* definition = static_cast<const Definition*>(&g_script.symbols[s]);
-            examine(definition, expr.location());
+        const Definition* definition;
+        if (expr.identifier() == m_definition_stack.back()->name()) {
+            // We're referring to the same symbol currently being assigned
+            // so we should refer to the previous definition of the symbol
+            // instead. It is not an error at sorting time if such previous
+            // definition doesn't exist because it may be within an untaken
+            // branch of a conditional expression - but obviously we can't
+            // recurse further in that case.
+            definition = m_definition_stack.back();
+            if (definition->previous_exists())
+                definition  = &definition->previous();
+            else
+                return;
         } else {
-            throw DiagnosticError(expr.location(), "error: undefined symbol");
+            // Refer to the latest definition of all other symbols
+            if (auto it = g_script.symbol_lookup.find(expr.identifier()); it != g_script.symbol_lookup.end())
+                definition = &g_script.symbols[it->second].definition();
+            else
+                throw DiagnosticError(expr.location(), "error: undefined symbol");
         }
+        examine(definition, expr.location());
     }
 
     void visit(const class IntegerExpression& expr) override
@@ -101,7 +111,27 @@ public:
 
     void visit(const class DefinedExpression& expr) override
     {
-/* TODO */
+        const Definition* definition;
+        if (expr.symbol() == m_definition_stack.back()->name()) {
+            // We're referring to the same symbol currently being assigned
+            // so we should refer to the previous definition of the symbol
+            // instead. It is not an error at sorting time if such previous
+            // definition doesn't exist because it may be within an untaken
+            // branch of a conditional expression - but obviously we can't
+            // recurse further in that case.
+            definition = m_definition_stack.back();
+            if (definition->previous_exists())
+                definition  = &definition->previous();
+            else
+                return;
+        } else {
+            // Refer to the latest definition of all other symbols
+            if (auto it = g_script.symbol_lookup.find(expr.symbol()); it != g_script.symbol_lookup.end())
+                definition = &g_script.symbols[it->second].definition();
+            else
+                return; // Not an error here, unlike SymbolExpression
+        }
+        examine(definition, expr.location());
     }
 
     void visit(const class MemoryExpression& expr) override
@@ -143,10 +173,6 @@ void Script::SortDefinitions()
             definition->expression().accept(sort);
             // Once all referenced definitions are added to the sort order, we can add this one
             definition_order.push_back(definition);
-            if (definition->kind() == DefinitionKind::TopLevelSymbol || definition->kind() == DefinitionKind::SectionScopeSymbol) {
-                auto symbol_id = static_cast<const Symbol*>(definition) - &symbols[0];
-                symbol_order.push_back(symbol_id);
-            }
         }
     };
     for (MemoryRegionId m = 0; m < memory_regions.size(); ++m) {
@@ -154,6 +180,6 @@ void Script::SortDefinitions()
         sort(&memory_regions[m].length());
     }
     for (SymbolId s = (SymbolId) 0; s < symbols.size(); ++s) {
-        sort(&symbols[s]);
+        sort(&symbols[s].definition());
     }
 }

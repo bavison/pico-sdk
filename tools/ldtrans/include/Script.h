@@ -37,8 +37,6 @@ struct Script
     std::unordered_map<IdentifierId, SymbolId> symbol_lookup;
     /* Definitions in dependency order */
     std::vector<const Definition*> definition_order;
-    /* Symbols in output order (assume destination linker format doesn't allow forward references) */
-    std::vector<SymbolId> symbol_order;
 
     void SortDefinitions();
 };

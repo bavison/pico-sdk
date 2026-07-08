@@ -170,6 +170,7 @@ class DefinedExpression : public Expression
 public:
     DefinedExpression(SourceLocation location, IdentifierId symbol) : m_location(location), m_symbol(symbol) {}
     void accept(ExpressionVisitor& visitor) const override { visitor.visit(*this); }
+    SourceLocation location() const { return m_location; }
     IdentifierId symbol() const { return m_symbol; }
 private:
     SourceLocation m_location;

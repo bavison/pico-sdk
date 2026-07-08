@@ -7,37 +7,41 @@
 #ifndef INCLUDE_SYMBOL_H_
 #define INCLUDE_SYMBOL_H_
 
+#include <memory>
 #include <string>
 
 #include "Definition.h"
+#include "Diagnostic.h"
 #include "Expression.h"
 #include "Identifier.h"
 #include "SourceLocation.h"
 #include "SourceManager.h"
 
-enum class SymbolKind
-{
-    TopLevel,
-    SectionScope,
-};
-
-class Symbol : public Definition
+class Symbol
 {
 public:
-    Symbol(SourceLocation location, IdentifierId name, ExpressionPtr expression, SymbolKind kind = SymbolKind::TopLevel) :
-        Definition(location, name, std::move(expression), kind == SymbolKind::TopLevel ? DefinitionKind::TopLevelSymbol : DefinitionKind::SectionScopeSymbol) {}
+    Symbol(Definition& definition) : m_definition(std::make_unique<Definition>(std::move(definition))) {}
+    void redefine(Definition& definition)
+    {
+        if (m_definition->kind() != definition.kind())
+            throw DiagnosticError(definition.location(), "error: cannot redefine a symbol with a different scope", {{ m_definition->location(), "previous definition was here" }});
+        auto new_definition = std::make_unique<Definition>(std::move(definition));
+        new_definition->enchain(m_definition);
+        m_definition = std::move(new_definition);
+    }
     std::string dump(const IdentifierManager& ids) const
     {
         DumpVisitor expression_dump(ids);
-        expression().accept(expression_dump);
+        m_definition->expression().accept(expression_dump);
         return std::string("SYMBOL\n") +
-            "  location: " + g_source_manager.toFileLineColumn(location()) + "\n" +
-            "  name: " + ids.toDisplayName(name()) + "\n" +
+            "  location: " + g_source_manager.toFileLineColumn(m_definition->location()) + "\n" +
+            "  name: " + ids.toDisplayName(m_definition->name()) + "\n" +
             "  value: " + expression_dump.result() + "\n" +
-            "  kind: " + (Definition::kind() == DefinitionKind::TopLevelSymbol ? "top-level\n" : "section\n");
+            "  kind: " + (m_definition->kind() == DefinitionKind::TopLevelSymbol ? "top-level\n" : "section\n");
     }
-    SymbolKind kind() const { return Definition::kind() == DefinitionKind::TopLevelSymbol ? SymbolKind::TopLevel : SymbolKind::SectionScope; }
+    const Definition& definition() const { return *m_definition; }
 private:
+    std::unique_ptr<Definition> m_definition;
 };
 
 #endif /* sentry INCLUDE_SYMBOL_H_ */
