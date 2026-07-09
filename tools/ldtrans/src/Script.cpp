@@ -4,6 +4,8 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
+#include <iostream>
+
 #include "Script.h"
 
 Script g_script;
@@ -11,9 +13,9 @@ Script g_script;
 class SortVisitor : public ExpressionVisitor
 {
 public:
-    explicit SortVisitor(std::vector<const Definition*>& definition_stack, std::vector<SourceLocation>& reference_stack) : m_definition_stack(definition_stack), m_reference_stack(reference_stack), m_assignee_kind(definition_stack.back()->kind()) {}
+    explicit SortVisitor(std::vector<Definition*>& definition_stack, std::vector<SourceLocation>& reference_stack) : m_definition_stack(definition_stack), m_reference_stack(reference_stack), m_assignee_kind(definition_stack.back()->kind()) {}
 
-    void examine(const Definition* d, SourceLocation location)
+    void examine(Definition* d, SourceLocation location)
     {
         // Check if we've already processed this definition
         if (std::find(g_script.definition_order.begin(), g_script.definition_order.end(), d) != g_script.definition_order.end())
@@ -58,8 +60,10 @@ public:
 
     void visit(const class SymbolExpression& expr) override
     {
-        const Definition* definition;
-        if (expr.identifier() == m_definition_stack.back()->name()) {
+        Definition* definition;
+        if (expr.identifier() == m_definition_stack.back()->name() &&
+                (m_definition_stack.back()->kind() == DefinitionKind::TopLevelSymbol ||
+                 m_definition_stack.back()->kind() == DefinitionKind::SectionScopeSymbol)) {
             // We're referring to the same symbol currently being assigned
             // so we should refer to the previous definition of the symbol
             // instead. It is not an error at sorting time if such previous
@@ -111,8 +115,10 @@ public:
 
     void visit(const class DefinedExpression& expr) override
     {
-        const Definition* definition;
-        if (expr.symbol() == m_definition_stack.back()->name()) {
+        Definition* definition;
+        if (expr.symbol() == m_definition_stack.back()->name() &&
+                (m_definition_stack.back()->kind() == DefinitionKind::TopLevelSymbol ||
+                 m_definition_stack.back()->kind() == DefinitionKind::SectionScopeSymbol)) {
             // We're referring to the same symbol currently being assigned
             // so we should refer to the previous definition of the symbol
             // instead. It is not an error at sorting time if such previous
@@ -151,7 +157,7 @@ public:
     }
 
 private:
-    std::vector<const Definition*>& m_definition_stack;
+    std::vector<Definition*>& m_definition_stack;
     std::vector<SourceLocation>& m_reference_stack;
     DefinitionKind m_assignee_kind;
 };
@@ -165,9 +171,9 @@ void Script::SortDefinitions()
      * Mixing memory region origin and length definitions in with
      * these allows us to set an evaluation order across all values
      * that we may need to calculate. */
-    auto sort = [this](const Definition* definition) {
+    auto sort = [this](Definition* definition) {
         if (std::find(definition_order.begin(), definition_order.end(), definition) == definition_order.end()) {
-            std::vector<const Definition*> definition_stack = { definition };
+            std::vector<Definition*> definition_stack = { definition };
             std::vector<SourceLocation> reference_stack;
             SortVisitor sort(definition_stack, reference_stack);
             definition->expression().accept(sort);
@@ -181,5 +187,176 @@ void Script::SortDefinitions()
     }
     for (SymbolId s = (SymbolId) 0; s < symbols.size(); ++s) {
         sort(&symbols[s].definition());
+    }
+}
+
+class EvaluationVisitor : public ExpressionVisitor
+{
+public:
+    explicit EvaluationVisitor(Definition* definition) : m_target(definition) {}
+
+    void visit(const class SymbolExpression& expr) override
+    {
+        Definition* d;
+        if (expr.identifier() == m_target->name() &&
+                (m_target->kind() == DefinitionKind::TopLevelSymbol ||
+                 m_target->kind() == DefinitionKind::SectionScopeSymbol)) {
+            // We're referring to the same symbol currently being assigned
+            // so we should refer to the previous definition of the symbol
+            // instead.
+            if (!m_target->previous_exists()) {
+                throw DiagnosticError(m_target->location(), std::string("error: circular dependency detected while evaluating ") + m_target->describe(g_script.identifiers),
+                        {{ expr.location(), m_target->describe(g_script.identifiers) + " depends on " + m_target->describe(g_script.identifiers) + " (and there is no earlier definition)" }});
+            }
+            d = &m_target->previous();
+        } else {
+            // Refer to latest definition of the symbol. Check for undefined
+            // symbols was already performed at definition sorting time.
+            auto it = g_script.symbol_lookup.find(expr.identifier());
+            d = &g_script.symbols[it->second].definition();
+        }
+        // Definition sorting means we can rely on the symbol value already having been evaluated
+        m_target->m_value = d->value();
+    }
+
+    void visit(const class IntegerExpression& expr) override
+    {
+        m_target->m_value = expr.value();
+    }
+
+    void visit(const class UnaryExpression& expr) override
+    {
+        expr.sub_expr().accept(*this);
+        switch (expr.operation()) {
+        case UnaryOperator::Plus:
+            /* unary plus is a nop */
+            break;
+        case UnaryOperator::Minus:
+            m_target->m_value = -m_target->m_value;
+            break;
+        case UnaryOperator::BitwiseNot:
+            m_target->m_value = ~m_target->m_value;
+            break;
+        case UnaryOperator::LogicalNot:
+            m_target->m_value = !m_target->m_value;
+            break;
+        case UnaryOperator::Align:
+            // This has an implicit argument of the location counter, which
+            // is only valid in section scope, and we leave evaluation of
+            // section-scope symbols to the external linker program
+            throw DiagnosticError(expr.location(), "error: invalid context for built-in function");
+            break;
+        default:
+            throw DiagnosticError(expr.location(), "error: unknown unary op");
+            break;
+        }
+    }
+
+    void visit(const class BinaryExpression& expr) override
+    {
+        expr.left_expr().accept(*this);
+        auto left_expr = m_target->value();
+        expr.right_expr().accept(*this);
+        auto right_expr = m_target->value();
+        switch (expr.operation()) {
+        case BinaryOperator::Multiply:
+            m_target->m_value = left_expr * right_expr;
+            break;
+        case BinaryOperator::Add:
+            m_target->m_value = left_expr + right_expr;
+            break;
+        case BinaryOperator::Subtract:
+            m_target->m_value = left_expr - right_expr;
+            break;
+        case BinaryOperator::GreaterOrEqual:
+            m_target->m_value = left_expr >= right_expr;
+            break;
+        case BinaryOperator::Greater:
+            m_target->m_value = left_expr > right_expr;
+            break;
+        case BinaryOperator::LessOrEqual:
+            m_target->m_value = left_expr <= right_expr;
+            break;
+        case BinaryOperator::Less:
+            m_target->m_value = left_expr < right_expr;
+            break;
+        case BinaryOperator::BitwiseAnd:
+            m_target->m_value = left_expr & right_expr;
+            break;
+        case BinaryOperator::Max:
+            m_target->m_value = left_expr > right_expr ? left_expr : right_expr;
+            break;
+        default:
+            throw DiagnosticError(expr.location(), "error: unknown binary op");
+            break;
+        }
+    }
+
+    void visit(const class TernaryExpression& expr) override
+    {
+        expr.if_expr().accept(*this);
+        if (m_target->value())
+            expr.then_expr().accept(*this);
+        else
+            expr.else_expr().accept(*this);
+    }
+
+    void visit(const class SectionExpression& expr) override
+    {
+        throw DiagnosticError(expr.location(), "error: invalid context for built-in function");
+    }
+
+    void visit(const class DefinedExpression& expr) override
+    {
+        if (expr.symbol() == m_target->name() &&
+                (m_target->kind() == DefinitionKind::TopLevelSymbol ||
+                 m_target->kind() == DefinitionKind::SectionScopeSymbol)) {
+            // We're referring to the same symbol currently being assigned
+            // so we should refer to the previous definition of the symbol
+            // instead.
+            m_target->m_value = m_target->previous_exists();
+        } else {
+            // Refer to latest definition of the symbol. Check for undefined
+            // symbols was already performed at definition sorting time.
+            auto it = g_script.symbol_lookup.find(expr.symbol());
+            m_target->m_value = it != g_script.symbol_lookup.end();
+        }
+    }
+
+    void visit(const class MemoryExpression& expr) override
+    {
+        // Definition sorting means we can rely on the value already having
+        // been evaluated. Check for undefined memory region was already
+        // performed at definition sorting time.
+        auto& memory_region = g_script.memory_regions[g_script.memory_region_lookup.find(expr.memory())->second];
+        switch (expr.operation()) {
+        case MemoryOperator::Length:
+            m_target->m_value = memory_region.length().value();
+            break;
+        case MemoryOperator::Origin:
+            m_target->m_value = memory_region.origin().value();
+            break;
+        default:
+            throw DiagnosticError(expr.location(), "error: unknown memory region op");
+        }
+    }
+
+    void visit(const class LocationCounterExpression& expr) override
+    {
+        throw DiagnosticError(expr.location(), "error: invalid context for location counter");
+    }
+
+private:
+    Definition* m_target;
+};
+
+void Script::EvaluateDefinitions()
+{
+    for (auto definition : definition_order) {
+        if (definition->kind() != DefinitionKind::SectionScopeSymbol) {
+            EvaluationVisitor evaluate(definition);
+            definition->expression().accept(evaluate);
+            std::cout << definition->dump(identifiers) << std::endl;
+        }
     }
 }

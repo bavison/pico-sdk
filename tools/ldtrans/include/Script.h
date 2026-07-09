@@ -36,9 +36,10 @@ struct Script
     /* Map from symbol to symbol index */
     std::unordered_map<IdentifierId, SymbolId> symbol_lookup;
     /* Definitions in dependency order */
-    std::vector<const Definition*> definition_order;
+    std::vector<Definition*> definition_order;
 
     void SortDefinitions();
+    void EvaluateDefinitions();
 };
 
 extern Script g_script;

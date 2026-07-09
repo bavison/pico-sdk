@@ -124,8 +124,8 @@ public:
     SourceLocation location() const { return m_location; }
     IdentifierId name() const { return m_name; }
     MemoryAttributesRules rules() const { return m_rules; }
-    const Definition& origin() const { return m_origin; }
-    const Definition& length() const { return m_length; }
+    Definition& origin() { return m_origin; }
+    Definition& length() { return m_length; }
 private:
     SourceLocation m_location;
     IdentifierId m_name;

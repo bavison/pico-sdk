@@ -39,7 +39,7 @@ public:
             "  value: " + expression_dump.result() + "\n" +
             "  kind: " + (m_definition->kind() == DefinitionKind::TopLevelSymbol ? "top-level\n" : "section\n");
     }
-    const Definition& definition() const { return *m_definition; }
+    Definition& definition() const { return *m_definition; }
 private:
     std::unique_ptr<Definition> m_definition;
 };

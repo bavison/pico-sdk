@@ -144,6 +144,7 @@ invalid_defsym:
 
         // Analyse
         g_script.SortDefinitions();
+        g_script.EvaluateDefinitions();
 
         // Now emit the output file (TODO)
 

@@ -95,6 +95,7 @@ class UnaryExpression : public Expression
 public:
     UnaryExpression(SourceLocation location, UnaryOperator op, ExpressionPtr sub_expr) : m_location(location), m_operation(op), m_sub_expr(std::move(sub_expr)) {}
     void accept(ExpressionVisitor& visitor) const override { visitor.visit(*this); }
+    SourceLocation location() const { return m_location; }
     UnaryOperator operation() const { return m_operation; }
     const Expression& sub_expr() const { return *m_sub_expr; }
 private:
@@ -121,6 +122,7 @@ class BinaryExpression : public Expression
 public:
     BinaryExpression(SourceLocation location, BinaryOperator op, ExpressionPtr left_expr, ExpressionPtr right_expr) : m_location(location), m_operation(op), m_left_expr(std::move(left_expr)), m_right_expr(std::move(right_expr)) {}
     void accept(ExpressionVisitor& visitor) const override { visitor.visit(*this); }
+    SourceLocation location() const { return m_location; }
     BinaryOperator operation() const { return m_operation; }
     const Expression& left_expr() const { return *m_left_expr; }
     const Expression& right_expr() const { return *m_right_expr; }
@@ -157,6 +159,7 @@ class SectionExpression : public Expression
 public:
     SectionExpression(SourceLocation location, SectionOperator op, IdentifierId section) : m_location(location), m_operation(op), m_section(section) {}
     void accept(ExpressionVisitor& visitor) const override { visitor.visit(*this); }
+    SourceLocation location() const { return m_location; }
     SectionOperator operation() const { return m_operation; }
     IdentifierId section() const { return m_section; }
 private:
@@ -201,6 +204,7 @@ class LocationCounterExpression : public Expression
 {
 public:
     void accept(ExpressionVisitor& visitor) const override { visitor.visit(*this); }
+    SourceLocation location() const { return m_location; }
 private:
     SourceLocation m_location;
 };
