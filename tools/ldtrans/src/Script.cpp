@@ -280,6 +280,9 @@ public:
         case BinaryOperator::Less:
             m_target->m_value = left_expr < right_expr;
             break;
+        case BinaryOperator::Equal:
+            m_target->m_value = left_expr == right_expr;
+            break;
         case BinaryOperator::BitwiseAnd:
             m_target->m_value = left_expr & right_expr;
             break;

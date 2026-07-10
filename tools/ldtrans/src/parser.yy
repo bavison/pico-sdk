@@ -81,7 +81,6 @@ static bool g_memory_region_attribute_sense_required = true;
     /* Keywords */
                         ASSERT              "ASSERT"
                         AT                  "AT"
-                        AT_NAMED            "AT>"
                         EXCLUDE_FILE        "EXCLUDE_FILE"
                         KEEP                "KEEP"
                         NOLOAD              "NOLOAD"
@@ -106,6 +105,7 @@ static bool g_memory_region_attribute_sense_required = true;
                         BITWISE_NOT         "~"
                         COLON               ":"
                         COMMA               ","
+                        EQ                  "=="
                         GE                  ">="
                         GT                  ">"
                         LBRACE              "{"
@@ -120,6 +120,7 @@ static bool g_memory_region_attribute_sense_required = true;
                         RPAREN              ")"
                         SEMICOLON           ";"
                         STAR                "*"
+                        WHITESPACE          "whitespace"
 
     /* Literals */
     <IdentifierToken>   IDENTIFIER          "identifier"
@@ -130,7 +131,8 @@ static bool g_memory_region_attribute_sense_required = true;
 %type <ExpressionPtr> unary_expression
 %type <ExpressionPtr> multiplicative_expression
 %type <ExpressionPtr> additive_expression
-%type <ExpressionPtr> comparison_expression
+%type <ExpressionPtr> relational_expression
+%type <ExpressionPtr> equality_expression
 %type <ExpressionPtr> bitwise_and_expression
 %type <ExpressionPtr> ternary_expression
 %type <ExpressionPtr> expression
@@ -153,8 +155,8 @@ command:
     | memory_command
     | sections_command
     | region_alias_command
-    | symbol_assignment
-    | SEMICOLON /*  */
+    | top_level_symbol_assignment
+    | SEMICOLON /* arbitrary extra semicolons allowed at top level */
     ;
 
 /* Expressions */
@@ -191,17 +193,22 @@ additive_expression:
     | additive_expression MINUS multiplicative_expression       { $$ = std::make_unique<BinaryExpression>($2, BinaryOperator::Subtract, std::move($1), std::move($3)); }
     ;
 
-comparison_expression:
+relational_expression:
       additive_expression                                       { $$ = std::move($1); }
-    | comparison_expression GE additive_expression              { $$ = std::make_unique<BinaryExpression>($2, BinaryOperator::GreaterOrEqual, std::move($1), std::move($3)); }
-    | comparison_expression GT additive_expression              { $$ = std::make_unique<BinaryExpression>($2, BinaryOperator::Greater, std::move($1), std::move($3)); }
-    | comparison_expression LE additive_expression              { $$ = std::make_unique<BinaryExpression>($2, BinaryOperator::LessOrEqual, std::move($1), std::move($3)); }
-    | comparison_expression LT additive_expression              { $$ = std::make_unique<BinaryExpression>($2, BinaryOperator::Less, std::move($1), std::move($3)); }
+    | relational_expression GE additive_expression              { $$ = std::make_unique<BinaryExpression>($2, BinaryOperator::GreaterOrEqual, std::move($1), std::move($3)); }
+    | relational_expression GT additive_expression              { $$ = std::make_unique<BinaryExpression>($2, BinaryOperator::Greater, std::move($1), std::move($3)); }
+    | relational_expression LE additive_expression              { $$ = std::make_unique<BinaryExpression>($2, BinaryOperator::LessOrEqual, std::move($1), std::move($3)); }
+    | relational_expression LT additive_expression              { $$ = std::make_unique<BinaryExpression>($2, BinaryOperator::Less, std::move($1), std::move($3)); }
+    ;
+
+equality_expression:
+      relational_expression                                     { $$ = std::move($1); }
+    | equality_expression EQ relational_expression              { $$ = std::make_unique<BinaryExpression>($2, BinaryOperator::Equal, std::move($1), std::move($3)); }
     ;
 
 bitwise_and_expression:
-      comparison_expression                                     { $$ = std::move($1); }
-    | bitwise_and_expression BITWISE_AND comparison_expression  { $$ = std::make_unique<BinaryExpression>($2, BinaryOperator::BitwiseAnd, std::move($1), std::move($3)); }
+      equality_expression                                       { $$ = std::move($1); }
+    | bitwise_and_expression BITWISE_AND equality_expression    { $$ = std::make_unique<BinaryExpression>($2, BinaryOperator::BitwiseAnd, std::move($1), std::move($3)); }
     ;
 
 ternary_expression: /* lowest priority */
@@ -298,8 +305,171 @@ memory_command:
         }
     ;
 
+inner_section_symbol_assignment:
+      IDENTIFIER opt_whitespace ASSIGN expression
+        {
+            std::cout << "assignment\n";
+            Definition definition($1.loc, $1.id, std::move($4), DefinitionKind::SectionScopeSymbol);
+            auto it = g_script.symbol_lookup.find($1.id);
+            if (it == g_script.symbol_lookup.end()) {
+                g_script.symbol_lookup[$1.id] = g_script.symbols.size();
+                g_script.symbols.emplace_back(Symbol(definition));
+            } else
+               g_script.symbols[it->second].redefine(definition);
+            std::cout << g_script.symbols[g_script.symbol_lookup.find($1.id)->second].dump(g_script.identifiers);
+        }
+    ;
+
+weak_section_symbol_assignment:
+      PROVIDE        LPAREN inner_section_symbol_assignment RPAREN SEMICOLON
+    | PROVIDE_HIDDEN LPAREN inner_section_symbol_assignment RPAREN SEMICOLON
+        {
+        }
+    ;
+
+section_symbol_assignment:
+      inner_section_symbol_assignment SEMICOLON
+    | weak_section_symbol_assignment
+    ;
+
+assert_command:
+      ASSERT LPAREN expression COMMA IDENTIFIER
+        {
+        }
+    ;
+
+opt_output_section_type:
+      /* empty */
+    | LPAREN NOLOAD RPAREN
+    ;
+
+opt_whitespace:
+      /* empty */
+    | WHITESPACE
+    ;
+
+wildcarded_identifier_element:
+      IDENTIFIER
+    | STAR
+    | QUERY
+    ;
+
+wildcarded_identifier:
+      wildcarded_identifier_element
+    | wildcarded_identifier wildcarded_identifier_element
+    ;
+
+filespec:
+      wildcarded_identifier
+    | COLON wildcarded_identifier
+    | wildcarded_identifier COLON
+    | wildcarded_identifier COLON wildcarded_identifier
+    ;
+
+filespec_list:
+      filespec
+    | filespec_list WHITESPACE filespec
+    ;
+
+exclude_file_command:
+      EXCLUDE_FILE opt_whitespace LPAREN opt_whitespace filespec_list opt_whitespace RPAREN
+    ;
+
+inner_input_section_list_item:
+      wildcarded_identifier
+    | exclude_file_command opt_whitespace wildcarded_identifier
+    ;
+
+middle_input_section_list_item:
+      inner_input_section_list_item
+    | SORT_BY_NAME      opt_whitespace LPAREN opt_whitespace inner_input_section_list_item opt_whitespace RPAREN
+    | SORT_BY_ALIGNMENT opt_whitespace LPAREN opt_whitespace inner_input_section_list_item opt_whitespace RPAREN
+    ;
+
+outer_input_section_list_item:
+      middle_input_section_list_item
+    | SORT_BY_NAME      opt_whitespace LPAREN opt_whitespace middle_input_section_list_item opt_whitespace RPAREN
+    | SORT_BY_ALIGNMENT opt_whitespace LPAREN opt_whitespace middle_input_section_list_item opt_whitespace RPAREN
+    ;
+
+input_section_list_items:
+    /* Whether the delimiting whitespace is required depends on the type of
+     * the preceding item, so our hands are tied to use right-recursion */
+      inner_input_section_list_item
+    | inner_input_section_list_item WHITESPACE input_section_list_items
+    | outer_input_section_list_item
+    | outer_input_section_list_item opt_whitespace input_section_list_items
+    ;
+
+input_section_list:
+      LPAREN opt_whitespace input_section_list_items opt_whitespace RPAREN
+    ;
+
+inner_input_file_specifier:
+      wildcarded_identifier
+    | exclude_file_command opt_whitespace wildcarded_identifier
+    ;
+
+outer_input_file_specifier:
+      inner_input_file_specifier
+    | SORT_BY_NAME opt_whitespace LPAREN opt_whitespace inner_input_file_specifier opt_whitespace RPAREN
+
+inner_input_section_description:
+      outer_input_file_specifier opt_whitespace input_section_list
+    ;
+
+outer_input_section_description:
+      inner_input_section_description
+    | KEEP opt_whitespace LPAREN opt_whitespace inner_input_section_description opt_whitespace RPAREN
+    ;
+
+self_delimiting_output_section_item:
+      section_symbol_assignment
+    | assert_command SEMICOLON /* yes, trailing semicolon required here unlike in other places */
+    | outer_input_section_description
+    | SEMICOLON
+    ;
+
+output_section_items:
+    /* Whether the delimiting whitespace is required depends on the type of
+     * the preceding item, so our hands are tied to use right-recursion */
+      /* empty */
+    | filespec
+    | filespec WHITESPACE output_section_items
+    | self_delimiting_output_section_item
+    | self_delimiting_output_section_item opt_whitespace output_section_items
+    ;
+
+opt_output_section_region:
+      /* empty */
+    | GT IDENTIFIER
+    ;
+
+opt_output_section_lma_region:
+      /* empty */
+    | AT GT IDENTIFIER
+    ;
+
+output_section_description:
+      IDENTIFIER opt_output_section_type COLON LBRACE opt_whitespace output_section_items opt_whitespace RBRACE opt_output_section_region opt_output_section_lma_region
+
+sections_item:
+      section_symbol_assignment
+    | assert_command
+    | output_section_description
+    /* unlike top-level commands or within output section descriptions, stray semicolons are not accepted here */
+    ;
+
+sections_items:
+    /* empty */
+    | sections_items sections_item
+    ;
+
 sections_command:
-    SECTIONS LBRACE input RBRACE   { std::cout << "sections command\n"; }
+      SECTIONS LBRACE sections_items RBRACE
+        {
+          std::cout << "sections command\n";
+        }
     ;
 
 region_alias_command:
@@ -318,8 +488,8 @@ region_alias_command:
         }
     ;
 
-symbol_assignment:
-      IDENTIFIER ASSIGN expression SEMICOLON
+inner_top_level_symbol_assignment:
+      IDENTIFIER ASSIGN expression
         {
             std::cout << "assignment\n";
             Definition definition($1.loc, $1.id, std::move($3), DefinitionKind::TopLevelSymbol);
@@ -333,64 +503,16 @@ symbol_assignment:
         }
     ;
 
-
-
-
-input:
-    /* empty */
-    | input token
+weak_top_level_symbol_assignment:
+      PROVIDE        LPAREN inner_top_level_symbol_assignment RPAREN SEMICOLON
+    | PROVIDE_HIDDEN LPAREN inner_top_level_symbol_assignment RPAREN SEMICOLON
+        {
+        }
     ;
 
-token:
-      ENTRY             { TRACE("ENTRY") }
-    | INCLUDE           { TRACE("INCLUDE") }
-    | MEMORY            { TRACE("MEMORY") }
-    | SECTIONS          { TRACE("SECTIONS") }
-    | REGION_ALIAS      { TRACE("REGION_ALIAS") }
-
-    | ASSERT            { TRACE("ASSERT") }
-    | AT                { TRACE("AT") }
-    | AT_NAMED          { TRACE("AT_NAMED") }
-    | EXCLUDE_FILE      { TRACE("EXCLUDE_FILE") }
-    | KEEP              { TRACE("KEEP") }
-    | NOLOAD            { TRACE("NOLOAD") }
-    | PROVIDE_HIDDEN    { TRACE("PROVIDE_HIDDEN") }
-    | PROVIDE           { TRACE("PROVIDE") }
-    | SORT_BY_ALIGNMENT { TRACE("SORT_BY_ALIGNMENT") }
-    | SORT_BY_NAME      { TRACE("SORT_BY_NAME") }
-
-    | ALIGNOF           { TRACE("ALIGNOF") }
-    | ALIGN             { TRACE("ALIGN") }
-    | DEFINED           { TRACE("DEFINED") }
-    | LENGTH            { TRACE("LENGTH") }
-    | LOADADDR          { TRACE("LOADADDR") }
-    | MAX               { TRACE("MAX") }
-    | ORIGIN            { TRACE("ORIGIN") }
-    | SIZEOF            { TRACE("SIZEOF") }
-
-    | ASSIGN            { TRACE("ASSIGN") }
-    | BITWISE_AND       { TRACE("BITWISE_AND") }
-    | BITWISE_NOT       { TRACE("BITWISE_NOT") }
-    | COLON             { TRACE("COLON") }
-    | COMMA             { TRACE("COMMA") }
-    | GE                { TRACE("GE") }
-    | GT                { TRACE("GT") }
-    | LBRACE            { TRACE("LBRACE") }
-    | LE                { TRACE("LE") }
-    | LOGICAL_NOT       { TRACE("LOGICAL_NOT") }
-    | LPAREN            { TRACE("LPAREN") }
-    | LT                { TRACE("LT") }
-    | MINUS             { TRACE("MINUS") }
-    | PLUS              { TRACE("PLUS") }
-    | QUERY             { TRACE("QUERY") }
-    | RBRACE            { TRACE("RBRACE") }
-    | RPAREN            { TRACE("RPAREN") }
-    | SEMICOLON         { TRACE("SEMICOLON") }
-    | STAR              { TRACE("STAR") }
-
-    | IDENTIFIER        { TRACE("IDENTIFIER: " << g_script.identifiers.toDisplayName($1.id)) }
-
-    | INTEGER           { TRACE("INTEGER: " << $1.value) }
+top_level_symbol_assignment:
+      inner_top_level_symbol_assignment SEMICOLON
+    | weak_top_level_symbol_assignment
     ;
 
 %%

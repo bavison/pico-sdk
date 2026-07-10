@@ -37,6 +37,10 @@
 static SourceLocation current_location;
 /* Location of most recently-lexed symbol */
 SourceLocation lexer_symbol_location;
+/* State variables to determine when whitespace is syntactically significant */
+static bool in_sections_command = false;
+static bool in_output_section_assignment = false;
+static unsigned brace_depth = 0;
 
 /* Include resumption stack */
 static std::vector<SourceLocation> resume_locations;
@@ -88,8 +92,11 @@ static YY_BUFFER_STATE my_scan_buffer(FileId id);
 }
 
 [ \t\r]+ {
-    /* Skip whitespace */
     ADVANCE();
+    if (in_sections_command && brace_depth >= 2 && !in_output_section_assignment) {
+        TRACE("WHITESPACE")
+        return yy::parser::make_WHITESPACE(lexer_symbol_location);
+    }
 }
 
 ENTRY {
@@ -112,6 +119,7 @@ MEMORY {
 
 SECTIONS {
     TRACE("SECTIONS")
+    in_sections_command = true;
     ADVANCE();
     return yy::parser::make_SECTIONS(lexer_symbol_location);
 }
@@ -124,14 +132,10 @@ REGION_ALIAS {
 
 ASSERT {
     TRACE("ASSERT")
+    if (in_sections_command && brace_depth >= 2)
+        in_output_section_assignment = true;
     ADVANCE();
     return yy::parser::make_ASSERT(lexer_symbol_location);
-}
-
-AT> {
-    TRACE("AT_NAMED")
-    ADVANCE();
-    return yy::parser::make_AT_NAMED(lexer_symbol_location);
 }
 
 AT {
@@ -160,12 +164,16 @@ NOLOAD {
 
 PROVIDE_HIDDEN {
     TRACE("PROVIDE_HIDDEN")
+    if (in_sections_command && brace_depth >= 2)
+        in_output_section_assignment = true;
     ADVANCE();
     return yy::parser::make_PROVIDE_HIDDEN(lexer_symbol_location);
 }
 
 PROVIDE {
     TRACE("PROVIDE")
+    if (in_sections_command && brace_depth >= 2)
+        in_output_section_assignment = true;
     ADVANCE();
     return yy::parser::make_PROVIDE(lexer_symbol_location);
 }
@@ -230,8 +238,16 @@ SIZEOF {
     return yy::parser::make_SIZEOF(lexer_symbol_location);
 }
 
+"==" {
+    TRACE("EQ")
+    ADVANCE();
+    return yy::parser::make_EQ(lexer_symbol_location);
+}
+
 "=" {
     TRACE("ASSIGN")
+    if (in_sections_command && brace_depth >= 2)
+        in_output_section_assignment = true;
     ADVANCE();
     return yy::parser::make_ASSIGN(lexer_symbol_location);
 }
@@ -274,6 +290,8 @@ SIZEOF {
 
 "{" {
     TRACE("LBRACE")
+    ++brace_depth;
+    std::cout << "brace_depth now " << brace_depth << std::endl;
     ADVANCE();
     return yy::parser::make_LBRACE(lexer_symbol_location);
 }
@@ -322,6 +340,9 @@ SIZEOF {
 
 "}" {
     TRACE("RBRACE")
+    if (--brace_depth == 0)
+        in_sections_command = false;
+    std::cout << "brace_depth now " << brace_depth << std::endl;
     ADVANCE();
     return yy::parser::make_RBRACE(lexer_symbol_location);
 }
@@ -334,6 +355,7 @@ SIZEOF {
 
 ";" {
     TRACE("SEMICOLON")
+    in_output_section_assignment = false;
     ADVANCE();
     return yy::parser::make_SEMICOLON(lexer_symbol_location);
 }

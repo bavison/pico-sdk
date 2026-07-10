@@ -113,6 +113,7 @@ enum class BinaryOperator
     Greater,
     LessOrEqual,
     Less,
+    Equal,
     BitwiseAnd,
     Max,
 };
@@ -279,6 +280,9 @@ public:
             break;
         case BinaryOperator::Less:
             m_result = std::string("(") + left_expr + " < " + right_expr + ")";
+            break;
+        case BinaryOperator::Equal:
+            m_result = std::string("(") + left_expr + " == " + right_expr + ")";
             break;
         case BinaryOperator::BitwiseAnd:
             m_result = std::string("(") + left_expr + " & " + right_expr + ")";
