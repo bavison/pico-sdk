@@ -76,11 +76,11 @@ public:
             else
                 return;
         } else {
-            // Refer to the latest definition of all other symbols
+            // Refer to the latest definition of all other symbols.
             if (auto it = g_script.symbol_lookup.find(expr.identifier()); it != g_script.symbol_lookup.end())
                 definition = &g_script.symbols[it->second].definition();
             else
-                throw DiagnosticError(expr.location(), "error: undefined symbol");
+                return;
         }
         examine(definition, expr.location());
     }
@@ -131,11 +131,11 @@ public:
             else
                 return;
         } else {
-            // Refer to the latest definition of all other symbols
+            // Refer to the latest definition of all other symbols.
             if (auto it = g_script.symbol_lookup.find(expr.symbol()); it != g_script.symbol_lookup.end())
                 definition = &g_script.symbols[it->second].definition();
             else
-                return; // Not an error here, unlike SymbolExpression
+                return;
         }
         examine(definition, expr.location());
     }
@@ -210,10 +210,11 @@ public:
             }
             d = &m_target->previous();
         } else {
-            // Refer to latest definition of the symbol. Check for undefined
-            // symbols was already performed at definition sorting time.
-            auto it = g_script.symbol_lookup.find(expr.identifier());
-            d = &g_script.symbols[it->second].definition();
+            // Refer to the latest definition of all other symbols.
+            if (auto it = g_script.symbol_lookup.find(expr.identifier()); it != g_script.symbol_lookup.end())
+                d = &g_script.symbols[it->second].definition();
+            else
+                throw DiagnosticError(expr.location(), "error: undefined symbol");
         }
         // Definition sorting means we can rely on the symbol value already having been evaluated
         m_target->m_value = d->value();
@@ -319,8 +320,7 @@ public:
             // instead.
             m_target->m_value = m_target->previous_exists();
         } else {
-            // Refer to latest definition of the symbol. Check for undefined
-            // symbols was already performed at definition sorting time.
+            // Refer to the latest definition of all other symbols.
             auto it = g_script.symbol_lookup.find(expr.symbol());
             m_target->m_value = it != g_script.symbol_lookup.end();
         }

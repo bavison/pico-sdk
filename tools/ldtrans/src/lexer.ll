@@ -291,7 +291,6 @@ SIZEOF {
 "{" {
     TRACE("LBRACE")
     ++brace_depth;
-    std::cout << "brace_depth now " << brace_depth << std::endl;
     ADVANCE();
     return yy::parser::make_LBRACE(lexer_symbol_location);
 }
@@ -342,7 +341,6 @@ SIZEOF {
     TRACE("RBRACE")
     if (--brace_depth == 0)
         in_sections_command = false;
-    std::cout << "brace_depth now " << brace_depth << std::endl;
     ADVANCE();
     return yy::parser::make_RBRACE(lexer_symbol_location);
 }

@@ -70,6 +70,20 @@ static bool g_memory_region_attribute_sense_required = true;
 /* Generate factory functions prefixed with make_ inside the parser namespace */
 %define api.token.constructor
 
+/* GNU ld scripts contain a handful of constructs that require decisions
+ * beyond LALR(1), for example:
+ *
+ *     foo.o bar.o
+ *     foo.o (.text)
+ *     foo.o = 123;
+ *
+ * The GLR parser resolves these by pursuing both parses until sufficient
+ * lookahead is available, while executing semantic actions only for the
+ * surviving parse.
+ */
+%glr-parser
+%skeleton "glr2.cc"
+
 %token
     /* Commands */
     <SourceLocation>    ENTRY               "ENTRY"
@@ -162,58 +176,59 @@ command:
 /* Expressions */
 
 primary_expression: /* highest priority */
-      IDENTIFIER                                                { $$ = std::make_unique<SymbolExpression>($1); }
-    | INTEGER                                                   { $$ = std::make_unique<IntegerExpression>($1); }
+      IDENTIFIER                                                { $$ = std::make_shared<SymbolExpression>($1); }
+    | INTEGER                                                   { $$ = std::make_shared<IntegerExpression>($1); }
     | LPAREN expression RPAREN                                  { $$ = std::move($2); }
-    | ALIGN LPAREN expression RPAREN                            { $$ = std::make_unique<UnaryExpression>($1, UnaryOperator::Align, std::move($3)); }
-    | ALIGNOF LPAREN IDENTIFIER RPAREN                          { $$ = std::make_unique<SectionExpression>($1, SectionOperator::AlignOf, $3.id); }
-    | DEFINED LPAREN IDENTIFIER RPAREN                          { $$ = std::make_unique<DefinedExpression>($1, $3.id); }
-    | LENGTH LPAREN IDENTIFIER RPAREN                           { $$ = std::make_unique<MemoryExpression>($1, MemoryOperator::Length, $3.id); }
-    | MAX LPAREN expression COMMA expression RPAREN             { $$ = std::make_unique<BinaryExpression>($1, BinaryOperator::Max, std::move($3), std::move($5)); }
-    | ORIGIN LPAREN IDENTIFIER RPAREN                           { $$ = std::make_unique<MemoryExpression>($1, MemoryOperator::Origin, $3.id); }
-    | SIZEOF LPAREN IDENTIFIER RPAREN                           { $$ = std::make_unique<SectionExpression>($1, SectionOperator::SizeOf, $3.id); }
+    | ALIGN LPAREN expression RPAREN                            { $$ = std::make_shared<UnaryExpression>($1, UnaryOperator::Align, std::move($3)); }
+    | ALIGNOF LPAREN IDENTIFIER RPAREN                          { $$ = std::make_shared<SectionExpression>($1, SectionOperator::AlignOf, $3.id); }
+    | DEFINED LPAREN IDENTIFIER RPAREN                          { $$ = std::make_shared<DefinedExpression>($1, $3.id); }
+    | LENGTH LPAREN IDENTIFIER RPAREN                           { $$ = std::make_shared<MemoryExpression>($1, MemoryOperator::Length, $3.id); }
+    | LOADADDR LPAREN IDENTIFIER RPAREN                         { $$ = std::make_shared<SectionExpression>($1, SectionOperator::LoadAddr, $3.id); }
+    | MAX LPAREN expression COMMA expression RPAREN             { $$ = std::make_shared<BinaryExpression>($1, BinaryOperator::Max, std::move($3), std::move($5)); }
+    | ORIGIN LPAREN IDENTIFIER RPAREN                           { $$ = std::make_shared<MemoryExpression>($1, MemoryOperator::Origin, $3.id); }
+    | SIZEOF LPAREN IDENTIFIER RPAREN                           { $$ = std::make_shared<SectionExpression>($1, SectionOperator::SizeOf, $3.id); }
     ;
 
 unary_expression:
       primary_expression                                        { $$ = std::move($1); }
-    | PLUS unary_expression                                     { $$ = std::make_unique<UnaryExpression>($1, UnaryOperator::Plus, std::move($2)); }
-    | MINUS unary_expression                                    { $$ = std::make_unique<UnaryExpression>($1, UnaryOperator::Minus, std::move($2)); }
-    | BITWISE_NOT unary_expression                              { $$ = std::make_unique<UnaryExpression>($1, UnaryOperator::BitwiseNot, std::move($2)); }
-    | LOGICAL_NOT unary_expression                              { $$ = std::make_unique<UnaryExpression>($1, UnaryOperator::LogicalNot, std::move($2)); }
+    | PLUS unary_expression                                     { $$ = std::make_shared<UnaryExpression>($1, UnaryOperator::Plus, std::move($2)); }
+    | MINUS unary_expression                                    { $$ = std::make_shared<UnaryExpression>($1, UnaryOperator::Minus, std::move($2)); }
+    | BITWISE_NOT unary_expression                              { $$ = std::make_shared<UnaryExpression>($1, UnaryOperator::BitwiseNot, std::move($2)); }
+    | LOGICAL_NOT unary_expression                              { $$ = std::make_shared<UnaryExpression>($1, UnaryOperator::LogicalNot, std::move($2)); }
     ;
 
 multiplicative_expression:
       unary_expression                                          { $$ = std::move($1); }
-    | multiplicative_expression STAR unary_expression           { $$ = std::make_unique<BinaryExpression>($2, BinaryOperator::Multiply, std::move($1), std::move($3)); }
+    | multiplicative_expression STAR unary_expression           { $$ = std::make_shared<BinaryExpression>($2, BinaryOperator::Multiply, std::move($1), std::move($3)); }
     ;
 
 additive_expression:
       multiplicative_expression                                 { $$ = std::move($1); }
-    | additive_expression PLUS multiplicative_expression        { $$ = std::make_unique<BinaryExpression>($2, BinaryOperator::Add, std::move($1), std::move($3)); }
-    | additive_expression MINUS multiplicative_expression       { $$ = std::make_unique<BinaryExpression>($2, BinaryOperator::Subtract, std::move($1), std::move($3)); }
+    | additive_expression PLUS multiplicative_expression        { $$ = std::make_shared<BinaryExpression>($2, BinaryOperator::Add, std::move($1), std::move($3)); }
+    | additive_expression MINUS multiplicative_expression       { $$ = std::make_shared<BinaryExpression>($2, BinaryOperator::Subtract, std::move($1), std::move($3)); }
     ;
 
 relational_expression:
       additive_expression                                       { $$ = std::move($1); }
-    | relational_expression GE additive_expression              { $$ = std::make_unique<BinaryExpression>($2, BinaryOperator::GreaterOrEqual, std::move($1), std::move($3)); }
-    | relational_expression GT additive_expression              { $$ = std::make_unique<BinaryExpression>($2, BinaryOperator::Greater, std::move($1), std::move($3)); }
-    | relational_expression LE additive_expression              { $$ = std::make_unique<BinaryExpression>($2, BinaryOperator::LessOrEqual, std::move($1), std::move($3)); }
-    | relational_expression LT additive_expression              { $$ = std::make_unique<BinaryExpression>($2, BinaryOperator::Less, std::move($1), std::move($3)); }
+    | relational_expression GE additive_expression              { $$ = std::make_shared<BinaryExpression>($2, BinaryOperator::GreaterOrEqual, std::move($1), std::move($3)); }
+    | relational_expression GT additive_expression              { $$ = std::make_shared<BinaryExpression>($2, BinaryOperator::Greater, std::move($1), std::move($3)); }
+    | relational_expression LE additive_expression              { $$ = std::make_shared<BinaryExpression>($2, BinaryOperator::LessOrEqual, std::move($1), std::move($3)); }
+    | relational_expression LT additive_expression              { $$ = std::make_shared<BinaryExpression>($2, BinaryOperator::Less, std::move($1), std::move($3)); }
     ;
 
 equality_expression:
       relational_expression                                     { $$ = std::move($1); }
-    | equality_expression EQ relational_expression              { $$ = std::make_unique<BinaryExpression>($2, BinaryOperator::Equal, std::move($1), std::move($3)); }
+    | equality_expression EQ relational_expression              { $$ = std::make_shared<BinaryExpression>($2, BinaryOperator::Equal, std::move($1), std::move($3)); }
     ;
 
 bitwise_and_expression:
       equality_expression                                       { $$ = std::move($1); }
-    | bitwise_and_expression BITWISE_AND equality_expression    { $$ = std::make_unique<BinaryExpression>($2, BinaryOperator::BitwiseAnd, std::move($1), std::move($3)); }
+    | bitwise_and_expression BITWISE_AND equality_expression    { $$ = std::make_shared<BinaryExpression>($2, BinaryOperator::BitwiseAnd, std::move($1), std::move($3)); }
     ;
 
 ternary_expression: /* lowest priority */
       bitwise_and_expression                                                    { $$ = std::move($1); }
-    | bitwise_and_expression QUERY ternary_expression COLON ternary_expression  { $$ = std::make_unique<TernaryExpression>($2, std::move($1), std::move($3), std::move($5)); }
+    | bitwise_and_expression QUERY ternary_expression COLON ternary_expression  { $$ = std::make_shared<TernaryExpression>($2, std::move($1), std::move($3), std::move($5)); }
     ;
 
 expression:
@@ -221,6 +236,16 @@ expression:
     ;
 
 /* Commands */
+
+whitespace:
+      WHITESPACE
+    | whitespace WHITESPACE /* we can get multiple whitespace tokens separated by comments */
+    ;
+
+opt_whitespace:
+      /* empty */
+    | whitespace
+    ;
 
 entry_command:
     ENTRY LPAREN IDENTIFIER RPAREN
@@ -233,12 +258,12 @@ entry_command:
     ;
 
 include_command:
-    INCLUDE IDENTIFIER
+    INCLUDE opt_whitespace IDENTIFIER
     {
         std::cout << "include command\n";
         FileId include_file;
         try {
-            include_file = g_source_manager.loadInclude(g_script.identifiers.toRaw($2.id));
+            include_file = g_source_manager.loadInclude(g_script.identifiers.toRaw($3.id));
         }
         catch (const std::exception& e) {
             throw DiagnosticError($1, std::string("error: ") + e.what());
@@ -333,19 +358,24 @@ section_symbol_assignment:
     ;
 
 assert_command:
-      ASSERT LPAREN expression COMMA IDENTIFIER
+      ASSERT LPAREN expression COMMA IDENTIFIER RPAREN
         {
         }
     ;
 
-opt_output_section_type:
-      /* empty */
-    | LPAREN NOLOAD RPAREN
+output_section_address:
+      expression
     ;
 
-opt_whitespace:
+output_section_type:
+      LPAREN NOLOAD RPAREN
+    ;
+
+output_section_header:
       /* empty */
-    | WHITESPACE
+    | output_section_type
+    | output_section_address
+    | output_section_address output_section_type
     ;
 
 wildcarded_identifier_element:
@@ -368,7 +398,7 @@ filespec:
 
 filespec_list:
       filespec
-    | filespec_list WHITESPACE filespec
+    | filespec_list whitespace filespec
     ;
 
 exclude_file_command:
@@ -380,25 +410,20 @@ inner_input_section_list_item:
     | exclude_file_command opt_whitespace wildcarded_identifier
     ;
 
-middle_input_section_list_item:
-      inner_input_section_list_item
-    | SORT_BY_NAME      opt_whitespace LPAREN opt_whitespace inner_input_section_list_item opt_whitespace RPAREN
-    | SORT_BY_ALIGNMENT opt_whitespace LPAREN opt_whitespace inner_input_section_list_item opt_whitespace RPAREN
-    ;
-
-outer_input_section_list_item:
-      middle_input_section_list_item
-    | SORT_BY_NAME      opt_whitespace LPAREN opt_whitespace middle_input_section_list_item opt_whitespace RPAREN
-    | SORT_BY_ALIGNMENT opt_whitespace LPAREN opt_whitespace middle_input_section_list_item opt_whitespace RPAREN
+self_delimiting_input_section_list_item:
+      SORT_BY_NAME      opt_whitespace LPAREN opt_whitespace           inner_input_section_list_item opt_whitespace RPAREN
+    | SORT_BY_NAME      opt_whitespace LPAREN opt_whitespace self_delimiting_input_section_list_item opt_whitespace RPAREN
+    | SORT_BY_ALIGNMENT opt_whitespace LPAREN opt_whitespace           inner_input_section_list_item opt_whitespace RPAREN
+    | SORT_BY_ALIGNMENT opt_whitespace LPAREN opt_whitespace self_delimiting_input_section_list_item opt_whitespace RPAREN
     ;
 
 input_section_list_items:
     /* Whether the delimiting whitespace is required depends on the type of
      * the preceding item, so our hands are tied to use right-recursion */
       inner_input_section_list_item
-    | inner_input_section_list_item WHITESPACE input_section_list_items
-    | outer_input_section_list_item
-    | outer_input_section_list_item opt_whitespace input_section_list_items
+    | inner_input_section_list_item whitespace input_section_list_items
+    | self_delimiting_input_section_list_item
+    | self_delimiting_input_section_list_item opt_whitespace input_section_list_items
     ;
 
 input_section_list:
@@ -427,17 +452,22 @@ self_delimiting_output_section_item:
       section_symbol_assignment
     | assert_command SEMICOLON /* yes, trailing semicolon required here unlike in other places */
     | outer_input_section_description
+    | include_command
     | SEMICOLON
     ;
 
 output_section_items:
     /* Whether the delimiting whitespace is required depends on the type of
      * the preceding item, so our hands are tied to use right-recursion */
-      /* empty */
-    | filespec
-    | filespec WHITESPACE output_section_items
+      filespec
+    | filespec whitespace output_section_items
     | self_delimiting_output_section_item
     | self_delimiting_output_section_item opt_whitespace output_section_items
+    ;
+
+opt_output_section_items:
+      opt_whitespace
+    | opt_whitespace output_section_items opt_whitespace
     ;
 
 opt_output_section_region:
@@ -450,8 +480,13 @@ opt_output_section_lma_region:
     | AT GT IDENTIFIER
     ;
 
+opt_output_section_fill:
+      /* empty */
+    | ASSIGN expression
+    ;
+
 output_section_description:
-      IDENTIFIER opt_output_section_type COLON LBRACE opt_whitespace output_section_items opt_whitespace RBRACE opt_output_section_region opt_output_section_lma_region
+      IDENTIFIER output_section_header COLON LBRACE opt_output_section_items RBRACE opt_output_section_region opt_output_section_lma_region opt_output_section_fill
 
 sections_item:
       section_symbol_assignment

@@ -58,7 +58,7 @@ public:
     virtual void accept(ExpressionVisitor& visitor) const = 0;
 };
 
-using ExpressionPtr = std::unique_ptr<Expression>;
+using ExpressionPtr = std::shared_ptr<Expression>;
 
 class SymbolExpression : public Expression
 {
@@ -152,6 +152,7 @@ private:
 enum class SectionOperator
 {
     AlignOf,
+    LoadAddr,
     SizeOf,
 };
 
@@ -312,6 +313,9 @@ public:
         switch (expr.operation()) {
         case SectionOperator::AlignOf:
             m_result = std::string("ALIGNOF(") + m_ids.toDisplayName(expr.section()) + ")";
+            break;
+        case SectionOperator::LoadAddr:
+            m_result = std::string("LOADADDR(") + m_ids.toDisplayName(expr.section()) + ")";
             break;
         case SectionOperator::SizeOf:
             m_result = std::string("SIZEOF(") + m_ids.toDisplayName(expr.section()) + ")";
