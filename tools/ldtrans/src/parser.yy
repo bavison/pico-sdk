@@ -153,6 +153,12 @@ static bool g_memory_region_attribute_sense_required = true;
 %type <MemoryAttributesRules> memory_attr
 %type <MemoryAttributesRules> memory_attr_list
 %type <MemoryAttributesRules> opt_memory_attrs
+%type <DefinitionPtr> inner_section_symbol_assignment
+%type <DefinitionPtr> weak_section_symbol_assignment
+%type <DefinitionPtr> section_symbol_assignment_alternatives
+%type <DefinitionPtr> inner_top_level_symbol_assignment
+%type <DefinitionPtr> weak_top_level_symbol_assignment
+%type <DefinitionPtr> top_level_symbol_assignment_alternatives
 
 %%
 
@@ -333,28 +339,40 @@ memory_command:
 inner_section_symbol_assignment:
       IDENTIFIER opt_whitespace ASSIGN expression
         {
-            std::cout << "assignment\n";
-            Definition definition($1.loc, $1.id, std::move($4), DefinitionKind::SectionScopeSymbol);
-            auto it = g_script.symbol_lookup.find($1.id);
-            if (it == g_script.symbol_lookup.end()) {
-                g_script.symbol_lookup[$1.id] = g_script.symbols.size();
-                g_script.symbols.emplace_back(Symbol(definition));
-            } else
-               g_script.symbols[it->second].redefine(definition);
-            std::cout << g_script.symbols[g_script.symbol_lookup.find($1.id)->second].dump(g_script.identifiers);
+            $$ = std::make_shared<Definition>($1.loc, $1.id, std::move($4), DefinitionKind::SectionScopeSymbol);
         }
     ;
 
 weak_section_symbol_assignment:
       PROVIDE        LPAREN inner_section_symbol_assignment RPAREN SEMICOLON
+        {
+            $$ = $3;
+            $$->set_visibility($1, DefinitionVisibility::Provide);
+        }
     | PROVIDE_HIDDEN LPAREN inner_section_symbol_assignment RPAREN SEMICOLON
         {
+            $$ = $3;
+            $$->set_visibility($1, DefinitionVisibility::ProvideHidden);
         }
     ;
 
-section_symbol_assignment:
+section_symbol_assignment_alternatives:
       inner_section_symbol_assignment SEMICOLON
     | weak_section_symbol_assignment
+    ;
+
+section_symbol_assignment:
+      section_symbol_assignment_alternatives
+        {
+            std::cout << "section-scope assignment\n";
+            auto it = g_script.symbol_lookup.find($1->name());
+            if (it == g_script.symbol_lookup.end()) {
+                g_script.symbol_lookup[$1->name()] = g_script.symbols.size();
+                g_script.symbols.emplace_back(Symbol($1));
+            } else
+               g_script.symbols[it->second].redefine($1);
+            std::cout << g_script.symbols[g_script.symbol_lookup.find($1->name())->second].dump(g_script.identifiers);
+        }
     ;
 
 assert_command:
@@ -526,28 +544,40 @@ region_alias_command:
 inner_top_level_symbol_assignment:
       IDENTIFIER ASSIGN expression
         {
-            std::cout << "assignment\n";
-            Definition definition($1.loc, $1.id, std::move($3), DefinitionKind::TopLevelSymbol);
-            auto it = g_script.symbol_lookup.find($1.id);
-            if (it == g_script.symbol_lookup.end()) {
-                g_script.symbol_lookup[$1.id] = g_script.symbols.size();
-                g_script.symbols.emplace_back(Symbol(definition));
-            } else
-               g_script.symbols[it->second].redefine(definition);
-            std::cout << g_script.symbols[g_script.symbol_lookup.find($1.id)->second].dump(g_script.identifiers);
+            $$ = std::make_shared<Definition>($1.loc, $1.id, std::move($3), DefinitionKind::TopLevelSymbol);
         }
     ;
 
 weak_top_level_symbol_assignment:
       PROVIDE        LPAREN inner_top_level_symbol_assignment RPAREN SEMICOLON
+        {
+            $$ = $3;
+            $$->set_visibility($1, DefinitionVisibility::Provide);
+        }
     | PROVIDE_HIDDEN LPAREN inner_top_level_symbol_assignment RPAREN SEMICOLON
         {
+            $$ = $3;
+            $$->set_visibility($1, DefinitionVisibility::ProvideHidden);
         }
     ;
 
-top_level_symbol_assignment:
+top_level_symbol_assignment_alternatives:
       inner_top_level_symbol_assignment SEMICOLON
     | weak_top_level_symbol_assignment
+    ;
+
+top_level_symbol_assignment:
+      top_level_symbol_assignment_alternatives
+        {
+            std::cout << "top-level assignment\n";
+            auto it = g_script.symbol_lookup.find($1->name());
+            if (it == g_script.symbol_lookup.end()) {
+                g_script.symbol_lookup[$1->name()] = g_script.symbols.size();
+                g_script.symbols.emplace_back(Symbol($1));
+            } else
+               g_script.symbols[it->second].redefine($1);
+            std::cout << g_script.symbols[g_script.symbol_lookup.find($1->name())->second].dump(g_script.identifiers);
+        }
     ;
 
 %%

@@ -20,14 +20,13 @@
 class Symbol
 {
 public:
-    Symbol(Definition& definition) : m_definition(std::make_unique<Definition>(std::move(definition))) {}
-    void redefine(Definition& definition)
+    Symbol(DefinitionPtr definition) : m_definition(definition) {}
+    void redefine(DefinitionPtr definition)
     {
-        if (m_definition->kind() != definition.kind())
-            throw DiagnosticError(definition.location(), "error: cannot redefine a symbol with a different scope", {{ m_definition->location(), "previous definition was here" }});
-        auto new_definition = std::make_unique<Definition>(std::move(definition));
-        new_definition->enchain(m_definition);
-        m_definition = std::move(new_definition);
+        if (m_definition->kind() != definition->kind())
+            throw DiagnosticError(definition->location(), "error: cannot redefine a symbol with a different scope", {{ m_definition->location(), "previous definition was here" }});
+        definition->enchain(m_definition);
+        m_definition = definition;
     }
     std::string dump(const IdentifierManager& ids) const
     {
@@ -37,11 +36,12 @@ public:
             "  location: " + g_source_manager.toFileLineColumn(m_definition->location()) + "\n" +
             "  name: " + ids.toDisplayName(m_definition->name()) + "\n" +
             "  value: " + expression_dump.result() + "\n" +
-            "  kind: " + (m_definition->kind() == DefinitionKind::TopLevelSymbol ? "top-level\n" : "section\n");
+            "  kind: " + (m_definition->kind() == DefinitionKind::TopLevelSymbol ? "top-level\n" : "section\n") +
+            "  visibility: " + (m_definition->visibility() == DefinitionVisibility::Standard ? "standard\n" : m_definition->visibility() == DefinitionVisibility::Provide ? "provide\n" : "provide hidden\n");
     }
     Definition& definition() const { return *m_definition; }
 private:
-    std::unique_ptr<Definition> m_definition;
+    std::shared_ptr<Definition> m_definition;
 };
 
 #endif /* sentry INCLUDE_SYMBOL_H_ */
