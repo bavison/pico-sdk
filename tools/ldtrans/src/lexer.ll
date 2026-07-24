@@ -366,11 +366,17 @@ SIZEOF {
 
 
 [A-Za-z_.][A-Za-z0-9_.-]* {
-    IdentifierToken tok{current_location, g_script.identifiers.toId(yytext)};
-    ADVANCE();
-    auto regularised = g_script.identifiers.toDisplayName(tok.id);
-    TRACE("IDENTIFIER: " << yytext << " regularised to " << regularised)
-    return yy::parser::make_IDENTIFIER(tok);
+     if (strcmp(yytext, ".") == 0) {
+        ADVANCE();
+        TRACE("LOCATION_COUNTER")
+        return yy::parser::make_LOCATION_COUNTER(lexer_symbol_location);
+    } else {
+        IdentifierToken tok{current_location, g_script.identifiers.toId(yytext)};
+        ADVANCE();
+        auto regularised = g_script.identifiers.toDisplayName(tok.id);
+        TRACE("IDENTIFIER: " << yytext << " regularised to " << regularised)
+        return yy::parser::make_IDENTIFIER(tok);
+    }
 }
 
 \"([^"\\\n]|\\.)*\" {
@@ -382,11 +388,17 @@ SIZEOF {
             ++i;
         unescaped.push_back(yytext[i]);
     }
-    IdentifierToken tok{current_location, g_script.identifiers.toId(unescaped)};
-    ADVANCE();
-    auto regularised = g_script.identifiers.toDisplayName(tok.id);
-    TRACE("IDENTIFIER: " << yytext << " regularised to " << regularised)
-    return yy::parser::make_IDENTIFIER(tok);
+    if (unescaped == ".") {
+        ADVANCE();
+        TRACE("LOCATION_COUNTER")
+        return yy::parser::make_LOCATION_COUNTER(lexer_symbol_location);
+    } else {
+        IdentifierToken tok{current_location, g_script.identifiers.toId(unescaped)};
+        ADVANCE();
+        auto regularised = g_script.identifiers.toDisplayName(tok.id);
+        TRACE("IDENTIFIER: " << yytext << " regularised to " << regularised)
+        return yy::parser::make_IDENTIFIER(tok);
+    }
 }
 
 0x[0-9A-Fa-f]+[KMkm]? {

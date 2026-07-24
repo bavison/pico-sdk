@@ -14,6 +14,7 @@
 
 #include "Identifier.h"
 #include "MemoryRegion.h"
+#include "OutputSection.h"
 #include "SourceLocation.h"
 #include "Symbol.h"
 
@@ -37,6 +38,8 @@ struct Script
     std::unordered_map<IdentifierId, SymbolId> symbol_lookup;
     /* Definitions in dependency order */
     std::vector<Definition*> definition_order;
+    /* Output sections */
+    std::vector<OutputSectionPtr> output_sections;
 
     void SortDefinitions();
     void EvaluateDefinitions();

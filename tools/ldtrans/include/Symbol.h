@@ -34,7 +34,7 @@ public:
         m_definition->expression().accept(expression_dump);
         return std::string("SYMBOL\n") +
             "  location: " + g_source_manager.toFileLineColumn(m_definition->location()) + "\n" +
-            "  name: " + ids.toDisplayName(m_definition->name()) + "\n" +
+            "  name: " + ids.toDisplayName(*m_definition->name()) + "\n" +
             "  value: " + expression_dump.result() + "\n" +
             "  kind: " + (m_definition->kind() == DefinitionKind::TopLevelSymbol ? "top-level\n" : "section\n") +
             "  visibility: " + (m_definition->visibility() == DefinitionVisibility::Standard ? "standard\n" : m_definition->visibility() == DefinitionVisibility::Provide ? "provide\n" : "provide hidden\n");

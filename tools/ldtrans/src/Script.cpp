@@ -10,7 +10,7 @@
 
 Script g_script;
 
-class SortVisitor : public ExpressionVisitor
+class SortVisitor : public ConstExpressionVisitor
 {
 public:
     explicit SortVisitor(std::vector<Definition*>& definition_stack, std::vector<SourceLocation>& reference_stack) : m_definition_stack(definition_stack), m_reference_stack(reference_stack), m_assignee_kind(definition_stack.back()->kind()) {}
@@ -190,7 +190,7 @@ void Script::SortDefinitions()
     }
 }
 
-class EvaluationVisitor : public ExpressionVisitor
+class EvaluationVisitor : public ConstExpressionVisitor
 {
 public:
     explicit EvaluationVisitor(Definition* definition) : m_target(definition) {}
@@ -356,7 +356,9 @@ private:
 void Script::EvaluateDefinitions()
 {
     for (auto definition : definition_order) {
-        if (definition->kind() != DefinitionKind::SectionScopeSymbol) {
+        if (definition->kind() != DefinitionKind::SectionScopeSymbol &&
+            definition->kind() != DefinitionKind::OutputSectionVMA &&
+            definition->kind() != DefinitionKind::OutputSectionLMA) {
             EvaluationVisitor evaluate(definition);
             definition->expression().accept(evaluate);
             std::cout << definition->dump(identifiers) << std::endl;

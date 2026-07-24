@@ -13,7 +13,7 @@
 
 #include "SourceLocation.h"
 
-class DiagnosticError : public std::runtime_error
+class Diagnostic
 {
 public:
     struct Note
@@ -22,30 +22,39 @@ public:
         std::string message;
     };
 
-    DiagnosticError(SourceLocation location, std::string message, std::vector<Note> _notes = {}) :
-        std::runtime_error(message), primary(location), notes(std::move(_notes)) {}
+    Diagnostic(SourceLocation primary, std::string message, std::vector<Note> notes = {}) :
+        m_primary(primary), m_message(message), m_notes(std::move(notes)) {}
 
     void addNote(SourceLocation location, std::string message)
     {
-        notes.push_back({location, std::move(message)});
+        m_notes.push_back({location, std::move(message)});
     }
 
     std::string format() const;
 
     static void push_include(SourceLocation location)
     {
-        include_sites.push_back(location);
+        s_include_sites.push_back(location);
     }
 
     static void pop_include()
     {
-        include_sites.pop_back();
+        s_include_sites.pop_back();
     }
 
-private:
-    SourceLocation primary;
-    std::vector<Note> notes;
-    static std::vector<SourceLocation> include_sites;
+protected:
+    SourceLocation m_primary;
+    std::string m_message;
+    std::vector<Note> m_notes;
+    static std::vector<SourceLocation> s_include_sites;
+};
+
+class DiagnosticError : public Diagnostic, public std::runtime_error
+{
+public:
+    DiagnosticError(SourceLocation primary, std::string message, std::vector<Note> notes = {}) :
+        Diagnostic(primary, message, std::move(notes)),
+        std::runtime_error(message) {}
 };
 
 #endif /* sentry INCLUDE_DIAGNOSTIC_H_ */

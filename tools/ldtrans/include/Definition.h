@@ -16,15 +16,17 @@
 #include "SourceLocation.h"
 #include "SourceManager.h"
 
-enum class DefinitionKind
+enum class DefinitionKind : std::uint8_t
 {
     TopLevelSymbol,
     SectionScopeSymbol,
     MemoryRegionOrigin,
     MemoryRegionLength,
+    OutputSectionVMA,
+    OutputSectionLMA,
 };
 
-enum class DefinitionVisibility
+enum class DefinitionVisibility : std::uint8_t
 {
     Standard,
     Provide,
@@ -34,7 +36,7 @@ enum class DefinitionVisibility
 class Definition
 {
 public:
-    Definition(SourceLocation location, IdentifierId name, ExpressionPtr expression, DefinitionKind kind) : m_location(location), m_name(name), m_expression(std::move(expression)), m_kind(kind) {}
+    Definition(SourceLocation location, std::optional<IdentifierId> name, ExpressionPtr expression, DefinitionKind kind) : m_location(location), m_name(name), m_expression(expression), m_kind(kind) {}
     void enchain(std::shared_ptr<Definition>& previous)
     {
         m_previous = std::move(previous);
@@ -43,17 +45,25 @@ public:
     {
         switch (m_kind) {
         case DefinitionKind::MemoryRegionOrigin:
-            return std::string("memory region ") + ids.toDisplayName(m_name) + " origin";
+            return std::string("memory region ") + ids.toDisplayName(*m_name) + " origin";
         case DefinitionKind::MemoryRegionLength:
-            return std::string("memory region ") + ids.toDisplayName(m_name) + " length";
+            return std::string("memory region ") + ids.toDisplayName(*m_name) + " length";
+        case DefinitionKind::OutputSectionVMA:
+            return std::string("output section ") + ids.toDisplayName(*m_name) + " VMA";
+        case DefinitionKind::OutputSectionLMA:
+            return std::string("output section ") + ids.toDisplayName(*m_name) + " LMA";
         default:
-            return std::string("symbol ") + ids.toDisplayName(m_name);
+            return std::string("symbol ") + ids.toDisplayName(*m_name);
         }
     }
     void set_visibility(SourceLocation new_location, DefinitionVisibility new_visibility)
     {
         m_location = new_location;
         m_visibility = new_visibility;
+    }
+    void set_name(IdentifierId new_name)
+    {
+        m_name = new_name;
     }
     std::string dump(const IdentifierManager& ids) const {
         char buffer[2 + 16 + 1] = "0x"; // includes null terminator, wherever that is
@@ -64,7 +74,8 @@ public:
     bool previous_exists() const { return bool(m_previous); }
     Definition& previous() const { return *m_previous; }
     SourceLocation location() const { return m_location; }
-    IdentifierId name() const { return m_name; }
+    std::optional<IdentifierId> name() const { return m_name; }
+    Expression& expression() { return *m_expression; }
     const Expression& expression() const { return *m_expression; }
     DefinitionKind kind() const { return m_kind; }
     DefinitionVisibility visibility() const { return m_visibility; }
@@ -91,7 +102,7 @@ private:
     }
     std::shared_ptr<Definition> m_previous;
     SourceLocation m_location;
-    IdentifierId m_name;
+    std::optional<IdentifierId> m_name;
     ExpressionPtr m_expression;
     DefinitionKind m_kind;
     DefinitionVisibility m_visibility = DefinitionVisibility::Standard;

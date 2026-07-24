@@ -39,6 +39,7 @@ yy::parser::symbol_type yylex();
 /* Literal insertions into parser.cpp (near top) */
 %{
 
+#include <algorithm>
 #include <iostream>
 #include <stdexcept>
 
@@ -124,6 +125,7 @@ static bool g_memory_region_attribute_sense_required = true;
                         GT                  ">"
                         LBRACE              "{"
                         LE                  "<="
+                        LOCATION_COUNTER    "."
                         LOGICAL_NOT         "!"
                         LPAREN              "("
                         LT                  "<"
@@ -154,8 +156,34 @@ static bool g_memory_region_attribute_sense_required = true;
 %type <MemoryAttributesRules> memory_attr_list
 %type <MemoryAttributesRules> opt_memory_attrs
 %type <DefinitionPtr> inner_section_symbol_assignment
+%type <OutputSectionItemPtr> location_counter_assignment
 %type <DefinitionPtr> weak_section_symbol_assignment
 %type <DefinitionPtr> section_symbol_assignment_alternatives
+%type <OutputSectionItemPtr> section_symbol_assignment;
+%type <DefinitionPtr> output_section_vma
+%type <std::pair<DefinitionPtr, bool>> output_section_header
+%type <DefinitionPtr> output_section_lma
+%type <DefinitionPtr> opt_output_section_lma
+%type <std::string> wildcarded_identifier_element
+%type <std::string> wildcarded_identifier
+%type <FileSpec> filespec
+%type <std::shared_ptr<std::vector<FileSpec>>> filespec_list
+%type <std::shared_ptr<std::vector<FileSpec>>> exclude_file_command
+%type <SectionListItemPtr> inner_input_section_list_item
+%type <SectionListItemPtr> self_delimiting_input_section_list_item
+%type <std::shared_ptr<std::vector<SectionListItem>>> input_section_list_items
+%type <std::shared_ptr<std::vector<SectionListItem>>> input_section_list
+%type <FileFilterPtr> inner_input_file_specifier
+%type <FileFilterPtr> outer_input_file_specifier
+%type <InputSectionFilterPtr> inner_input_section_description
+%type <InputSectionFilterPtr> outer_input_section_description
+%type <OutputSectionItemPtr> self_delimiting_output_section_item
+%type <std::shared_ptr<std::vector<OutputSectionItemPtr>>> output_section_items
+%type <std::shared_ptr<std::vector<OutputSectionItemPtr>>> opt_output_section_items
+%type <std::optional<IdentifierId>> opt_output_section_region
+%type <std::optional<IdentifierId>> opt_output_section_lma_region
+%type <std::optional<Fill>> opt_output_section_fill
+%type <OutputSectionPtr> output_section_description
 %type <DefinitionPtr> inner_top_level_symbol_assignment
 %type <DefinitionPtr> weak_top_level_symbol_assignment
 %type <DefinitionPtr> top_level_symbol_assignment_alternatives
@@ -184,61 +212,62 @@ command:
 primary_expression: /* highest priority */
       IDENTIFIER                                                { $$ = std::make_shared<SymbolExpression>($1); }
     | INTEGER                                                   { $$ = std::make_shared<IntegerExpression>($1); }
-    | LPAREN expression RPAREN                                  { $$ = std::move($2); }
-    | ALIGN LPAREN expression RPAREN                            { $$ = std::make_shared<UnaryExpression>($1, UnaryOperator::Align, std::move($3)); }
+    | LOCATION_COUNTER                                          { $$ = std::make_shared<LocationCounterExpression>($1); }
+    | LPAREN expression RPAREN                                  { $$ = $2; }
+    | ALIGN LPAREN expression RPAREN                            { $$ = std::make_shared<UnaryExpression>($1, UnaryOperator::Align, $3); }
     | ALIGNOF LPAREN IDENTIFIER RPAREN                          { $$ = std::make_shared<SectionExpression>($1, SectionOperator::AlignOf, $3.id); }
     | DEFINED LPAREN IDENTIFIER RPAREN                          { $$ = std::make_shared<DefinedExpression>($1, $3.id); }
     | LENGTH LPAREN IDENTIFIER RPAREN                           { $$ = std::make_shared<MemoryExpression>($1, MemoryOperator::Length, $3.id); }
     | LOADADDR LPAREN IDENTIFIER RPAREN                         { $$ = std::make_shared<SectionExpression>($1, SectionOperator::LoadAddr, $3.id); }
-    | MAX LPAREN expression COMMA expression RPAREN             { $$ = std::make_shared<BinaryExpression>($1, BinaryOperator::Max, std::move($3), std::move($5)); }
+    | MAX LPAREN expression COMMA expression RPAREN             { $$ = std::make_shared<BinaryExpression>($1, BinaryOperator::Max, $3, $5); }
     | ORIGIN LPAREN IDENTIFIER RPAREN                           { $$ = std::make_shared<MemoryExpression>($1, MemoryOperator::Origin, $3.id); }
     | SIZEOF LPAREN IDENTIFIER RPAREN                           { $$ = std::make_shared<SectionExpression>($1, SectionOperator::SizeOf, $3.id); }
     ;
 
 unary_expression:
-      primary_expression                                        { $$ = std::move($1); }
-    | PLUS unary_expression                                     { $$ = std::make_shared<UnaryExpression>($1, UnaryOperator::Plus, std::move($2)); }
-    | MINUS unary_expression                                    { $$ = std::make_shared<UnaryExpression>($1, UnaryOperator::Minus, std::move($2)); }
-    | BITWISE_NOT unary_expression                              { $$ = std::make_shared<UnaryExpression>($1, UnaryOperator::BitwiseNot, std::move($2)); }
-    | LOGICAL_NOT unary_expression                              { $$ = std::make_shared<UnaryExpression>($1, UnaryOperator::LogicalNot, std::move($2)); }
+      primary_expression                                        { $$ = $1; }
+    | PLUS unary_expression                                     { $$ = std::make_shared<UnaryExpression>($1, UnaryOperator::Plus, $2); }
+    | MINUS unary_expression                                    { $$ = std::make_shared<UnaryExpression>($1, UnaryOperator::Minus, $2); }
+    | BITWISE_NOT unary_expression                              { $$ = std::make_shared<UnaryExpression>($1, UnaryOperator::BitwiseNot, $2); }
+    | LOGICAL_NOT unary_expression                              { $$ = std::make_shared<UnaryExpression>($1, UnaryOperator::LogicalNot, $2); }
     ;
 
 multiplicative_expression:
-      unary_expression                                          { $$ = std::move($1); }
-    | multiplicative_expression STAR unary_expression           { $$ = std::make_shared<BinaryExpression>($2, BinaryOperator::Multiply, std::move($1), std::move($3)); }
+      unary_expression                                          { $$ = $1; }
+    | multiplicative_expression STAR unary_expression           { $$ = std::make_shared<BinaryExpression>($2, BinaryOperator::Multiply, $1, $3); }
     ;
 
 additive_expression:
-      multiplicative_expression                                 { $$ = std::move($1); }
-    | additive_expression PLUS multiplicative_expression        { $$ = std::make_shared<BinaryExpression>($2, BinaryOperator::Add, std::move($1), std::move($3)); }
-    | additive_expression MINUS multiplicative_expression       { $$ = std::make_shared<BinaryExpression>($2, BinaryOperator::Subtract, std::move($1), std::move($3)); }
+      multiplicative_expression                                 { $$ = $1; }
+    | additive_expression PLUS multiplicative_expression        { $$ = std::make_shared<BinaryExpression>($2, BinaryOperator::Add, $1, $3); }
+    | additive_expression MINUS multiplicative_expression       { $$ = std::make_shared<BinaryExpression>($2, BinaryOperator::Subtract, $1, $3); }
     ;
 
 relational_expression:
-      additive_expression                                       { $$ = std::move($1); }
-    | relational_expression GE additive_expression              { $$ = std::make_shared<BinaryExpression>($2, BinaryOperator::GreaterOrEqual, std::move($1), std::move($3)); }
-    | relational_expression GT additive_expression              { $$ = std::make_shared<BinaryExpression>($2, BinaryOperator::Greater, std::move($1), std::move($3)); }
-    | relational_expression LE additive_expression              { $$ = std::make_shared<BinaryExpression>($2, BinaryOperator::LessOrEqual, std::move($1), std::move($3)); }
-    | relational_expression LT additive_expression              { $$ = std::make_shared<BinaryExpression>($2, BinaryOperator::Less, std::move($1), std::move($3)); }
+      additive_expression                                       { $$ = $1; }
+    | relational_expression GE additive_expression              { $$ = std::make_shared<BinaryExpression>($2, BinaryOperator::GreaterOrEqual, $1, $3); }
+    | relational_expression GT additive_expression              { $$ = std::make_shared<BinaryExpression>($2, BinaryOperator::Greater,        $1, $3); }
+    | relational_expression LE additive_expression              { $$ = std::make_shared<BinaryExpression>($2, BinaryOperator::LessOrEqual,    $1, $3); }
+    | relational_expression LT additive_expression              { $$ = std::make_shared<BinaryExpression>($2, BinaryOperator::Less,           $1, $3); }
     ;
 
 equality_expression:
-      relational_expression                                     { $$ = std::move($1); }
-    | equality_expression EQ relational_expression              { $$ = std::make_shared<BinaryExpression>($2, BinaryOperator::Equal, std::move($1), std::move($3)); }
+      relational_expression                                     { $$ = $1; }
+    | equality_expression EQ relational_expression              { $$ = std::make_shared<BinaryExpression>($2, BinaryOperator::Equal, $1, $3); }
     ;
 
 bitwise_and_expression:
-      equality_expression                                       { $$ = std::move($1); }
-    | bitwise_and_expression BITWISE_AND equality_expression    { $$ = std::make_shared<BinaryExpression>($2, BinaryOperator::BitwiseAnd, std::move($1), std::move($3)); }
+      equality_expression                                       { $$ = $1; }
+    | bitwise_and_expression BITWISE_AND equality_expression    { $$ = std::make_shared<BinaryExpression>($2, BinaryOperator::BitwiseAnd, $1, $3); }
     ;
 
 ternary_expression: /* lowest priority */
-      bitwise_and_expression                                                    { $$ = std::move($1); }
-    | bitwise_and_expression QUERY ternary_expression COLON ternary_expression  { $$ = std::make_shared<TernaryExpression>($2, std::move($1), std::move($3), std::move($5)); }
+      bitwise_and_expression                                                    { $$ = $1; }
+    | bitwise_and_expression QUERY ternary_expression COLON ternary_expression  { $$ = std::make_shared<TernaryExpression>($2, $1, $3, $5); }
     ;
 
 expression:
-      ternary_expression                                        { $$ = std::move($1); }
+      ternary_expression                                        { $$ = $1; }
     ;
 
 /* Commands */
@@ -256,7 +285,6 @@ opt_whitespace:
 entry_command:
     ENTRY LPAREN IDENTIFIER RPAREN
     {
-        std::cout << "entry command\n";
         if (g_script.entry)
             throw DiagnosticError($1, "error: redefinition of entry point", {{ g_script.entry->first, "previous definition was here" }});
         g_script.entry = {$1, $3.id};
@@ -266,7 +294,6 @@ entry_command:
 include_command:
     INCLUDE opt_whitespace IDENTIFIER
     {
-        std::cout << "include command\n";
         FileId include_file;
         try {
             include_file = g_source_manager.loadInclude(g_script.identifiers.toRaw($3.id));
@@ -314,8 +341,8 @@ memory_block:
                 throw DiagnosticError($1.loc, "error: redefinition of memory region or region alias", {{ g_script.memory_regions[previous].location(), "previous definition was here" }});
             } 
             g_script.memory_region_lookup[$1.id] = g_script.memory_regions.size();
-            g_script.memory_regions.emplace_back(MemoryRegion($1.loc, $1.id, $2, Definition($4, $1.id, std::move($6), DefinitionKind::MemoryRegionOrigin), Definition($8, $1.id, std::move($10), DefinitionKind::MemoryRegionLength)));
-            std::cout << g_script.memory_regions.back().dump(g_script.identifiers);
+            g_script.memory_regions.emplace_back(MemoryRegion($1.loc, $1.id, $2, Definition($4, $1.id, $6, DefinitionKind::MemoryRegionOrigin), Definition($8, $1.id, $10, DefinitionKind::MemoryRegionLength)));
+//            std::cout << g_script.memory_regions.back().dump(g_script.identifiers);
         }
     ;
 
@@ -332,14 +359,29 @@ memory_items:
 memory_command:
       MEMORY LBRACE memory_items RBRACE
         {
-            std::cout << "memory command\n";
+        }
+    ;
+
+location_counter_assignment:
+      LOCATION_COUNTER opt_whitespace ASSIGN expression SEMICOLON
+        {
+            auto unary = std::dynamic_pointer_cast<UnaryExpression>($4);
+            if (unary && unary->operation() == UnaryOperator::Align) {
+                auto align = dynamic_cast<IntegerExpression*>(&unary->sub_expr());
+                if (align)
+                    $$ = std::make_shared<OutputSectionAlign>($1, align->value());
+                else
+                    throw DiagnosticError($1, "error: unsupported expression for assignment to location counter");
+            } else {
+                throw DiagnosticError($1, "error: unsupported expression for assignment to location counter");
+            }
         }
     ;
 
 inner_section_symbol_assignment:
       IDENTIFIER opt_whitespace ASSIGN expression
         {
-            $$ = std::make_shared<Definition>($1.loc, $1.id, std::move($4), DefinitionKind::SectionScopeSymbol);
+            $$ = std::make_shared<Definition>($1.loc, $1.id, $4, DefinitionKind::SectionScopeSymbol);
         }
     ;
 
@@ -364,14 +406,23 @@ section_symbol_assignment_alternatives:
 section_symbol_assignment:
       section_symbol_assignment_alternatives
         {
-            std::cout << "section-scope assignment\n";
-            auto it = g_script.symbol_lookup.find($1->name());
+            bool location_counter_used = false;
+            auto name = *$1->name();
+            for_each_location_counter($1->expression(), [name, &location_counter_used](LocationCounterExpression& expr) {
+                location_counter_used = true;
+                expr.set_assignee(name);
+            });
+            if (location_counter_used)
+                $$ = std::make_shared<OutputSectionLocationMarker>($1->location(), name);
+            else
+                $$ = std::make_shared<OutputSectionNop>();
+            auto it = g_script.symbol_lookup.find(name);
             if (it == g_script.symbol_lookup.end()) {
-                g_script.symbol_lookup[$1->name()] = g_script.symbols.size();
+                g_script.symbol_lookup[name] = g_script.symbols.size();
                 g_script.symbols.emplace_back(Symbol($1));
             } else
                g_script.symbols[it->second].redefine($1);
-            std::cout << g_script.symbols[g_script.symbol_lookup.find($1->name())->second].dump(g_script.identifiers);
+//            std::cout << g_script.symbols[g_script.symbol_lookup.find(name)->second].dump(g_script.identifiers);
         }
     ;
 
@@ -381,8 +432,8 @@ assert_command:
         }
     ;
 
-output_section_address:
-      expression
+output_section_vma:
+      expression                             { $$ = std::make_shared<Definition>($1->location(), std::nullopt, $1, DefinitionKind::OutputSectionVMA); }
     ;
 
 output_section_type:
@@ -390,126 +441,213 @@ output_section_type:
     ;
 
 output_section_header:
-      /* empty */
-    | output_section_type
-    | output_section_address
-    | output_section_address output_section_type
+      /* empty */                            { $$ = { nullptr, false }; }
+    | output_section_type                    { $$ = { nullptr, true }; }
+    | output_section_vma                     { $$ = { $1, false }; }
+    | output_section_vma output_section_type { $$ = { $1, true }; }
+    ;
+
+output_section_lma:
+      AT LPAREN expression RPAREN            { $$ = std::make_shared<Definition>($1, std::nullopt, $3, DefinitionKind::OutputSectionLMA); }
+    ;
+
+opt_output_section_lma:
+      /* empty */                            { $$ = nullptr; }
+    | output_section_lma                     { $$ = $1; }
     ;
 
 wildcarded_identifier_element:
-      IDENTIFIER
-    | STAR
-    | QUERY
+      IDENTIFIER                             { $$ = g_script.identifiers.toRaw($1.id); }
+    | STAR                                   { $$ = "*"; }
+    | QUERY                                  { $$ = "?"; }
     ;
 
 wildcarded_identifier:
-      wildcarded_identifier_element
-    | wildcarded_identifier wildcarded_identifier_element
+      wildcarded_identifier_element                       { $$ = $1; }
+    | wildcarded_identifier wildcarded_identifier_element { $$ = $1 + $2; }
     ;
 
 filespec:
-      wildcarded_identifier
-    | COLON wildcarded_identifier
-    | wildcarded_identifier COLON
-    | wildcarded_identifier COLON wildcarded_identifier
+      wildcarded_identifier                               { $$ = { ArchiveSpecType::Any, "", $1 }; }
+    | COLON wildcarded_identifier                         { $$ = { ArchiveSpecType::None, "", $2 }; }
+    | wildcarded_identifier COLON                         { $$ = { ArchiveSpecType::Specified, $1, "" }; }
+    | wildcarded_identifier COLON wildcarded_identifier   { $$ = { ArchiveSpecType::Specified, $1, $3 }; }
     ;
 
 filespec_list:
-      filespec
-    | filespec_list whitespace filespec
+      filespec                               { $$ = std::make_shared<std::vector<FileSpec>>(); $$->push_back($1); }
+    | filespec_list whitespace filespec      { $$ = $1; $$->push_back($3); }
     ;
 
 exclude_file_command:
-      EXCLUDE_FILE opt_whitespace LPAREN opt_whitespace filespec_list opt_whitespace RPAREN
+      EXCLUDE_FILE opt_whitespace LPAREN opt_whitespace filespec_list opt_whitespace RPAREN  { $$ = $5; }
     ;
 
 inner_input_section_list_item:
       wildcarded_identifier
+        {
+            $$ = std::make_shared<SectionListItem>(SectionListItem{$1});
+        }
     | exclude_file_command opt_whitespace wildcarded_identifier
+        {
+            static_assert(!std::is_const_v<std::remove_reference_t<decltype(*$1)>>);
+            $$ = std::make_shared<SectionListItem>(SectionListItem{$3, std::move(*$1)});
+        }
     ;
 
 self_delimiting_input_section_list_item:
       SORT_BY_NAME      opt_whitespace LPAREN opt_whitespace           inner_input_section_list_item opt_whitespace RPAREN
+        { $$ = $5; $$->sorts.push_back(SortType::ByName); }
     | SORT_BY_NAME      opt_whitespace LPAREN opt_whitespace self_delimiting_input_section_list_item opt_whitespace RPAREN
+        { $$ = $5; $$->sorts.push_back(SortType::ByName); }
     | SORT_BY_ALIGNMENT opt_whitespace LPAREN opt_whitespace           inner_input_section_list_item opt_whitespace RPAREN
+        { $$ = $5; $$->sorts.push_back(SortType::ByAlignment); }
     | SORT_BY_ALIGNMENT opt_whitespace LPAREN opt_whitespace self_delimiting_input_section_list_item opt_whitespace RPAREN
+        { $$ = $5; $$->sorts.push_back(SortType::ByAlignment); }
     ;
 
 input_section_list_items:
     /* Whether the delimiting whitespace is required depends on the type of
      * the preceding item, so our hands are tied to use right-recursion */
-      inner_input_section_list_item
-    | inner_input_section_list_item whitespace input_section_list_items
-    | self_delimiting_input_section_list_item
-    | self_delimiting_input_section_list_item opt_whitespace input_section_list_items
+      inner_input_section_list_item                                                   { $$ = std::make_shared<std::vector<SectionListItem>>(); $$->push_back(std::move(*$1)); }
+    | inner_input_section_list_item whitespace input_section_list_items               { $$ = $3; $$->push_back(std::move(*$1)); }
+    | self_delimiting_input_section_list_item                                         { $$ = std::make_shared<std::vector<SectionListItem>>(); $$->push_back(std::move(*$1)); }
+    | self_delimiting_input_section_list_item opt_whitespace input_section_list_items { $$ = $3; $$->push_back(std::move(*$1)); }
     ;
 
 input_section_list:
       LPAREN opt_whitespace input_section_list_items opt_whitespace RPAREN
+        {
+            $$ = $3;
+            /* Now undo the effect of the right-recursion */
+            std::reverse($$->begin(), $$->end());
+        }
     ;
 
 inner_input_file_specifier:
-      wildcarded_identifier
-    | exclude_file_command opt_whitespace wildcarded_identifier
+      filespec                                     { $$ = std::make_shared<FileFilter>(FileFilter{$1}); }
+    | exclude_file_command opt_whitespace filespec { $$ = std::make_shared<FileFilter>(FileFilter{$3, std::move(*$1)}); }
     ;
 
 outer_input_file_specifier:
-      inner_input_file_specifier
-    | SORT_BY_NAME opt_whitespace LPAREN opt_whitespace inner_input_file_specifier opt_whitespace RPAREN
+      inner_input_file_specifier                                                                         { $$ = $1; }
+    | SORT_BY_NAME opt_whitespace LPAREN opt_whitespace inner_input_file_specifier opt_whitespace RPAREN { $$ = $5; $$->sorted_by_name = true; }
 
 inner_input_section_description:
-      outer_input_file_specifier opt_whitespace input_section_list
+      outer_input_file_specifier opt_whitespace input_section_list { $$ = std::make_shared<InputSectionFilter>(InputSectionFilter{std::move(*$1), std::move(*$3)}); }
     ;
 
 outer_input_section_description:
-      inner_input_section_description
-    | KEEP opt_whitespace LPAREN opt_whitespace inner_input_section_description opt_whitespace RPAREN
+      inner_input_section_description                                                                 { $$ = $1; }
+    | KEEP opt_whitespace LPAREN opt_whitespace inner_input_section_description opt_whitespace RPAREN { $$ = $5; $$->keep = true; }
     ;
 
 self_delimiting_output_section_item:
-      section_symbol_assignment
-    | assert_command SEMICOLON /* yes, trailing semicolon required here unlike in other places */
-    | outer_input_section_description
-    | include_command
-    | SEMICOLON
+      location_counter_assignment                                                                 { $$ = $1; }
+    | section_symbol_assignment                                                                   { $$ = $1; }
+    | assert_command SEMICOLON /* yes, trailing semicolon required here unlike in other places */ { $$ = std::make_shared<OutputSectionNop>(); }
+    | outer_input_section_description                                                             { $$ = std::make_shared<OutputSectionInputSectionDescription>(std::move(*$1)); }
+    | include_command                                                                             { $$ = std::make_shared<OutputSectionNop>(); }
+    | SEMICOLON                                                                                   { $$ = std::make_shared<OutputSectionNop>(); }
     ;
 
 output_section_items:
     /* Whether the delimiting whitespace is required depends on the type of
      * the preceding item, so our hands are tied to use right-recursion */
       filespec
+        {
+            $$ = std::make_shared<std::vector<OutputSectionItemPtr>>();
+            $$->push_back(std::make_shared<OutputSectionInputSectionDescription>(InputSectionFilter{ /*FileFilter*/ { /*FileSpec*/ $1 } }));
+        }
     | filespec whitespace output_section_items
+        {
+            $$ = $3;
+            $$->push_back(std::make_shared<OutputSectionInputSectionDescription>(InputSectionFilter{ /*FileFilter*/ { /*FileSpec*/ $1 } }));
+        }
     | self_delimiting_output_section_item
+        {
+            $$ = std::make_shared<std::vector<OutputSectionItemPtr>>();
+            $$->push_back($1);
+        }
     | self_delimiting_output_section_item opt_whitespace output_section_items
+        {
+            $$ = $3;
+            $$->push_back($1);
+        }
     ;
 
 opt_output_section_items:
       opt_whitespace
+        {
+            $$ = std::make_shared<std::vector<OutputSectionItemPtr>>();
+        }
     | opt_whitespace output_section_items opt_whitespace
+        {
+            $$ = $2;
+            /* Now undo the effect of the right-recursion */
+            std::reverse($$->begin(), $$->end());
+        }
     ;
 
 opt_output_section_region:
-      /* empty */
-    | GT IDENTIFIER
+      /* empty */   { $$.reset(); }
+    | GT IDENTIFIER { $$ = $2.id; }
     ;
 
 opt_output_section_lma_region:
-      /* empty */
-    | AT GT IDENTIFIER
+      /* empty */      { $$.reset(); }
+    | AT GT IDENTIFIER { $$ = $3.id; }
     ;
 
 opt_output_section_fill:
       /* empty */
+        {
+            $$.reset();
+        }
     | ASSIGN expression
+        {
+            auto integer = std::dynamic_pointer_cast<IntegerExpression>($2);
+            if (integer)
+                $$ = Fill{integer->value()};
+            else
+                throw DiagnosticError($2->location(), "error: unsupported expression for assignment to fill value");
+        }
     ;
 
 output_section_description:
-      IDENTIFIER output_section_header COLON LBRACE opt_output_section_items RBRACE opt_output_section_region opt_output_section_lma_region opt_output_section_fill
+      IDENTIFIER output_section_header COLON opt_output_section_lma LBRACE opt_output_section_items RBRACE opt_output_section_region opt_output_section_lma_region opt_output_section_fill
+        {
+            if ($2.first)
+                $2.first->set_name($1.id);
+            if ($4)
+                $4->set_name($1.id);
+            $$ = std::make_shared<OutputSection>(OutputSection{ $1.loc, $1.id, $2.second, $2.first, $4, $8, $9, $10, $6 });
+        }
 
 sections_item:
-      section_symbol_assignment
+      location_counter_assignment
+       {
+           Diagnostic warning(*$1->location(), "warning: assignment to location counter outside output section description doesn't reserve space");
+           std::cerr << warning.format();
+       }
+    | section_symbol_assignment
+      {
+          if (std::dynamic_pointer_cast<OutputSectionLocationMarker>($1))
+              throw DiagnosticError(*$1->location(), "error: assignment from location counter outside section description is not supported");
+      }
     | assert_command
     | output_section_description
+        {
+            for (const auto& other : g_script.output_sections) {
+                if (other->name == $1->name) {
+                    Diagnostic warning($1->location, "warning: output section is defined more than once", {{ other->location, "first definition is here" }});
+                    std::cerr << warning.format();
+                    break;
+                }
+            }
+            g_script.output_sections.push_back($1);
+            std::cout << $1->dump(g_script.identifiers);
+        }
     /* unlike top-level commands or within output section descriptions, stray semicolons are not accepted here */
     ;
 
@@ -521,14 +659,12 @@ sections_items:
 sections_command:
       SECTIONS LBRACE sections_items RBRACE
         {
-          std::cout << "sections command\n";
         }
     ;
 
 region_alias_command:
       REGION_ALIAS LPAREN IDENTIFIER COMMA IDENTIFIER RPAREN
         {
-            std::cout << "region_alias command\n";
             auto it = g_script.memory_region_lookup.find($3.id);
             if (it != g_script.memory_region_lookup.end()) {
                 auto const& previous = it->second;
@@ -544,7 +680,7 @@ region_alias_command:
 inner_top_level_symbol_assignment:
       IDENTIFIER ASSIGN expression
         {
-            $$ = std::make_shared<Definition>($1.loc, $1.id, std::move($3), DefinitionKind::TopLevelSymbol);
+            $$ = std::make_shared<Definition>($1.loc, $1.id, $3, DefinitionKind::TopLevelSymbol);
         }
     ;
 
@@ -569,14 +705,17 @@ top_level_symbol_assignment_alternatives:
 top_level_symbol_assignment:
       top_level_symbol_assignment_alternatives
         {
-            std::cout << "top-level assignment\n";
-            auto it = g_script.symbol_lookup.find($1->name());
+            auto name = *$1->name();
+            for_each_location_counter($1->expression(), [](LocationCounterExpression& expr) {
+                throw DiagnosticError(expr.location(), "error: assignment from location counter outside section description is not supported");
+            });
+            auto it = g_script.symbol_lookup.find(name);
             if (it == g_script.symbol_lookup.end()) {
-                g_script.symbol_lookup[$1->name()] = g_script.symbols.size();
+                g_script.symbol_lookup[name] = g_script.symbols.size();
                 g_script.symbols.emplace_back(Symbol($1));
             } else
                g_script.symbols[it->second].redefine($1);
-            std::cout << g_script.symbols[g_script.symbol_lookup.find($1->name())->second].dump(g_script.identifiers);
+//            std::cout << g_script.symbols[g_script.symbol_lookup.find(name)->second].dump(g_script.identifiers);
         }
     ;
 

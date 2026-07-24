@@ -11,7 +11,9 @@
 
 #include <charconv>
 #include <memory>
+#include <optional>
 
+#include "Diagnostic.h"
 #include "Identifier.h"
 #include "main.h"
 #include "SourceLocation.h"
@@ -39,6 +41,23 @@ class ExpressionVisitor
 public:
     virtual ~ExpressionVisitor() = default;
 
+    virtual void visit(class SymbolExpression& expr) = 0;
+    virtual void visit(class IntegerExpression& expr) = 0;
+    virtual void visit(class UnaryExpression& expr) = 0;
+    virtual void visit(class BinaryExpression& expr) = 0;
+    virtual void visit(class TernaryExpression& expr) = 0;
+    virtual void visit(class SectionExpression& expr) = 0;
+    virtual void visit(class DefinedExpression& expr) = 0;
+    virtual void visit(class MemoryExpression& expr) = 0;
+    virtual void visit(class LocationCounterExpression& expr) = 0;
+};
+
+// Variant of the above intended for cases where we know we won't edit the expression objects
+class ConstExpressionVisitor
+{
+public:
+    virtual ~ConstExpressionVisitor() = default;
+
     virtual void visit(const class SymbolExpression& expr) = 0;
     virtual void visit(const class IntegerExpression& expr) = 0;
     virtual void visit(const class UnaryExpression& expr) = 0;
@@ -55,7 +74,9 @@ class Expression
 {
 public:
     virtual ~Expression() = default;
-    virtual void accept(ExpressionVisitor& visitor) const = 0;
+    virtual void accept(ExpressionVisitor& visitor) = 0;
+    virtual void accept(ConstExpressionVisitor& visitor) const = 0;
+    virtual SourceLocation location() const = 0;
 };
 
 using ExpressionPtr = std::shared_ptr<Expression>;
@@ -64,8 +85,9 @@ class SymbolExpression : public Expression
 {
 public:
     SymbolExpression(IdentifierToken symbol) : m_symbol(symbol) {}
-    void accept(ExpressionVisitor& visitor) const override { visitor.visit(*this); }
-    SourceLocation location() const { return m_symbol.loc; }
+    void accept(ExpressionVisitor& visitor) override { visitor.visit(*this); }
+    void accept(ConstExpressionVisitor& visitor) const override { visitor.visit(*this); }
+    SourceLocation location() const override { return m_symbol.loc; }
     IdentifierId identifier() const { return m_symbol.id; }
 private:
     IdentifierToken m_symbol;
@@ -75,13 +97,15 @@ class IntegerExpression : public Expression
 {
 public:
     IntegerExpression(IntegerToken integer) : m_integer(integer) {}
-    void accept(ExpressionVisitor& visitor) const override { visitor.visit(*this); }
+    void accept(ExpressionVisitor& visitor) override { visitor.visit(*this); }
+    void accept(ConstExpressionVisitor& visitor) const override { visitor.visit(*this); }
+    SourceLocation location() const override { return m_integer.loc; }
     uint64_t value() const { return m_integer.value; }
 private:
     IntegerToken m_integer;
 };
 
-enum class UnaryOperator
+enum class UnaryOperator : std::uint8_t
 {
     Plus,
     Minus,
@@ -93,10 +117,12 @@ enum class UnaryOperator
 class UnaryExpression : public Expression
 {
 public:
-    UnaryExpression(SourceLocation location, UnaryOperator op, ExpressionPtr sub_expr) : m_location(location), m_operation(op), m_sub_expr(std::move(sub_expr)) {}
-    void accept(ExpressionVisitor& visitor) const override { visitor.visit(*this); }
-    SourceLocation location() const { return m_location; }
+    UnaryExpression(SourceLocation location, UnaryOperator op, ExpressionPtr sub_expr) : m_location(location), m_operation(op), m_sub_expr(sub_expr) {}
+    void accept(ExpressionVisitor& visitor) override { visitor.visit(*this); }
+    void accept(ConstExpressionVisitor& visitor) const override { visitor.visit(*this); }
+    SourceLocation location() const override { return m_location; }
     UnaryOperator operation() const { return m_operation; }
+    Expression& sub_expr() { return *m_sub_expr; }
     const Expression& sub_expr() const { return *m_sub_expr; }
 private:
     SourceLocation m_location;
@@ -104,7 +130,7 @@ private:
     ExpressionPtr m_sub_expr;
 };
 
-enum class BinaryOperator
+enum class BinaryOperator : std::uint8_t
 {
     Multiply,
     Add,
@@ -121,11 +147,14 @@ enum class BinaryOperator
 class BinaryExpression : public Expression
 {
 public:
-    BinaryExpression(SourceLocation location, BinaryOperator op, ExpressionPtr left_expr, ExpressionPtr right_expr) : m_location(location), m_operation(op), m_left_expr(std::move(left_expr)), m_right_expr(std::move(right_expr)) {}
-    void accept(ExpressionVisitor& visitor) const override { visitor.visit(*this); }
-    SourceLocation location() const { return m_location; }
+    BinaryExpression(SourceLocation location, BinaryOperator op, ExpressionPtr left_expr, ExpressionPtr right_expr) : m_location(location), m_operation(op), m_left_expr(left_expr), m_right_expr(right_expr) {}
+    void accept(ExpressionVisitor& visitor) override { visitor.visit(*this); }
+    void accept(ConstExpressionVisitor& visitor) const override { visitor.visit(*this); }
+    SourceLocation location() const override { return m_location; }
     BinaryOperator operation() const { return m_operation; }
+    Expression& left_expr() { return *m_left_expr; }
     const Expression& left_expr() const { return *m_left_expr; }
+    Expression& right_expr() { return *m_right_expr; }
     const Expression& right_expr() const { return *m_right_expr; }
 private:
     SourceLocation m_location;
@@ -137,10 +166,15 @@ private:
 class TernaryExpression : public Expression
 {
 public:
-    TernaryExpression(SourceLocation location, ExpressionPtr condition_expr, ExpressionPtr if_expr, ExpressionPtr else_expr) : m_location(location), m_if_expr(std::move(condition_expr)), m_then_expr(std::move(if_expr)), m_else_expr(std::move(else_expr)) {}
-    void accept(ExpressionVisitor& visitor) const override { visitor.visit(*this); }
+    TernaryExpression(SourceLocation location, ExpressionPtr if_expr, ExpressionPtr then_expr, ExpressionPtr else_expr) : m_location(location), m_if_expr(if_expr), m_then_expr(then_expr), m_else_expr(else_expr) {}
+    void accept(ExpressionVisitor& visitor) override { visitor.visit(*this); }
+    void accept(ConstExpressionVisitor& visitor) const override { visitor.visit(*this); }
+    SourceLocation location() const override { return m_location; }
+    Expression& if_expr() { return *m_if_expr; }
     const Expression& if_expr() const { return *m_if_expr; }
+    Expression& then_expr() { return *m_then_expr; }
     const Expression& then_expr() const { return *m_then_expr; }
+    Expression& else_expr() { return *m_else_expr; }
     const Expression& else_expr() const { return *m_else_expr; }
 private:
     SourceLocation m_location;
@@ -149,7 +183,7 @@ private:
     ExpressionPtr m_else_expr;
 };
 
-enum class SectionOperator
+enum class SectionOperator : std::uint8_t
 {
     AlignOf,
     LoadAddr,
@@ -160,8 +194,9 @@ class SectionExpression : public Expression
 {
 public:
     SectionExpression(SourceLocation location, SectionOperator op, IdentifierId section) : m_location(location), m_operation(op), m_section(section) {}
-    void accept(ExpressionVisitor& visitor) const override { visitor.visit(*this); }
-    SourceLocation location() const { return m_location; }
+    void accept(ExpressionVisitor& visitor) override { visitor.visit(*this); }
+    void accept(ConstExpressionVisitor& visitor) const override { visitor.visit(*this); }
+    SourceLocation location() const override { return m_location; }
     SectionOperator operation() const { return m_operation; }
     IdentifierId section() const { return m_section; }
 private:
@@ -174,15 +209,16 @@ class DefinedExpression : public Expression
 {
 public:
     DefinedExpression(SourceLocation location, IdentifierId symbol) : m_location(location), m_symbol(symbol) {}
-    void accept(ExpressionVisitor& visitor) const override { visitor.visit(*this); }
-    SourceLocation location() const { return m_location; }
+    void accept(ExpressionVisitor& visitor) override { visitor.visit(*this); }
+    void accept(ConstExpressionVisitor& visitor) const override { visitor.visit(*this); }
+    SourceLocation location() const override { return m_location; }
     IdentifierId symbol() const { return m_symbol; }
 private:
     SourceLocation m_location;
     IdentifierId m_symbol;
 };
 
-enum class MemoryOperator
+enum class MemoryOperator : std::uint8_t
 {
     Length,
     Origin,
@@ -192,8 +228,9 @@ class MemoryExpression : public Expression
 {
 public:
     MemoryExpression(SourceLocation location, MemoryOperator op, IdentifierId memory) : m_location(location), m_operation(op), m_memory(memory) {}
-    void accept(ExpressionVisitor& visitor) const override { visitor.visit(*this); }
-    SourceLocation location() const { return m_location; }
+    void accept(ExpressionVisitor& visitor) override { visitor.visit(*this); }
+    void accept(ConstExpressionVisitor& visitor) const override { visitor.visit(*this); }
+    SourceLocation location() const override { return m_location; }
     MemoryOperator operation() const { return m_operation; }
     IdentifierId memory() const { return m_memory; }
 private:
@@ -205,14 +242,19 @@ private:
 class LocationCounterExpression : public Expression
 {
 public:
-    void accept(ExpressionVisitor& visitor) const override { visitor.visit(*this); }
-    SourceLocation location() const { return m_location; }
+    LocationCounterExpression(SourceLocation location) : m_location(location) {}
+    void accept(ExpressionVisitor& visitor) override { visitor.visit(*this); }
+    void accept(ConstExpressionVisitor& visitor) const override { visitor.visit(*this); }
+    SourceLocation location() const override { return m_location; }
+    void set_assignee(IdentifierId assignee) { m_assignee = assignee; }
+    std::optional<IdentifierId> assignee() const { return m_assignee; }
 private:
     SourceLocation m_location;
+    std::optional<IdentifierId> m_assignee; /* a hint for use generating a name for this location */
 };
 
 
-class DumpVisitor : public ExpressionVisitor
+class DumpVisitor : public ConstExpressionVisitor
 {
 public:
     explicit DumpVisitor(const IdentifierManager& ids) : m_ids(ids) {}
@@ -348,7 +390,7 @@ public:
 
     void visit(const LocationCounterExpression& expr) override
     {
-        m_result = "<location counter unimplemeted>";
+        m_result = "<location counter unimplemented>";
     }
 
     std::string result() const { return m_result; }
@@ -357,5 +399,33 @@ private:
     const IdentifierManager& m_ids;
     std::string m_result;
 };
+
+
+template<typename Callback>
+class LocationCounterVisitor : public ExpressionVisitor
+{
+public:
+    explicit LocationCounterVisitor(Callback&& callback) : m_callback(std::forward<Callback>(callback)) {}
+    void visit(SymbolExpression&  expr) override {}
+    void visit(IntegerExpression& expr) override {}
+    void visit(UnaryExpression&   expr) override { expr.sub_expr().accept(*this); }
+    void visit(BinaryExpression&  expr) override { expr.left_expr().accept(*this); expr.right_expr().accept(*this); }
+    void visit(TernaryExpression& expr) override { expr.if_expr().accept(*this); expr.then_expr().accept(*this); expr.else_expr().accept(*this); }
+    void visit(SectionExpression& expr) override {}
+    void visit(DefinedExpression& expr) override {}
+    void visit(MemoryExpression&  expr) override {}
+    void visit(LocationCounterExpression& expr) override { m_callback(expr); }
+private:
+    Callback m_callback;
+};
+
+template<typename Callback>
+void for_each_location_counter(Expression& expr, Callback&& callback)
+{
+    LocationCounterVisitor<Callback> visitor(std::forward<Callback>(callback));
+    expr.accept(visitor);
+}
+
+//throw DiagnosticError(expr.location(), "error: unsupported usage of location counter within expression");
 
 #endif /* sentry INCLUDE_EXPRESSION_H_ */
