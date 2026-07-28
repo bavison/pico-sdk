@@ -171,8 +171,8 @@ static bool g_memory_region_attribute_sense_required = true;
 %type <std::shared_ptr<std::vector<FileSpec>>> exclude_file_command
 %type <SectionListItemPtr> inner_input_section_list_item
 %type <SectionListItemPtr> self_delimiting_input_section_list_item
-%type <std::shared_ptr<std::vector<SectionListItem>>> input_section_list_items
-%type <std::shared_ptr<std::vector<SectionListItem>>> input_section_list
+%type <std::shared_ptr<std::vector<SectionListItemPtr>>> input_section_list_items
+%type <std::shared_ptr<std::vector<SectionListItemPtr>>> input_section_list
 %type <FileFilterPtr> inner_input_file_specifier
 %type <FileFilterPtr> outer_input_file_specifier
 %type <InputSectionFilterPtr> inner_input_section_description
@@ -491,7 +491,7 @@ inner_input_section_list_item:
     | exclude_file_command opt_whitespace wildcarded_identifier
         {
             static_assert(!std::is_const_v<std::remove_reference_t<decltype(*$1)>>);
-            $$ = std::make_shared<SectionListItem>(SectionListItem{$3, std::move(*$1)});
+            $$ = std::make_shared<SectionListItem>(SectionListItem{$3, $1});
         }
     ;
 
@@ -509,10 +509,10 @@ self_delimiting_input_section_list_item:
 input_section_list_items:
     /* Whether the delimiting whitespace is required depends on the type of
      * the preceding item, so our hands are tied to use right-recursion */
-      inner_input_section_list_item                                                   { $$ = std::make_shared<std::vector<SectionListItem>>(); $$->push_back(std::move(*$1)); }
-    | inner_input_section_list_item whitespace input_section_list_items               { $$ = $3; $$->push_back(std::move(*$1)); }
-    | self_delimiting_input_section_list_item                                         { $$ = std::make_shared<std::vector<SectionListItem>>(); $$->push_back(std::move(*$1)); }
-    | self_delimiting_input_section_list_item opt_whitespace input_section_list_items { $$ = $3; $$->push_back(std::move(*$1)); }
+      inner_input_section_list_item                                                   { $$ = std::make_shared<std::vector<SectionListItemPtr>>(); $$->push_back($1); }
+    | inner_input_section_list_item whitespace input_section_list_items               { $$ = $3; $$->push_back($1); }
+    | self_delimiting_input_section_list_item                                         { $$ = std::make_shared<std::vector<SectionListItemPtr>>(); $$->push_back($1); }
+    | self_delimiting_input_section_list_item opt_whitespace input_section_list_items { $$ = $3; $$->push_back($1); }
     ;
 
 input_section_list:
@@ -534,7 +534,7 @@ outer_input_file_specifier:
     | SORT_BY_NAME opt_whitespace LPAREN opt_whitespace inner_input_file_specifier opt_whitespace RPAREN { $$ = $5; $$->sorted_by_name = true; }
 
 inner_input_section_description:
-      outer_input_file_specifier opt_whitespace input_section_list { $$ = std::make_shared<InputSectionFilter>(InputSectionFilter{std::move(*$1), std::move(*$3)}); }
+      outer_input_file_specifier opt_whitespace input_section_list { $$ = std::make_shared<InputSectionFilter>(InputSectionFilter{std::move(*$1), $3}); }
     ;
 
 outer_input_section_description:
@@ -546,7 +546,7 @@ self_delimiting_output_section_item:
       location_counter_assignment                                                                 { $$ = $1; }
     | section_symbol_assignment                                                                   { $$ = $1; }
     | assert_command SEMICOLON /* yes, trailing semicolon required here unlike in other places */ { $$ = std::make_shared<OutputSectionNop>(); }
-    | outer_input_section_description                                                             { $$ = std::make_shared<OutputSectionInputSectionDescription>(std::move(*$1)); }
+    | outer_input_section_description                                                             { $$ = std::make_shared<OutputSectionInputSectionDescription>($1); }
     | include_command                                                                             { $$ = std::make_shared<OutputSectionNop>(); }
     | SEMICOLON                                                                                   { $$ = std::make_shared<OutputSectionNop>(); }
     ;
@@ -557,12 +557,12 @@ output_section_items:
       filespec
         {
             $$ = std::make_shared<std::vector<OutputSectionItemPtr>>();
-            $$->push_back(std::make_shared<OutputSectionInputSectionDescription>(InputSectionFilter{ /*FileFilter*/ { /*FileSpec*/ $1 } }));
+            $$->push_back(std::make_shared<OutputSectionInputSectionDescription>(std::make_shared<InputSectionFilter>(InputSectionFilter{ /*FileFilter*/ { /*FileSpec*/ $1 } })));
         }
     | filespec whitespace output_section_items
         {
             $$ = $3;
-            $$->push_back(std::make_shared<OutputSectionInputSectionDescription>(InputSectionFilter{ /*FileFilter*/ { /*FileSpec*/ $1 } }));
+            $$->push_back(std::make_shared<OutputSectionInputSectionDescription>(std::make_shared<InputSectionFilter>(InputSectionFilter{ /*FileFilter*/ { /*FileSpec*/ $1 } })));
         }
     | self_delimiting_output_section_item
         {

@@ -22,6 +22,8 @@
 /* Literal insertions into lexer.cpp (near top) */
 %{
 
+#include <climits>
+
 #include <iostream>
 
 #include "Diagnostic.h"
