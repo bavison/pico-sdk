@@ -507,20 +507,26 @@ self_delimiting_input_section_list_item:
     ;
 
 input_section_list_items:
-    /* Whether the delimiting whitespace is required depends on the type of
-     * the preceding item, so our hands are tied to use right-recursion */
+    /* Use left-recursion to work around bison bug, at the cost of some input compatibility */
       inner_input_section_list_item                                                   { $$ = std::make_shared<std::vector<SectionListItemPtr>>(); $$->push_back($1); }
-    | inner_input_section_list_item whitespace input_section_list_items               { $$ = $3; $$->push_back($1); }
+    | input_section_list_items whitespace inner_input_section_list_item               { $$ = $1; $$->push_back($3); }
     | self_delimiting_input_section_list_item                                         { $$ = std::make_shared<std::vector<SectionListItemPtr>>(); $$->push_back($1); }
-    | self_delimiting_input_section_list_item opt_whitespace input_section_list_items { $$ = $3; $$->push_back($1); }
+    | input_section_list_items whitespace self_delimiting_input_section_list_item     { $$ = $1; $$->push_back($3); }
+
+//    /* Whether the delimiting whitespace is required depends on the type of
+//     * the preceding item, so our hands are tied to use right-recursion */
+//      inner_input_section_list_item                                                   { $$ = std::make_shared<std::vector<SectionListItemPtr>>(); $$->push_back($1); }
+//    | inner_input_section_list_item whitespace input_section_list_items               { $$ = $3; $$->push_back($1); }
+//    | self_delimiting_input_section_list_item                                         { $$ = std::make_shared<std::vector<SectionListItemPtr>>(); $$->push_back($1); }
+//    | self_delimiting_input_section_list_item opt_whitespace input_section_list_items { $$ = $3; $$->push_back($1); }
     ;
 
 input_section_list:
       LPAREN opt_whitespace input_section_list_items opt_whitespace RPAREN
         {
             $$ = $3;
-            /* Now undo the effect of the right-recursion */
-            std::reverse($$->begin(), $$->end());
+//            /* Now undo the effect of the right-recursion */
+//            std::reverse($$->begin(), $$->end());
         }
     ;
 
@@ -552,28 +558,50 @@ self_delimiting_output_section_item:
     ;
 
 output_section_items:
-    /* Whether the delimiting whitespace is required depends on the type of
-     * the preceding item, so our hands are tied to use right-recursion */
+    /* Use left-recursion to work around bison bug, at the cost of some input compatibility */
       filespec
         {
             $$ = std::make_shared<std::vector<OutputSectionItemPtr>>();
             $$->push_back(std::make_shared<OutputSectionInputSectionDescription>(std::make_shared<InputSectionFilter>(InputSectionFilter{ /*FileFilter*/ { /*FileSpec*/ $1 } })));
         }
-    | filespec whitespace output_section_items
+    | output_section_items whitespace filespec
         {
-            $$ = $3;
-            $$->push_back(std::make_shared<OutputSectionInputSectionDescription>(std::make_shared<InputSectionFilter>(InputSectionFilter{ /*FileFilter*/ { /*FileSpec*/ $1 } })));
+            $$ = $1;
+            $$->push_back(std::make_shared<OutputSectionInputSectionDescription>(std::make_shared<InputSectionFilter>(InputSectionFilter{ /*FileFilter*/ { /*FileSpec*/ $3 } })));
         }
     | self_delimiting_output_section_item
         {
             $$ = std::make_shared<std::vector<OutputSectionItemPtr>>();
             $$->push_back($1);
         }
-    | self_delimiting_output_section_item opt_whitespace output_section_items
+    | output_section_items whitespace self_delimiting_output_section_item
         {
-            $$ = $3;
-            $$->push_back($1);
+            $$ = $1;
+            $$->push_back($3);
         }
+
+//    /* Whether the delimiting whitespace is required depends on the type of
+//     * the preceding item, so our hands are tied to use right-recursion */
+//      filespec
+//        {
+//            $$ = std::make_shared<std::vector<OutputSectionItemPtr>>();
+//            $$->push_back(std::make_shared<OutputSectionInputSectionDescription>(std::make_shared<InputSectionFilter>(InputSectionFilter{ /*FileFilter*/ { /*FileSpec*/ $1 } })));
+//        }
+//    | filespec whitespace output_section_items
+//        {
+//            $$ = $3;
+//            $$->push_back(std::make_shared<OutputSectionInputSectionDescription>(std::make_shared<InputSectionFilter>(InputSectionFilter{ /*FileFilter*/ { /*FileSpec*/ $1 } })));
+//        }
+//    | self_delimiting_output_section_item
+//        {
+//            $$ = std::make_shared<std::vector<OutputSectionItemPtr>>();
+//            $$->push_back($1);
+//        }
+//    | self_delimiting_output_section_item opt_whitespace output_section_items
+//        {
+//            $$ = $3;
+//            $$->push_back($1);
+//        }
     ;
 
 opt_output_section_items:
@@ -584,8 +612,8 @@ opt_output_section_items:
     | opt_whitespace output_section_items opt_whitespace
         {
             $$ = $2;
-            /* Now undo the effect of the right-recursion */
-            std::reverse($$->begin(), $$->end());
+//            /* Now undo the effect of the right-recursion */
+//            std::reverse($$->begin(), $$->end());
         }
     ;
 
