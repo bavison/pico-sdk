@@ -22,6 +22,12 @@
 using MemoryRegionId = std::size_t;
 using SymbolId = std::size_t;
 
+struct Assertion
+{
+    Definition definition;
+    IdentifierId message;
+};
+
 struct Script
 {
     /* Identifiers */
@@ -36,6 +42,8 @@ struct Script
     std::vector<Symbol> symbols;
     /* Map from symbol to symbol index */
     std::unordered_map<IdentifierId, SymbolId> symbol_lookup;
+    /* Assertions */
+    std::vector<Assertion> assertions;
     /* Definitions in dependency order */
     std::vector<Definition*> definition_order;
     /* Output sections */
@@ -43,6 +51,7 @@ struct Script
 
     void SortDefinitions();
     void EvaluateDefinitions();
+    IdentifierId MakeAssertAnchor();
 };
 
 extern Script g_script;

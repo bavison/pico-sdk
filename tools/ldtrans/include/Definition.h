@@ -24,6 +24,7 @@ enum class DefinitionKind : std::uint8_t
     MemoryRegionLength,
     OutputSectionVMA,
     OutputSectionLMA,
+    Assertion,
 };
 
 enum class DefinitionVisibility : std::uint8_t
@@ -52,6 +53,8 @@ public:
             return std::string("output section ") + ids.toDisplayName(*m_name) + " VMA";
         case DefinitionKind::OutputSectionLMA:
             return std::string("output section ") + ids.toDisplayName(*m_name) + " LMA";
+        case DefinitionKind::Assertion:
+            return "assertion";
         default:
             return std::string("symbol ") + ids.toDisplayName(*m_name);
         }

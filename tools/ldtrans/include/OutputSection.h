@@ -139,13 +139,13 @@ public:
 class OutputSectionLocationMarker : public OutputSectionItem
 {
 public:
-    OutputSectionLocationMarker(SourceLocation location, IdentifierId assignee) : OutputSectionItem(location), m_assignee(assignee) {}
+    OutputSectionLocationMarker(SourceLocation location, IdentifierId anchor) : OutputSectionItem(location), m_anchor(anchor) {}
     std::string dump(const IdentifierManager& ids) const override
     {
-        return "    anchor: " + ids.toDisplayName(m_assignee) + "\n";
+        return "    anchor: " + ids.toDisplayName(m_anchor) + "\n";
     }
 private:
-    IdentifierId m_assignee;
+    IdentifierId m_anchor;
 };
 
 class OutputSectionAlign : public OutputSectionItem

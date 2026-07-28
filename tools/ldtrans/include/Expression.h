@@ -246,11 +246,11 @@ public:
     void accept(ExpressionVisitor& visitor) override { visitor.visit(*this); }
     void accept(ConstExpressionVisitor& visitor) const override { visitor.visit(*this); }
     SourceLocation location() const override { return m_location; }
-    void set_assignee(IdentifierId assignee) { m_assignee = assignee; }
-    std::optional<IdentifierId> assignee() const { return m_assignee; }
+    void set_anchor(IdentifierId anchor) { m_anchor = anchor; }
+    std::optional<IdentifierId> anchor() const { return m_anchor; }
 private:
     SourceLocation m_location;
-    std::optional<IdentifierId> m_assignee; /* a hint for use generating a name for this location */
+    std::optional<IdentifierId> m_anchor; /* used for generating a name for this location */
 };
 
 

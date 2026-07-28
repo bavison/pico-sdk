@@ -159,7 +159,8 @@ static bool g_memory_region_attribute_sense_required = true;
 %type <OutputSectionItemPtr> location_counter_assignment
 %type <DefinitionPtr> weak_section_symbol_assignment
 %type <DefinitionPtr> section_symbol_assignment_alternatives
-%type <OutputSectionItemPtr> section_symbol_assignment;
+%type <OutputSectionItemPtr> section_symbol_assignment
+%type <OutputSectionItemPtr> assert_command
 %type <DefinitionPtr> output_section_vma
 %type <std::pair<DefinitionPtr, bool>> output_section_header
 %type <DefinitionPtr> output_section_lma
@@ -407,28 +408,45 @@ section_symbol_assignment:
       section_symbol_assignment_alternatives
         {
             bool location_counter_used = false;
-            auto name = *$1->name();
-            for_each_location_counter($1->expression(), [name, &location_counter_used](LocationCounterExpression& expr) {
+            auto anchor = *$1->name();
+            for_each_location_counter($1->expression(), [anchor, &location_counter_used](LocationCounterExpression& expr) {
                 location_counter_used = true;
-                expr.set_assignee(name);
+                expr.set_anchor(anchor);
             });
             if (location_counter_used)
-                $$ = std::make_shared<OutputSectionLocationMarker>($1->location(), name);
+                $$ = std::make_shared<OutputSectionLocationMarker>($1->location(), anchor);
             else
                 $$ = std::make_shared<OutputSectionNop>();
-            auto it = g_script.symbol_lookup.find(name);
+            auto it = g_script.symbol_lookup.find(anchor);
             if (it == g_script.symbol_lookup.end()) {
-                g_script.symbol_lookup[name] = g_script.symbols.size();
+                g_script.symbol_lookup[anchor] = g_script.symbols.size();
                 g_script.symbols.emplace_back(Symbol($1));
             } else
                g_script.symbols[it->second].redefine($1);
-//            std::cout << g_script.symbols[g_script.symbol_lookup.find(name)->second].dump(g_script.identifiers);
+//            std::cout << g_script.symbols[g_script.symbol_lookup.find(anchor)->second].dump(g_script.identifiers);
         }
     ;
 
 assert_command:
       ASSERT LPAREN expression COMMA IDENTIFIER RPAREN
         {
+            bool location_counter_used = false;
+            auto anchor = g_script.MakeAssertAnchor();
+            for_each_location_counter(*$3, [anchor, &location_counter_used](LocationCounterExpression& expr) {
+                location_counter_used = true;
+                expr.set_anchor(anchor);
+            });
+            if (location_counter_used)
+                $$ = std::make_shared<OutputSectionLocationMarker>($1, anchor);
+            else
+                $$ = std::make_shared<OutputSectionNop>();
+            g_script.assertions.emplace_back(Assertion{ Definition($1, std::nullopt, $3, DefinitionKind::Assertion), $5.id });
+            std::cout << "ASSERT\n";
+            std::cout << "  location: " + g_source_manager.toFileLineColumn($1) + "\n";
+            DumpVisitor expression_dump(g_script.identifiers);
+            $3->accept(expression_dump);
+            std::cout << "  expression: " + expression_dump.result() + "\n";
+            std::cout << "  message: " + g_script.identifiers.toDisplayName($5.id) + "\n";
         }
     ;
 
@@ -551,7 +569,7 @@ outer_input_section_description:
 self_delimiting_output_section_item:
       location_counter_assignment                                                                 { $$ = $1; }
     | section_symbol_assignment                                                                   { $$ = $1; }
-    | assert_command SEMICOLON /* yes, trailing semicolon required here unlike in other places */ { $$ = std::make_shared<OutputSectionNop>(); }
+    | assert_command SEMICOLON /* yes, trailing semicolon required here unlike in other places */ { $$ = $1; }
     | outer_input_section_description                                                             { $$ = std::make_shared<OutputSectionInputSectionDescription>($1); }
     | include_command                                                                             { $$ = std::make_shared<OutputSectionNop>(); }
     | SEMICOLON                                                                                   { $$ = std::make_shared<OutputSectionNop>(); }
@@ -664,6 +682,10 @@ sections_item:
               throw DiagnosticError(*$1->location(), "error: assignment from location counter outside section description is not supported");
       }
     | assert_command
+      {
+          if (std::dynamic_pointer_cast<OutputSectionLocationMarker>($1))
+              throw DiagnosticError(*$1->location(), "error: assertion expression involving location counter outside section description is not supported");
+      }
     | output_section_description
         {
             for (const auto& other : g_script.output_sections) {

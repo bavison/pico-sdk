@@ -188,6 +188,9 @@ void Script::SortDefinitions()
     for (SymbolId s = (SymbolId) 0; s < symbols.size(); ++s) {
         sort(&symbols[s].definition());
     }
+    for (Assertion& a : assertions) {
+        sort(&a.definition);
+    }
 }
 
 class EvaluationVisitor : public ConstExpressionVisitor
@@ -358,10 +361,17 @@ void Script::EvaluateDefinitions()
     for (auto definition : definition_order) {
         if (definition->kind() != DefinitionKind::SectionScopeSymbol &&
             definition->kind() != DefinitionKind::OutputSectionVMA &&
-            definition->kind() != DefinitionKind::OutputSectionLMA) {
+            definition->kind() != DefinitionKind::OutputSectionLMA &&
+            definition->kind() != DefinitionKind::Assertion) {
             EvaluationVisitor evaluate(definition);
             definition->expression().accept(evaluate);
             std::cout << definition->dump(identifiers) << std::endl;
         }
     }
+}
+
+IdentifierId Script::MakeAssertAnchor()
+{
+    static uint32_t assert_index = 0;
+    return g_script.identifiers.toId("ASSERT" + std::to_string(++assert_index));
 }
