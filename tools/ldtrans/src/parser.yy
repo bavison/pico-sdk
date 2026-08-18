@@ -441,12 +441,12 @@ assert_command:
             else
                 $$ = std::make_shared<OutputSectionNop>();
             g_script.assertions.emplace_back(Assertion{ Definition($1, std::nullopt, $3, DefinitionKind::Assertion), $5.id });
-            std::cout << "ASSERT\n";
-            std::cout << "  location: " + g_source_manager.toFileLineColumn($1) + "\n";
-            DumpVisitor expression_dump(g_script.identifiers);
-            $3->accept(expression_dump);
-            std::cout << "  expression: " + expression_dump.result() + "\n";
-            std::cout << "  message: " + g_script.identifiers.toDisplayName($5.id) + "\n";
+//            std::cout << "ASSERT\n";
+//            std::cout << "  location: " + g_source_manager.toFileLineColumn($1) + "\n";
+//            DumpVisitor expression_dump(g_script.identifiers);
+//            $3->accept(expression_dump);
+//            std::cout << "  expression: " + expression_dump.result() + "\n";
+//            std::cout << "  message: " + g_script.identifiers.toDisplayName($5.id) + "\n";
         }
     ;
 
@@ -696,7 +696,7 @@ sections_item:
                 }
             }
             g_script.output_sections.push_back($1);
-            std::cout << $1->dump(g_script.identifiers);
+//            std::cout << $1->dump(g_script.identifiers);
         }
     /* unlike top-level commands or within output section descriptions, stray semicolons are not accepted here */
     ;

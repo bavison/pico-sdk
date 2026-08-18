@@ -365,7 +365,7 @@ void Script::EvaluateDefinitions()
             definition->kind() != DefinitionKind::Assertion) {
             EvaluationVisitor evaluate(definition);
             definition->expression().accept(evaluate);
-            std::cout << definition->dump(identifiers) << std::endl;
+//            std::cout << definition->dump(identifiers) << std::endl;
         }
     }
 }
