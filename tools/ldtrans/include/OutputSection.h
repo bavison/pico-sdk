@@ -19,6 +19,7 @@ enum class ArchiveSpecType : std::uint8_t
 
 struct FileSpec
 {
+    SourceLocation location;
     ArchiveSpecType archive_type;
     std::string archive;
     std::string file;
@@ -48,6 +49,7 @@ enum class SortType : std::uint8_t
 
 struct SectionListItem
 {
+    std::optional<SourceLocation> location; /* optional because it can be implicit "*" in GNU syntax */
     std::string sections;
     std::shared_ptr<std::vector<FileSpec>> exclude_files = std::make_shared<std::vector<FileSpec>>();
     std::vector<SortType> sorts;
@@ -71,6 +73,7 @@ using SectionListItemPtr = std::shared_ptr<SectionListItem>;
 
 struct FileFilter
 {
+    SourceLocation location;
     FileSpec files;
     std::vector<FileSpec> exclude_files;
     bool sorted_by_name = false;
@@ -94,10 +97,11 @@ using FileFilterPtr = std::shared_ptr<FileFilter>;
 
 struct InputSectionFilter
 {
+    SourceLocation location;
     FileFilter files;
     std::shared_ptr<std::vector<SectionListItemPtr>> sections =
         std::make_shared<std::vector<SectionListItemPtr>>(
-            std::initializer_list<SectionListItemPtr>{std::make_shared<SectionListItem>(SectionListItem{"*"})});
+            std::initializer_list<SectionListItemPtr>{std::make_shared<SectionListItem>(SectionListItem{{}, "*"})});
     bool keep = false;
     std::vector<std::string> dump() const
     {
@@ -156,6 +160,7 @@ public:
     {
         return "    align: " + std::to_string(m_granule) + "\n";
     }
+    uint64_t granule() const { return m_granule; }
 private:
     uint64_t m_granule;
 };
@@ -163,7 +168,8 @@ private:
 class OutputSectionInputSectionDescription : public OutputSectionItem
 {
 public:
-    OutputSectionInputSectionDescription(InputSectionFilterPtr filter) : m_filter(filter) {}
+    OutputSectionInputSectionDescription(InputSectionFilterPtr filter) : OutputSectionItem(filter->location), m_filter(filter) {}
+    const InputSectionFilter& filter(void) const { return *m_filter; }
     std::string dump(const IdentifierManager& ids) const override
     {
         std::string result = "    input section pattern:\n";

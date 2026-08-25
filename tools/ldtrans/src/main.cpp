@@ -17,6 +17,7 @@
 #include "Diagnostic.h"
 #include "lexer.h"
 #include "main.h"
+#include "OutputWriter.h"
 #include "parser.hpp"
 
 /* Queue of top-level files to process */
@@ -38,7 +39,7 @@ int main(int argc, char* argv[])
             return str.substr(prefix.size());
         };
 
-        std::filesystem::path output_file;
+        std::filesystem::path output_base;
         std::string_view format_name;
 
         int i;
@@ -51,9 +52,9 @@ int main(int argc, char* argv[])
             } else if (auto a = option(arg, "--format=")) {
                 format_name = *a;
             } else if (i+1 < argc && arg == "-o") {
-                output_file = argv[++i];
+                output_base = argv[++i];
             } else if (auto a = option(arg, "--output=")) {
-                output_file = *a;
+                output_base = *a;
             } else if (arg == "-v" || arg == "--version") {
                 // Print version information
             } else if (arg == "--") {
@@ -146,7 +147,9 @@ invalid_defsym:
         g_script.SortDefinitions();
         g_script.EvaluateDefinitions();
 
-        // Now emit the output file (TODO)
+        // Now emit the output file
+        auto& writer = OutputWriter::lookup_writer(format_name);
+        writer.write(g_script, output_base);
 
         return EXIT_SUCCESS;
     }

@@ -26,7 +26,9 @@ ADD_FLEX_BISON_DEPENDENCY(ld_lexer ld_parser)
 add_executable(ldtrans
         src/Diagnostic.cpp
         src/Definition.cpp
+        src/IarWriter.cpp
         src/main.cpp
+        src/OutputWriter.cpp
         src/Script.cpp
         src/SourceManager.cpp
         src/Symbol.cpp

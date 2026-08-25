@@ -165,11 +165,11 @@ static bool g_memory_region_attribute_sense_required = true;
 %type <std::pair<DefinitionPtr, bool>> output_section_header
 %type <DefinitionPtr> output_section_lma
 %type <DefinitionPtr> opt_output_section_lma
-%type <std::string> wildcarded_identifier_element
-%type <std::string> wildcarded_identifier
+%type <std::pair<SourceLocation, std::string>> wildcarded_identifier_element
+%type <std::pair<SourceLocation, std::string>> wildcarded_identifier
 %type <FileSpec> filespec
 %type <std::shared_ptr<std::vector<FileSpec>>> filespec_list
-%type <std::shared_ptr<std::vector<FileSpec>>> exclude_file_command
+%type <std::pair<SourceLocation, std::shared_ptr<std::vector<FileSpec>>>> exclude_file_command
 %type <SectionListItemPtr> inner_input_section_list_item
 %type <SectionListItemPtr> self_delimiting_input_section_list_item
 %type <std::shared_ptr<std::vector<SectionListItemPtr>>> input_section_list_items
@@ -475,21 +475,21 @@ opt_output_section_lma:
     ;
 
 wildcarded_identifier_element:
-      IDENTIFIER                             { $$ = g_script.identifiers.toRaw($1.id); }
-    | STAR                                   { $$ = "*"; }
-    | QUERY                                  { $$ = "?"; }
+      IDENTIFIER                             { $$ = { $1.loc, g_script.identifiers.toRaw($1.id) }; }
+    | STAR                                   { $$ = { $1, "*" }; }
+    | QUERY                                  { $$ = { $1, "?" }; }
     ;
 
 wildcarded_identifier:
       wildcarded_identifier_element                       { $$ = $1; }
-    | wildcarded_identifier wildcarded_identifier_element { $$ = $1 + $2; }
+    | wildcarded_identifier wildcarded_identifier_element { $$.first = $1.first; $$.second = $1.second + $2.second; }
     ;
 
 filespec:
-      wildcarded_identifier                               { $$ = { ArchiveSpecType::Any, "", $1 }; }
-    | COLON wildcarded_identifier                         { $$ = { ArchiveSpecType::None, "", $2 }; }
-    | wildcarded_identifier COLON                         { $$ = { ArchiveSpecType::Specified, $1, "" }; }
-    | wildcarded_identifier COLON wildcarded_identifier   { $$ = { ArchiveSpecType::Specified, $1, $3 }; }
+      wildcarded_identifier                               { $$ = { $1.first, ArchiveSpecType::Any, "", $1.second }; }
+    | COLON wildcarded_identifier                         { $$ = { $1,       ArchiveSpecType::None, "", $2.second }; }
+    | wildcarded_identifier COLON                         { $$ = { $1.first, ArchiveSpecType::Specified, $1.second, "" }; }
+    | wildcarded_identifier COLON wildcarded_identifier   { $$ = { $1.first, ArchiveSpecType::Specified, $1.second, $3.second }; }
     ;
 
 filespec_list:
@@ -498,30 +498,29 @@ filespec_list:
     ;
 
 exclude_file_command:
-      EXCLUDE_FILE opt_whitespace LPAREN opt_whitespace filespec_list opt_whitespace RPAREN  { $$ = $5; }
+      EXCLUDE_FILE opt_whitespace LPAREN opt_whitespace filespec_list opt_whitespace RPAREN  { $$ = { $1, $5 }; }
     ;
 
 inner_input_section_list_item:
       wildcarded_identifier
         {
-            $$ = std::make_shared<SectionListItem>(SectionListItem{$1});
+            $$ = std::make_shared<SectionListItem>(SectionListItem{$1.first, $1.second});
         }
     | exclude_file_command opt_whitespace wildcarded_identifier
         {
-            static_assert(!std::is_const_v<std::remove_reference_t<decltype(*$1)>>);
-            $$ = std::make_shared<SectionListItem>(SectionListItem{$3, $1});
+            $$ = std::make_shared<SectionListItem>(SectionListItem{$1.first, $3.second, $1.second});
         }
     ;
 
 self_delimiting_input_section_list_item:
       SORT_BY_NAME      opt_whitespace LPAREN opt_whitespace           inner_input_section_list_item opt_whitespace RPAREN
-        { $$ = $5; $$->sorts.push_back(SortType::ByName); }
+        { $$ = $5; $$->location = $1; $$->sorts.push_back(SortType::ByName); }
     | SORT_BY_NAME      opt_whitespace LPAREN opt_whitespace self_delimiting_input_section_list_item opt_whitespace RPAREN
-        { $$ = $5; $$->sorts.push_back(SortType::ByName); }
+        { $$ = $5; $$->location = $1; $$->sorts.push_back(SortType::ByName); }
     | SORT_BY_ALIGNMENT opt_whitespace LPAREN opt_whitespace           inner_input_section_list_item opt_whitespace RPAREN
-        { $$ = $5; $$->sorts.push_back(SortType::ByAlignment); }
+        { $$ = $5; $$->location = $1; $$->sorts.push_back(SortType::ByAlignment); }
     | SORT_BY_ALIGNMENT opt_whitespace LPAREN opt_whitespace self_delimiting_input_section_list_item opt_whitespace RPAREN
-        { $$ = $5; $$->sorts.push_back(SortType::ByAlignment); }
+        { $$ = $5; $$->location = $1; $$->sorts.push_back(SortType::ByAlignment); }
     ;
 
 input_section_list_items:
@@ -549,21 +548,21 @@ input_section_list:
     ;
 
 inner_input_file_specifier:
-      filespec                                     { $$ = std::make_shared<FileFilter>(FileFilter{$1}); }
-    | exclude_file_command opt_whitespace filespec { $$ = std::make_shared<FileFilter>(FileFilter{$3, std::move(*$1)}); }
+      filespec                                     { $$ = std::make_shared<FileFilter>(FileFilter{$1.location, $1}); }
+    | exclude_file_command opt_whitespace filespec { $$ = std::make_shared<FileFilter>(FileFilter{$1.first, $3, std::move(*$1.second)}); }
     ;
 
 outer_input_file_specifier:
       inner_input_file_specifier                                                                         { $$ = $1; }
-    | SORT_BY_NAME opt_whitespace LPAREN opt_whitespace inner_input_file_specifier opt_whitespace RPAREN { $$ = $5; $$->sorted_by_name = true; }
+    | SORT_BY_NAME opt_whitespace LPAREN opt_whitespace inner_input_file_specifier opt_whitespace RPAREN { $$ = $5; $$->location = $1; $$->sorted_by_name = true; }
 
 inner_input_section_description:
-      outer_input_file_specifier opt_whitespace input_section_list { $$ = std::make_shared<InputSectionFilter>(InputSectionFilter{std::move(*$1), $3}); }
+      outer_input_file_specifier opt_whitespace input_section_list { $$ = std::make_shared<InputSectionFilter>(InputSectionFilter{$1->location, std::move(*$1), $3}); }
     ;
 
 outer_input_section_description:
       inner_input_section_description                                                                 { $$ = $1; }
-    | KEEP opt_whitespace LPAREN opt_whitespace inner_input_section_description opt_whitespace RPAREN { $$ = $5; $$->keep = true; }
+    | KEEP opt_whitespace LPAREN opt_whitespace inner_input_section_description opt_whitespace RPAREN { $$ = $5; $$->location = $1; $$->keep = true; }
     ;
 
 self_delimiting_output_section_item:
@@ -580,12 +579,12 @@ output_section_items:
       filespec
         {
             $$ = std::make_shared<std::vector<OutputSectionItemPtr>>();
-            $$->push_back(std::make_shared<OutputSectionInputSectionDescription>(std::make_shared<InputSectionFilter>(InputSectionFilter{ /*FileFilter*/ { /*FileSpec*/ $1 } })));
+            $$->push_back(std::make_shared<OutputSectionInputSectionDescription>(std::make_shared<InputSectionFilter>(InputSectionFilter{ $1.location, /*FileFilter*/ { $1.location, /*FileSpec*/ $1 } })));
         }
     | output_section_items whitespace filespec
         {
             $$ = $1;
-            $$->push_back(std::make_shared<OutputSectionInputSectionDescription>(std::make_shared<InputSectionFilter>(InputSectionFilter{ /*FileFilter*/ { /*FileSpec*/ $3 } })));
+            $$->push_back(std::make_shared<OutputSectionInputSectionDescription>(std::make_shared<InputSectionFilter>(InputSectionFilter{ $3.location, /*FileFilter*/ { $3.location, /*FileSpec*/ $3 } })));
         }
     | self_delimiting_output_section_item
         {
@@ -603,12 +602,12 @@ output_section_items:
 //      filespec
 //        {
 //            $$ = std::make_shared<std::vector<OutputSectionItemPtr>>();
-//            $$->push_back(std::make_shared<OutputSectionInputSectionDescription>(std::make_shared<InputSectionFilter>(InputSectionFilter{ /*FileFilter*/ { /*FileSpec*/ $1 } })));
+//            $$->push_back(std::make_shared<OutputSectionInputSectionDescription>(std::make_shared<InputSectionFilter>(InputSectionFilter{ $1.location, /*FileFilter*/ { $1.location, /*FileSpec*/ $1 } })));
 //        }
 //    | filespec whitespace output_section_items
 //        {
 //            $$ = $3;
-//            $$->push_back(std::make_shared<OutputSectionInputSectionDescription>(std::make_shared<InputSectionFilter>(InputSectionFilter{ /*FileFilter*/ { /*FileSpec*/ $1 } })));
+//            $$->push_back(std::make_shared<OutputSectionInputSectionDescription>(std::make_shared<InputSectionFilter>(InputSectionFilter{ $1.location, /*FileFilter*/ { $1.location, /*FileSpec*/ $1 } })));
 //        }
 //    | self_delimiting_output_section_item
 //        {
