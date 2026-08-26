@@ -294,7 +294,7 @@ private:
 class SectionSelectors : public BlockEntry
 {
 public:
-    SectionSelectors(std::vector<SectionSelector>& section_selectors, bool keep) : m_section_selectors(std::move(section_selectors)), m_keep(keep) {}
+    SectionSelectors(std::vector<SectionSelector> section_selectors, bool keep) : m_section_selectors(std::move(section_selectors)), m_keep(keep) {}
 
     void output_initialise_directives(std::ostream& output, InitialiseDirectiveOutputState& state, std::string except_objects, bool writable, bool uninitialised) const override
     {
@@ -371,7 +371,7 @@ class Block
 {
 public:
     Block(std::string name, DefinitionPtr address = nullptr, std::optional<IdentifierId> region = {}, std::string except_objects = "", std::optional<uint64_t> align = {}, bool sorted = false, bool writable = false, bool uninitialised = false) :
-        m_name(name), m_address(address), m_region(region), m_except_objects(except_objects), m_align(align), m_sorted(sorted), m_writable(writable), m_uninitialised(uninitialised) {}
+        m_name(std::move(name)), m_address(address), m_region(region), m_except_objects(except_objects), m_align(align), m_sorted(sorted), m_writable(writable), m_uninitialised(uninitialised) {}
 
     void push_back(std::unique_ptr<BlockEntry> entry)
     {
@@ -414,7 +414,7 @@ public:
         output << "};\n\n";
     }
 
-    std::string name(void) { return m_name; }
+    const std::string& name(void) const { return m_name; }
 
 private:
     std::vector<std::unique_ptr<BlockEntry>> m_entries;
@@ -556,12 +556,12 @@ public:
                         m_writable,
                         m_uninitialised
                 );
-                auto main_subblock_entry = std::make_unique<SectionSelectors>(selection.main_selectors, item.filter().keep);
+                auto main_subblock_entry = std::make_unique<SectionSelectors>(std::move(selection.main_selectors), item.filter().keep);
                 main_subblock->push_back(std::move(main_subblock_entry));
                 auto main_entry = std::make_unique<SubBlock>(std::move(main_subblock));
                 m_main_block->push_back(std::move(main_entry));
                 if (m_initialised) {
-                    auto init_entry = std::make_unique<SectionSelectors>(selection.init_selectors, item.filter().keep);
+                    auto init_entry = std::make_unique<SectionSelectors>(std::move(selection.init_selectors), item.filter().keep);
                     m_init_block->push_back(std::move(init_entry));
                 }
             } else if (!selection.except_clause.empty()) {
@@ -584,21 +584,21 @@ public:
                             selection.except_clause
                     );
                 }
-                auto main_subblock_entry = std::make_unique<SectionSelectors>(selection.main_selectors, item.filter().keep);
+                auto main_subblock_entry = std::make_unique<SectionSelectors>(std::move(selection.main_selectors), item.filter().keep);
                 main_subblock->push_back(std::move(main_subblock_entry));
                 auto main_entry = std::make_unique<SubBlock>(std::move(main_subblock));
                 m_main_block->push_back(std::move(main_entry));
                 if (m_initialised) {
-                    auto init_subblock_entry = std::make_unique<SectionSelectors>(selection.init_selectors, item.filter().keep);
+                    auto init_subblock_entry = std::make_unique<SectionSelectors>(std::move(selection.init_selectors), item.filter().keep);
                     init_subblock->push_back(std::move(init_subblock_entry));
                     auto init_entry = std::make_unique<SubBlock>(std::move(init_subblock));
                     m_init_block->push_back(std::move(init_entry));
                 }
             } else if (!selection.main_selectors.empty()) {
-                auto main_entry = std::make_unique<SectionSelectors>(selection.main_selectors, item.filter().keep);
+                auto main_entry = std::make_unique<SectionSelectors>(std::move(selection.main_selectors), item.filter().keep);
                 m_main_block->push_back(std::move(main_entry));
                 if (m_initialised) {
-                    auto init_entry = std::make_unique<SectionSelectors>(selection.init_selectors, item.filter().keep);
+                    auto init_entry = std::make_unique<SectionSelectors>(std::move(selection.init_selectors), item.filter().keep);
                     m_init_block->push_back(std::move(init_entry));
                 }
             }
