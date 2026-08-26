@@ -72,12 +72,137 @@ private:
 
 /* Structures to track how GNU syntax can implicitly knock out matches for a subset of filespecs for any given section spec */
 
-struct FilesRemaining
+struct SectionSelector
 {
-    bool poisoned; /* we've encountered a GNU section definition that required matching filenames both positively and negatively - the remainder can't be expressed in IAR terms */
-    SourceLocation first_ref; /* for generating diagnostic notes */
-    bool negative_match = true; /* remaining files are those which DON'T match any in matches, else those which DO match at least one */
-    StringSet matches; /* list of filespecs to compare */
+    std::optional<std::string> sections;
+    std::optional<std::string> objects;
+};
+
+class FilesRemaining
+{
+private:
+    static std::string generate_except_clause(const StringSet& files)
+    {
+        std::string result;
+        const char* sep = "object ";
+        for (const auto& file : files) {
+            result += sep + file + ",";
+            sep = "\n  object ";
+        }
+        return result;
+    }
+
+public:
+    /* Result to be emitted to the IAR file after applying a GNU rule to a FilesRemaining */
+    struct Selection
+    {
+        std::vector<SectionSelector> main_selectors;
+        std::vector<SectionSelector> init_selectors;
+        std::string except_clause;
+    };
+
+    FilesRemaining(SourceLocation first_ref, bool poisoned = false) : m_poisoned(poisoned), m_first_ref(first_ref) {}
+
+    bool poisoned() const noexcept { return m_poisoned; }
+    SourceLocation first_ref() const noexcept { return m_first_ref; }
+
+    /* Find emitted selection, and update files remaining, in case where GNU specifies both positive and negative patterns */
+    Selection select(const std::optional<std::string>& main_sections, const std::optional<std::string>& init_sections,
+            const std::string& positive_pattern, const StringSet& negative_patterns, bool initialised)
+    {
+        /* In this case we've already established that this section pattern hasn't been found before, so FilesRemaining contains nothing of interest */
+        Selection result;
+        result.main_selectors.emplace_back(SectionSelector{ main_sections, positive_pattern });
+        if (initialised)
+            result.init_selectors.emplace_back(SectionSelector{ init_sections, positive_pattern });
+        result.except_clause = generate_except_clause(negative_patterns);
+        return result;
+    }
+
+    /* Find emitted selection, and update files remaining, in case where GNU specifies only positive pattern */
+    Selection select(const std::optional<std::string>& main_sections, const std::optional<std::string>& init_sections,
+            const std::string& positive_pattern, bool initialised)
+    {
+        Selection result;
+        if (m_negative_match) {
+            auto it = std::find(m_matches.begin(), m_matches.end(), positive_pattern);
+            if (it == m_matches.end()) {
+                result.main_selectors.emplace_back(SectionSelector{ main_sections, positive_pattern });
+                if (initialised)
+                    result.init_selectors.emplace_back(SectionSelector{ init_sections, positive_pattern });
+                /* now we have one more pattern we MUST NOT match... */
+                m_matches.emplace_back(positive_pattern);
+            } /* else do nothing, this filespec was already matched by an earlier specific match */
+        } else {
+            auto it = std::find(m_matches.begin(), m_matches.end(), positive_pattern);
+            if (it != m_matches.end()) {
+                result.main_selectors.emplace_back(SectionSelector{ main_sections, positive_pattern });
+                if (initialised)
+                    result.init_selectors.emplace_back(SectionSelector{ init_sections, positive_pattern });
+                /*  now we have one fewer pattern that we CAN match...*/
+                m_matches.erase(it);
+            } /* else do nothing, this filespec was not excepted from an earlier global match */
+        }
+        return result;
+    }
+
+    /* Find emitted selection, and update files remaining, in case where GNU specifies negative patterns */
+    Selection select(const std::optional<std::string>& main_sections, const std::optional<std::string>& init_sections,
+            const StringSet& negative_patterns, bool initialised)
+    {
+        Selection result;
+        if (m_negative_match) {
+            /* files not to match this time is the union of those already positively matched (i.e. which are marked as MUST NOT match again)
+              with the files that are excluded in the new GNU entry */
+            StringSet excluded_files = m_matches | negative_patterns;
+            /* in future, we CAN only match files from the new GNU entry that we also haven't previously positively matched */
+            m_negative_match = false;
+            m_matches = negative_patterns - m_matches;
+            result.main_selectors.emplace_back(SectionSelector{ main_sections, std::optional<std::string>{} });
+            if (initialised)
+                result.init_selectors.emplace_back(SectionSelector{ init_sections, std::optional<std::string>{} });
+            result.except_clause = generate_except_clause(excluded_files);
+        } else {
+            /* files to match this time are those that we already CAN, less those excluded by the new GNU entry */
+            StringSet included_files = m_matches - negative_patterns;
+            /* in future, we CAN only match files that we already CAN and which also aren't covered by the new GNU entry */
+            m_matches = m_matches & negative_patterns;
+            for (const auto& filespec : included_files) {
+                result.main_selectors.emplace_back(SectionSelector{ main_sections, filespec });
+                if (initialised)
+                    result.init_selectors.emplace_back(SectionSelector{ init_sections, filespec });
+            }
+        }
+        return result;
+    }
+
+    /* Find emitted selection, and update files remaining, in case where GNU specifies negative patterns */
+    Selection select(const std::optional<std::string>& main_sections, const std::optional<std::string>& init_sections,
+            bool initialised)
+    {
+        Selection result;
+        if (m_negative_match) {
+            result.main_selectors.emplace_back(SectionSelector{ main_sections, std::optional<std::string>{} });
+            if (initialised)
+                result.init_selectors.emplace_back(SectionSelector{ init_sections, std::optional<std::string>{} });
+            result.except_clause = generate_except_clause(m_matches);
+        } else {
+            for (auto& filespec : m_matches) {
+                result.main_selectors.emplace_back(SectionSelector{ main_sections, filespec });
+                if (initialised)
+                    result.init_selectors.emplace_back(SectionSelector{ init_sections, filespec });
+            }
+        }
+        m_negative_match = false;
+        m_matches.clear();
+        return result;
+    }
+
+private:
+    bool m_poisoned; /* we've encountered a GNU section definition that required matching filenames both positively and negatively - the remainder can't be expressed in IAR terms */
+    SourceLocation m_first_ref; /* for generating diagnostic notes */
+    bool m_negative_match = true; /* remaining files are those which DON'T match any in matches, else those which DO match at least one */
+    StringSet m_matches; /* list of filespecs to compare */
 };
 
 
@@ -164,12 +289,6 @@ public:
 
 private:
     std::unique_ptr<Block> m_block;
-};
-
-struct SectionSelector
-{
-    std::optional<std::string> sections;
-    std::optional<std::string> objects;
 };
 
 class SectionSelectors : public BlockEntry
@@ -341,6 +460,191 @@ static std::string iar_filespec(const FileSpec& generic)
     }
 }
 
+class ProcessVisitor : public ConstOutputSectionItemVisitor
+{
+public:
+    ProcessVisitor(Block* main_block, Block* init_block, std::unordered_map<std::string, FilesRemaining>& all_remaining, bool initialised, bool uninitialised, bool writable) :
+        m_main_block(main_block), m_init_block(init_block), m_all_remaining(all_remaining), m_initialised(initialised), m_uninitialised(uninitialised), m_writable(writable) {}
+
+    void visit(const OutputSectionNop& item) override { /* nothing to do */ }
+
+    void visit(const OutputSectionLocationMarker&) override
+    {
+        auto subblock = std::make_unique<Block>(
+                BlockName::next("anchor")
+        );
+        auto entry = std::make_unique<SubBlock>(std::move(subblock));
+        m_main_block->push_back(std::move(entry));
+    }
+
+    void visit(const OutputSectionAlign& item) override
+    {
+        auto subblock = std::make_unique<Block>(
+                BlockName::next("align"),
+                nullptr,
+                std::optional<IdentifierId>{},
+                "",
+                item.granule()
+        );
+        auto entry = std::make_unique<SubBlock>(std::move(subblock));
+        m_main_block->push_back(std::move(entry));
+    }
+
+    void visit(const OutputSectionInputSectionDescription& item) override
+    {
+        if (item.filter().files.sorted_by_name) {
+            Diagnostic warning(item.filter().files.location, "warning: ignoring file-scope SORT directive which cannot be represented in IAR syntax");
+            std::cerr << warning.format();
+        }
+        std::string common_positive_file_pattern = iar_filespec(item.filter().files.files);
+        StringSet common_negative_file_patterns;
+        for (const auto& pattern : item.filter().files.exclude_files)
+            common_negative_file_patterns.emplace_back(iar_filespec(pattern));
+
+        for (const auto& section_list_item : *item.filter().sections) {
+            bool sorted = false;
+            for (const auto& sort : section_list_item->sorts) {
+                if (sort == SortType::ByName)
+                    sorted = true;
+                else if (sort == SortType::ByAlignment) {
+                    Diagnostic warning(*section_list_item->location, "warning: ignoring SORT_BY_ALIGNMENT directive which cannot be represented in IAR syntax");
+                    std::cerr << warning.format();
+                }
+            }
+            StringSet negative_file_patterns = common_negative_file_patterns;
+            for (const auto& pattern: *section_list_item->exclude_files)
+                negative_file_patterns.emplace_back(iar_filespec(pattern));
+
+            SourceLocation loc = section_list_item->location ? *section_list_item->location : item.filter().location;
+            std::optional<std::string> main_sections = section_list_item->sections == "*" ? std::optional<std::string>{} : section_list_item->sections;
+            std::optional<std::string> init_sections = section_list_item->sections == "*" ? std::optional<std::string>{} : section_list_item->sections + "_init";
+            FilesRemaining::Selection selection;
+
+            if (auto it = m_all_remaining.find(section_list_item->sections); it != m_all_remaining.end() && it->second.poisoned())
+                throw DiagnosticError(loc, "error: cannot reference same section pattern more than once if any of them have both positive and negative file patterns",
+                        {{ it->second.first_ref(), "section pattern was first encountered here" }});
+            if (common_positive_file_pattern != "*" && !negative_file_patterns.empty()) {
+                auto [it, inserted] = m_all_remaining.try_emplace(section_list_item->sections, FilesRemaining(loc, true));
+                if (!inserted)
+                    throw DiagnosticError(loc, "error: cannot reference same section pattern more than once if any of them have both positive and negative file patterns",
+                            {{ it->second.first_ref(), "section pattern was first encountered here" }});
+                selection = it->second.select(main_sections, init_sections, common_positive_file_pattern, negative_file_patterns, m_initialised);
+            } else if (common_positive_file_pattern != "*") {
+                auto [it, inserted] = m_all_remaining.try_emplace(section_list_item->sections, FilesRemaining(loc));
+                selection = it->second.select(main_sections, init_sections, common_positive_file_pattern, m_initialised);
+            } else if (!negative_file_patterns.empty()) {
+                auto [it, inserted] = m_all_remaining.try_emplace(section_list_item->sections, FilesRemaining(loc));
+                selection = it->second.select(main_sections, init_sections, negative_file_patterns, m_initialised);
+            } else {
+                auto [it, inserted] = m_all_remaining.try_emplace(section_list_item->sections, FilesRemaining(loc));
+                selection = it->second.select(main_sections, init_sections, m_initialised);
+            }
+
+            if (sorted) {
+                if (!selection.except_clause.empty()) {
+                    Diagnostic warning(*section_list_item->location, "warning: unable to represent both SORT and file exclusion in IAR syntax; ignoring file exclusion");
+                    std::cerr << warning.format();
+                }
+                /* Init block doesn't use a subblock in SORT case */
+                std::unique_ptr<Block> main_subblock = std::make_unique<Block>(
+                        BlockName::next("sort"),
+                        nullptr,
+                        std::optional<IdentifierId>{},
+                        "",
+                        std::optional<uint64_t>{},
+                        true,
+                        m_writable,
+                        m_uninitialised
+                );
+                auto main_subblock_entry = std::make_unique<SectionSelectors>(selection.main_selectors, item.filter().keep);
+                main_subblock->push_back(std::move(main_subblock_entry));
+                auto main_entry = std::make_unique<SubBlock>(std::move(main_subblock));
+                m_main_block->push_back(std::move(main_entry));
+                if (m_initialised) {
+                    auto init_entry = std::make_unique<SectionSelectors>(selection.init_selectors, item.filter().keep);
+                    m_init_block->push_back(std::move(init_entry));
+                }
+            } else if (!selection.except_clause.empty()) {
+                std::unique_ptr<Block> main_subblock = std::make_unique<Block>(
+                        BlockName::next("except"),
+                        nullptr,
+                        std::optional<IdentifierId>{},
+                        selection.except_clause,
+                        std::optional<uint64_t>{},
+                        false,
+                        m_writable,
+                        m_uninitialised
+                );
+                std::unique_ptr<Block> init_subblock;
+                if (m_initialised) {
+                    init_subblock = std::make_unique<Block>(
+                            BlockName::next("except"),
+                            nullptr,
+                            std::optional<IdentifierId>{},
+                            selection.except_clause
+                    );
+                }
+                auto main_subblock_entry = std::make_unique<SectionSelectors>(selection.main_selectors, item.filter().keep);
+                main_subblock->push_back(std::move(main_subblock_entry));
+                auto main_entry = std::make_unique<SubBlock>(std::move(main_subblock));
+                m_main_block->push_back(std::move(main_entry));
+                if (m_initialised) {
+                    auto init_subblock_entry = std::make_unique<SectionSelectors>(selection.init_selectors, item.filter().keep);
+                    init_subblock->push_back(std::move(init_subblock_entry));
+                    auto init_entry = std::make_unique<SubBlock>(std::move(init_subblock));
+                    m_init_block->push_back(std::move(init_entry));
+                }
+            } else if (!selection.main_selectors.empty()) {
+                auto main_entry = std::make_unique<SectionSelectors>(selection.main_selectors, item.filter().keep);
+                m_main_block->push_back(std::move(main_entry));
+                if (m_initialised) {
+                    auto init_entry = std::make_unique<SectionSelectors>(selection.init_selectors, item.filter().keep);
+                    m_init_block->push_back(std::move(init_entry));
+                }
+            }
+        }
+    }
+
+private:
+    Block* m_main_block;
+    Block* m_init_block;
+    std::unordered_map<std::string, FilesRemaining>& m_all_remaining;
+    bool m_initialised;
+    bool m_uninitialised;
+    bool m_writable;
+};
+
+static std::pair<std::unique_ptr<Block>, std::unique_ptr<Block>> build_blocks(
+        bool initialised, const OutputSection& os,
+        std::unordered_map<std::string, FilesRemaining>& all_remaining)
+{
+    bool uninitialised = os.noload;
+    bool writable = initialised || uninitialised;
+    std::unique_ptr<Block> main_block = std::make_unique<Block>(
+            g_script.identifiers.toRaw(os.name),
+            os.vma,
+            os.vma_region,
+            "",
+            std::optional<uint64_t>(),
+            false,
+            writable,
+            uninitialised
+    );
+    std::unique_ptr<Block> init_block;
+    if (initialised)
+        init_block = std::make_unique<Block>(
+                g_script.identifiers.toRaw(os.name) + "_init",
+                os.lma,
+                os.lma_region
+        );
+
+    ProcessVisitor processor(main_block.get(), init_block.get(), all_remaining, initialised, uninitialised, writable);
+    for (auto& item : *os.items)
+        item->accept(processor);
+
+    return { std::move(main_block), std::move(init_block) };
+}
+
 void IarWriter::write(const Script& script, std::filesystem::path& base)
 {
     std::ofstream output_file_stream;
@@ -389,254 +693,9 @@ void IarWriter::write(const Script& script, std::filesystem::path& base)
     /* Restructure output sections to fit IAR syntax better */
     std::vector<std::unique_ptr<Block>> top_level_blocks;
     std::unordered_map<std::string, FilesRemaining> all_remaining;
-
     for (auto& os : g_script.output_sections) {
         bool initialised = os->lma || os->lma_region;
-        bool uninitialised = os->noload;
-        bool writable = initialised || uninitialised;
-        bool in_sub_block = false;
-        std::unique_ptr<Block> main_block = std::make_unique<Block>(
-                g_script.identifiers.toRaw(os->name),
-                os->vma,
-                os->vma_region,
-                "",
-                std::optional<uint64_t>(),
-                false,
-                writable,
-                uninitialised
-        );
-        std::unique_ptr<Block> init_block;
-        if (initialised)
-            init_block = std::make_unique<Block>(
-                    g_script.identifiers.toRaw(os->name) + "_init",
-                    os->lma,
-                    os->lma_region
-            );
-        for (auto& item : *os->items) {
-            if (auto location_marker = std::dynamic_pointer_cast<OutputSectionLocationMarker>(item)) {
-                auto subblock = std::make_unique<Block>(
-                        BlockName::next("anchor")
-                );
-                auto entry = std::make_unique<SubBlock>(std::move(subblock));
-                main_block->push_back(std::move(entry));
-
-            } else if (auto align = std::dynamic_pointer_cast<OutputSectionAlign>(item)) {
-                auto subblock = std::make_unique<Block>(
-                        BlockName::next("align"),
-                        nullptr,
-                        std::optional<IdentifierId>{},
-                        "",
-                        align->granule()
-                );
-                auto entry = std::make_unique<SubBlock>(std::move(subblock));
-                main_block->push_back(std::move(entry));
-
-            } else if (auto filter = std::dynamic_pointer_cast<OutputSectionInputSectionDescription>(item)) {
-                if (filter->filter().files.sorted_by_name) {
-                    Diagnostic warning(filter->filter().files.location, "warning: ignoring file-scope SORT directive which cannot be represented in IAR syntax");
-                    std::cerr << warning.format();
-                }
-                std::string common_positive_file_pattern = iar_filespec(filter->filter().files.files);
-                StringSet common_negative_file_patterns;
-                for (const auto& pattern : filter->filter().files.exclude_files)
-                    common_negative_file_patterns.emplace_back(iar_filespec(pattern));
-
-                std::vector<SectionSelector> main_section_selectors;
-                std::vector<SectionSelector> init_section_selectors;
-                for (const auto& section_list_item : *filter->filter().sections) {
-                    bool sorted = false;
-                    for (const auto& sort : section_list_item->sorts) {
-                        if (sort == SortType::ByName)
-                            sorted = true;
-                        else if (sort == SortType::ByAlignment) {
-                            Diagnostic warning(*section_list_item->location, "warning: ignoring SORT_BY_ALIGNMENT directive which cannot be represented in IAR syntax");
-                            std::cerr << warning.format();
-                        }
-                    }
-                    StringSet negative_file_patterns = common_negative_file_patterns;
-                    for (const auto& pattern: *section_list_item->exclude_files)
-                        negative_file_patterns.emplace_back(iar_filespec(pattern));
-
-                    std::vector<SectionSelector> *p_main_section_selectors;
-                    std::vector<SectionSelector> *p_init_section_selectors;
-                    std::unique_ptr<Block> main_subblock;
-                    std::unique_ptr<Block> init_subblock;
-                    std::vector<SectionSelector> main_subblock_section_selectors;
-                    std::vector<SectionSelector> init_subblock_section_selectors;
-
-                    std::vector<SectionSelector> new_main_section_selectors;
-                    std::vector<SectionSelector> new_init_section_selectors;
-                    std::string except_clause;
-                    SourceLocation loc = section_list_item->location ? *section_list_item->location : filter->filter().location;
-                    std::optional<std::string> main_sections = section_list_item->sections == "*" ? std::optional<std::string>{} : section_list_item->sections;
-                    std::optional<std::string> init_sections = section_list_item->sections == "*" ? std::optional<std::string>{} : section_list_item->sections + "_init";
-                    auto it = all_remaining.find(section_list_item->sections);
-                    if (it != all_remaining.end() && it->second.poisoned) {
-                        throw DiagnosticError(loc, "error: cannot reference same section pattern more than once if any of them have both positive and negative file patterns",
-                                {{ it->second.first_ref, "section pattern was first encountered here" }});
-                    }
-                    if (common_positive_file_pattern != "*" && !negative_file_patterns.empty()) {
-                        if (it != all_remaining.end()) {
-                            throw DiagnosticError(loc, "error: cannot reference same section pattern more than once if any of them have both positive and negative file patterns",
-                                    {{ it->second.first_ref, "section pattern was first encountered here" }});
-                        }
-                        all_remaining[section_list_item->sections] = FilesRemaining{ true, loc };
-
-                        new_main_section_selectors.emplace_back(SectionSelector{ main_sections, common_positive_file_pattern });
-                        new_init_section_selectors.emplace_back(SectionSelector{ init_sections, common_positive_file_pattern });
-                        const char* sep = "object ";
-                        for (auto& negative_file_pattern : negative_file_patterns) {
-                            except_clause += sep + negative_file_pattern + ",";
-                            sep = "\n  object ";
-                        }
-                    } else if (common_positive_file_pattern != "*") {
-                        bool fresh = it != all_remaining.end();
-                        auto& remaining = all_remaining[section_list_item->sections]; /* default-constructs if not already present */
-                        if (fresh)
-                            remaining.first_ref = loc;
-                        if (remaining.negative_match) {
-                            auto it = std::find(remaining.matches.begin(), remaining.matches.end(), common_positive_file_pattern);
-                            if (it == remaining.matches.end()) {
-                                new_main_section_selectors.emplace_back(SectionSelector{ main_sections, common_positive_file_pattern });
-                                new_init_section_selectors.emplace_back(SectionSelector{ init_sections, common_positive_file_pattern });
-                                remaining.matches.emplace_back(common_positive_file_pattern);
-                            } /* else do nothing, this filespec was already matched by an earlier specific match */
-                        } else {
-                            auto it = std::find(remaining.matches.begin(), remaining.matches.end(), common_positive_file_pattern);
-                            if (it != remaining.matches.end()) {
-                                new_main_section_selectors.emplace_back(SectionSelector{ main_sections, common_positive_file_pattern });
-                                new_init_section_selectors.emplace_back(SectionSelector{ init_sections, common_positive_file_pattern });
-                                remaining.matches.erase(it);
-                            } /* else do nothing, this filespec was not excepted from an earlier global match */
-                        }
-                    } else if (!negative_file_patterns.empty()) {
-                        bool fresh = it != all_remaining.end();
-                        auto& remaining = all_remaining[section_list_item->sections]; /* default-constructs if not already present */
-                        if (fresh)
-                            remaining.first_ref = loc;
-                        if (remaining.negative_match) {
-                            StringSet excluded_files;
-                            excluded_files = remaining.matches | negative_file_patterns;
-                            remaining.negative_match = false;
-                            remaining.matches = negative_file_patterns - remaining.matches;
-                            new_main_section_selectors.emplace_back(SectionSelector{ main_sections, std::optional<std::string>{} });
-                            new_init_section_selectors.emplace_back(SectionSelector{ init_sections, std::optional<std::string>{} });
-                            const char* sep = "object ";
-                            for (const auto& filespec : excluded_files) {
-                                except_clause += sep + filespec + ",";
-                                sep = "\n  object ";
-                            }
-                        } else {
-                            StringSet included_files;
-                            included_files = remaining.matches - negative_file_patterns;
-                            remaining.matches = remaining.matches & negative_file_patterns;
-                            for (const auto& filespec : included_files) {
-                                new_main_section_selectors.emplace_back(SectionSelector{ main_sections, filespec });
-                                new_init_section_selectors.emplace_back(SectionSelector{ init_sections, filespec });
-                            }
-                        }
-                    } else {
-                        /* Catch-all case with no filtering by filename */
-                        bool fresh = it != all_remaining.end();
-                        auto& remaining = all_remaining[section_list_item->sections]; /* default-constructs if not already present */
-                        if (fresh)
-                            remaining.first_ref = loc;
-                        if (remaining.negative_match) {
-                            const char* sep = "object ";
-                            for (auto& negative_file_pattern : remaining.matches) {
-                                except_clause += sep + negative_file_pattern + ",";
-                                sep = "\n  object ";
-                            }
-                            new_main_section_selectors.emplace_back(SectionSelector{ main_sections, std::optional<std::string>{} });
-                            new_init_section_selectors.emplace_back(SectionSelector{ init_sections, std::optional<std::string>{} });
-                        } else {
-                            for (auto& filespec : remaining.matches) {
-                                new_main_section_selectors.emplace_back(SectionSelector{ main_sections, filespec });
-                                new_init_section_selectors.emplace_back(SectionSelector{ init_sections, filespec });
-                            }
-                        }
-                        remaining.negative_match = false;
-                        remaining.matches.clear();
-                    }
-
-                    if (sorted) {
-                        if (!except_clause.empty()) {
-                            Diagnostic warning(*section_list_item->location, "warning: unable to represent both SORT and file exclusion in IAR syntax; ignoring file exclusion");
-                            std::cerr << warning.format();
-                        }
-                        /* Init block doesn't use a subblock in SORT case */
-                        main_subblock = std::make_unique<Block>(
-                                BlockName::next("sort"),
-                                nullptr,
-                                std::optional<IdentifierId>{},
-                                "",
-                                std::optional<uint64_t>{},
-                                true,
-                                writable,
-                                uninitialised
-                        );
-                        p_main_section_selectors = &main_subblock_section_selectors;
-                        p_init_section_selectors = &init_section_selectors;
-                    } else if (!except_clause.empty()) {
-                        main_subblock = std::make_unique<Block>(
-                                BlockName::next("except"),
-                                nullptr,
-                                std::optional<IdentifierId>{},
-                                except_clause,
-                                std::optional<uint64_t>{},
-                                false,
-                                writable,
-                                uninitialised
-                        );
-                        if (initialised)
-                            init_subblock = std::make_unique<Block>(
-                                    BlockName::next("except"),
-                                    nullptr,
-                                    std::optional<IdentifierId>{},
-                                    except_clause
-                            );
-                        p_main_section_selectors = &main_subblock_section_selectors;
-                        p_init_section_selectors = &init_subblock_section_selectors;
-                    } else {
-                        p_main_section_selectors = &main_section_selectors;
-                        p_init_section_selectors = &init_section_selectors;
-                    }
-
-                    p_main_section_selectors->insert(p_main_section_selectors->end(), std::make_move_iterator(new_main_section_selectors.begin()), std::make_move_iterator(new_main_section_selectors.end()));
-                    if (initialised)
-                        p_init_section_selectors->insert(p_init_section_selectors->end(), std::make_move_iterator(new_init_section_selectors.begin()), std::make_move_iterator(new_init_section_selectors.end()));
-
-                    if (sorted) {
-                        auto main_subblock_entry = std::make_unique<SectionSelectors>(main_subblock_section_selectors, filter->filter().keep);
-                        main_subblock->push_back(std::move(main_subblock_entry));
-                        auto main_entry = std::make_unique<SubBlock>(std::move(main_subblock));
-                        main_block->push_back(std::move(main_entry));
-                        if (initialised) {
-                            auto init_entry = std::make_unique<SectionSelectors>(init_section_selectors, filter->filter().keep);
-                            init_block->push_back(std::move(init_entry));
-                        }
-                    } else if (!except_clause.empty()) {
-                        auto main_subblock_entry = std::make_unique<SectionSelectors>(main_subblock_section_selectors, filter->filter().keep);
-                        main_subblock->push_back(std::move(main_subblock_entry));
-                        auto main_entry = std::make_unique<SubBlock>(std::move(main_subblock));
-                        main_block->push_back(std::move(main_entry));
-                        if (initialised) {
-                            auto init_subblock_entry = std::make_unique<SectionSelectors>(init_subblock_section_selectors, filter->filter().keep);
-                            init_subblock->push_back(std::move(init_subblock_entry));
-                            auto init_entry = std::make_unique<SubBlock>(std::move(init_subblock));
-                            init_block->push_back(std::move(init_entry));
-                        }
-                    } else if (!main_section_selectors.empty()) {
-                        auto main_entry = std::make_unique<SectionSelectors>(main_section_selectors, filter->filter().keep);
-                        main_block->push_back(std::move(main_entry));
-                        if (initialised) {
-                            auto init_entry = std::make_unique<SectionSelectors>(init_section_selectors, filter->filter().keep);
-                            init_block->push_back(std::move(init_entry));
-                        }
-                    }
-                }
-            }
-        }
+        auto [main_block, init_block] = build_blocks(initialised, *os, all_remaining);
         top_level_blocks.push_back(std::move(main_block));
         if (initialised)
             top_level_blocks.push_back(std::move(init_block));

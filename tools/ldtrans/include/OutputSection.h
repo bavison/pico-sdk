@@ -116,12 +116,24 @@ struct InputSectionFilter
 
 using InputSectionFilterPtr = std::shared_ptr<InputSectionFilter>;
 
+class ConstOutputSectionItemVisitor
+{
+public:
+    virtual ~ConstOutputSectionItemVisitor() = default;
+
+    virtual void visit(const class OutputSectionNop& item) = 0;
+    virtual void visit(const class OutputSectionLocationMarker& item) = 0;
+    virtual void visit(const class OutputSectionAlign& item) = 0;
+    virtual void visit(const class OutputSectionInputSectionDescription& item) = 0;
+};
+
 class OutputSectionItem
 {
 public:
    virtual ~OutputSectionItem() = default;
    std::optional<SourceLocation> location() const { return m_location; }
    virtual std::string dump(const IdentifierManager& ids) const = 0;
+   virtual void accept(ConstOutputSectionItemVisitor& visitor) = 0;
 protected:
    OutputSectionItem() = default;
    explicit OutputSectionItem(SourceLocation location) : m_location(location) {}
@@ -138,6 +150,7 @@ public:
     {
         return "";
     }
+    void accept(ConstOutputSectionItemVisitor& visitor) override { visitor.visit(*this); }
 };
 
 class OutputSectionLocationMarker : public OutputSectionItem
@@ -148,6 +161,7 @@ public:
     {
         return "    anchor: " + ids.toDisplayName(m_anchor) + "\n";
     }
+    void accept(ConstOutputSectionItemVisitor& visitor) override { visitor.visit(*this); }
 private:
     IdentifierId m_anchor;
 };
@@ -160,6 +174,7 @@ public:
     {
         return "    align: " + std::to_string(m_granule) + "\n";
     }
+    void accept(ConstOutputSectionItemVisitor& visitor) override { visitor.visit(*this); }
     uint64_t granule() const { return m_granule; }
 private:
     uint64_t m_granule;
@@ -169,7 +184,6 @@ class OutputSectionInputSectionDescription : public OutputSectionItem
 {
 public:
     OutputSectionInputSectionDescription(InputSectionFilterPtr filter) : OutputSectionItem(filter->location), m_filter(filter) {}
-    const InputSectionFilter& filter(void) const { return *m_filter; }
     std::string dump(const IdentifierManager& ids) const override
     {
         std::string result = "    input section pattern:\n";
@@ -177,6 +191,8 @@ public:
             result += "      " + line + "\n";
         return result;
     }
+    void accept(ConstOutputSectionItemVisitor& visitor) override { visitor.visit(*this); }
+    const InputSectionFilter& filter(void) const { return *m_filter; }
 private:
     InputSectionFilterPtr m_filter;
 };
