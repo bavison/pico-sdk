@@ -390,7 +390,7 @@ public:
 
     void visit(const LocationCounterExpression& expr) override
     {
-        m_result = "<location counter unimplemented>";
+        m_result = "<location counter>";
     }
 
     std::string result() const { return m_result; }

@@ -226,7 +226,7 @@ std::unordered_map<std::string, unsigned> BlockName::m_next_indices;
 
 struct InitialiseDirectiveOutputState
 {
-    enum class OpenDirective
+    enum class OpenDirective : std::uint8_t
     {
         None,
         ByCopy,
@@ -667,12 +667,12 @@ void IarWriter::write(const Script& script, std::filesystem::path& base)
     /* Memory regions */
     for (auto& region : g_script.memory_regions) {
         bool ram = false;
-        auto origin = region.origin().value();
-        auto length = region.length().value();
+        auto origin = region.origin().value().absolute;
+        auto length = region.length().value().absolute;
         for (auto& os : g_script.output_sections) {
             if (os->noload || os->lma || os->lma_region) {
                 if (os->vma) {
-                    auto vma_value = os->vma ? os->vma->value() : 0;
+                    auto vma_value = os->vma ? os->vma->value().absolute : 0;
                     if (vma_value >= origin && vma_value < origin + length) {
                         ram = true;
                         break;
@@ -716,4 +716,47 @@ void IarWriter::write(const Script& script, std::filesystem::path& base)
     /* Define block layouts */
     for (const auto& block : top_level_blocks)
         block->output_define_directives(output);
+
+    /* Mapping of top-level blocks to memory regions */
+    std::optional<IdentifierId> current_vma_region;
+    std::map<IdentifierId, std::vector<std::string>> block_mapping;
+    for (const auto& os : g_script.output_sections) {
+        if (os->vma_region && !os->vma)
+            // new region name - but do lookup to resolve any possible alias
+            current_vma_region = g_script.memory_regions[g_script.memory_region_lookup[*os->vma_region]].name();
+        else if (os->vma && os->vma->value().type == DefinitionValueType::Absolute)
+            current_vma_region.reset();
+        // else either it's an error condition or we have a VMA expression which evaluates to the location counter, so keep the same region
+        if (os->vma && os->vma_region) {
+            Diagnostic warning { os->location, "warning: output section VMA region ignored in favour of VMA address" };
+            std::cerr << warning.format();
+        }
+        if ((os->vma && os->vma->value().type == DefinitionValueType::LocationCounter) || (os->vma_region && !os->vma)) {
+            if (!current_vma_region)
+                throw DiagnosticError( os->location, "error: cannot determine VMA region for output section");
+            block_mapping[*current_vma_region].emplace_back(g_script.identifiers.toRaw(os->name));
+        }
+
+        /* With LMA, there's no equivalent persistence mechanism so we recalculate it each time */
+        std::optional<IdentifierId> current_lma_region;
+        if (os->lma_region && !os->lma)
+            current_lma_region = g_script.memory_regions[g_script.memory_region_lookup[*os->lma_region]].name();
+        else if (os->lma && os->lma->value().type == DefinitionValueType::LocationCounter)
+            current_lma_region = current_vma_region;
+        if (os->lma && os->lma_region) {
+            Diagnostic warning { os->location, "warning: output section LMA region ignored in favour of LMA address" };
+            std::cerr << warning.format();
+        }
+        if ((os->lma && os->lma->value().type == DefinitionValueType::LocationCounter) || (os->lma_region && !os->lma)) {
+            if (!current_vma_region)
+                throw DiagnosticError( os->location, "error: cannot determine LMA region for output section");
+            block_mapping[*current_lma_region].emplace_back(g_script.identifiers.toRaw(os->name) + "_init");
+        }
+    }
+    for (const auto& this_region : block_mapping) {
+        output << "place in " << g_script.identifiers.toRaw(this_region.first) << " {\n";
+        for (const auto& block: this_region.second)
+            output << "  block " << block << ",\n";
+        output << "}\n\n";
+    }
 }

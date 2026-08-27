@@ -34,6 +34,20 @@ enum class DefinitionVisibility : std::uint8_t
     ProvideHidden,
 };
 
+enum class DefinitionValueType : std::uint8_t
+{
+    Absolute,
+    LocationCounter,
+    ModifiedLocationCounter,
+};
+
+struct DefinitionValue
+{
+    uint64_t absolute = 0;
+    DefinitionValueType type = DefinitionValueType::Absolute;
+    bool uses_location_counter = false; /* including in non-taken branches of ternary operator */
+};
+
 class Definition
 {
 public:
@@ -69,9 +83,18 @@ public:
         m_name = new_name;
     }
     std::string dump(const IdentifierManager& ids) const {
+        std::string prefix = describe(ids) + describe_visibility() + " = " + dump_expression_chain(ids) + " = ";
         char buffer[2 + 16 + 1] = "0x"; // includes null terminator, wherever that is
-        auto [ptr, ec] = std::to_chars(buffer + 2, buffer + 2 + 16, m_value, 16);
-        return describe(ids) + describe_visibility() + " = " + dump_expression_chain(ids) + " = " + (ec == std::errc{} ? buffer : "<invalid>");
+        auto [ptr, ec] = std::to_chars(buffer + 2, buffer + 2 + 16, m_value.absolute, 16);
+        const char* numerical = (ec == std::errc{} ? buffer : "<invalid>");
+        if (m_value.type == DefinitionValueType::LocationCounter)
+            return prefix + "<location counter>";
+        else if (m_value.type == DefinitionValueType::ModifiedLocationCounter)
+            return prefix + "<modified location counter>";
+        else if (m_value.uses_location_counter)
+            return prefix + numerical + " (includes unused reference to location counter)";
+        else
+            return prefix + numerical;
     }
     friend class EvaluationVisitor;
     bool previous_exists() const { return bool(m_previous); }
@@ -82,7 +105,7 @@ public:
     const Expression& expression() const { return *m_expression; }
     DefinitionKind kind() const { return m_kind; }
     DefinitionVisibility visibility() const { return m_visibility; }
-    uint64_t value() const { return m_value; }
+    DefinitionValue value() const { return m_value; }
 private:
     std::string dump_expression_chain(const IdentifierManager& ids) const {
         std::string earlier;
@@ -109,7 +132,8 @@ private:
     ExpressionPtr m_expression;
     DefinitionKind m_kind;
     DefinitionVisibility m_visibility = DefinitionVisibility::Standard;
-    uint64_t m_value = 0;
+    bool m_dead_branch = false; /* currently evaluating an untaken branch of a ternary operator */
+    DefinitionValue m_value;
 };
 
 using DefinitionPtr = std::shared_ptr<Definition>;

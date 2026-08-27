@@ -188,6 +188,12 @@ void Script::SortDefinitions()
     for (SymbolId s = (SymbolId) 0; s < symbols.size(); ++s) {
         sort(&symbols[s].definition());
     }
+    for (OutputSectionPtr& o : output_sections) {
+        if (o->vma)
+            sort(o->vma.get());
+        if (o->lma)
+            sort(o->lma.get());
+    }
     for (Assertion& a : assertions) {
         sort(&a.definition);
     }
@@ -200,6 +206,10 @@ public:
 
     void visit(const class SymbolExpression& expr) override
     {
+        if (m_target->m_dead_branch) {
+            m_target->m_value = { 0 };
+            return;
+        }
         Definition* d;
         if (expr.identifier() == m_target->name() &&
                 (m_target->kind() == DefinitionKind::TopLevelSymbol ||
@@ -225,24 +235,26 @@ public:
 
     void visit(const class IntegerExpression& expr) override
     {
-        m_target->m_value = expr.value();
+        m_target->m_value = { expr.value() };
     }
 
     void visit(const class UnaryExpression& expr) override
     {
         expr.sub_expr().accept(*this);
+        if (m_target->m_value.type != DefinitionValueType::Absolute)
+            m_target->m_value.type = DefinitionValueType::ModifiedLocationCounter;
         switch (expr.operation()) {
         case UnaryOperator::Plus:
             /* unary plus is a nop */
             break;
         case UnaryOperator::Minus:
-            m_target->m_value = -m_target->m_value;
+            m_target->m_value.absolute = -m_target->m_value.absolute;
             break;
         case UnaryOperator::BitwiseNot:
-            m_target->m_value = ~m_target->m_value;
+            m_target->m_value.absolute = ~m_target->m_value.absolute;
             break;
         case UnaryOperator::LogicalNot:
-            m_target->m_value = !m_target->m_value;
+            m_target->m_value.absolute = !m_target->m_value.absolute;
             break;
         case UnaryOperator::Align:
             // This has an implicit argument of the location counter, which
@@ -262,36 +274,38 @@ public:
         auto left_expr = m_target->value();
         expr.right_expr().accept(*this);
         auto right_expr = m_target->value();
+        m_target->m_value.type = left_expr.type == DefinitionValueType::Absolute && right_expr.type == DefinitionValueType::Absolute ? DefinitionValueType::Absolute : DefinitionValueType::ModifiedLocationCounter;
+        m_target->m_value.uses_location_counter = left_expr.uses_location_counter || right_expr.uses_location_counter;
         switch (expr.operation()) {
         case BinaryOperator::Multiply:
-            m_target->m_value = left_expr * right_expr;
+            m_target->m_value.absolute = left_expr.absolute * right_expr.absolute;
             break;
         case BinaryOperator::Add:
-            m_target->m_value = left_expr + right_expr;
+            m_target->m_value.absolute = left_expr.absolute + right_expr.absolute;
             break;
         case BinaryOperator::Subtract:
-            m_target->m_value = left_expr - right_expr;
+            m_target->m_value.absolute = left_expr.absolute - right_expr.absolute;
             break;
         case BinaryOperator::GreaterOrEqual:
-            m_target->m_value = left_expr >= right_expr;
+            m_target->m_value.absolute = left_expr.absolute >= right_expr.absolute;
             break;
         case BinaryOperator::Greater:
-            m_target->m_value = left_expr > right_expr;
+            m_target->m_value.absolute = left_expr.absolute > right_expr.absolute;
             break;
         case BinaryOperator::LessOrEqual:
-            m_target->m_value = left_expr <= right_expr;
+            m_target->m_value.absolute = left_expr.absolute <= right_expr.absolute;
             break;
         case BinaryOperator::Less:
-            m_target->m_value = left_expr < right_expr;
+            m_target->m_value.absolute = left_expr.absolute < right_expr.absolute;
             break;
         case BinaryOperator::Equal:
-            m_target->m_value = left_expr == right_expr;
+            m_target->m_value.absolute = left_expr.absolute == right_expr.absolute;
             break;
         case BinaryOperator::BitwiseAnd:
-            m_target->m_value = left_expr & right_expr;
+            m_target->m_value.absolute = left_expr.absolute & right_expr.absolute;
             break;
         case BinaryOperator::Max:
-            m_target->m_value = left_expr > right_expr ? left_expr : right_expr;
+            m_target->m_value.absolute = left_expr.absolute > right_expr.absolute ? left_expr.absolute : right_expr.absolute;
             break;
         default:
             throw DiagnosticError(expr.location(), "error: unknown binary op");
@@ -301,11 +315,29 @@ public:
 
     void visit(const class TernaryExpression& expr) override
     {
+        bool parent_dead_branch = m_target->m_dead_branch;
         expr.if_expr().accept(*this);
-        if (m_target->value())
-            expr.then_expr().accept(*this);
-        else
+        auto if_expr = m_target->value();
+        DefinitionValue then_expr;
+        DefinitionValue else_expr;
+        if (if_expr.type != DefinitionValueType::Absolute)
+            throw DiagnosticError(expr.location(), "error: location counter cannot be used in if clause of ternary operator in this context");
+        if (m_target->value().absolute) {
+            m_target->m_dead_branch = true;
             expr.else_expr().accept(*this);
+            else_expr = m_target->value();
+            m_target->m_dead_branch = parent_dead_branch;
+            expr.then_expr().accept(*this);
+            then_expr = m_target->value();
+        } else {
+            m_target->m_dead_branch = true;
+            expr.then_expr().accept(*this);
+            then_expr = m_target->value();
+            m_target->m_dead_branch = parent_dead_branch;
+            expr.else_expr().accept(*this);
+            else_expr = m_target->value();
+        }
+        m_target->m_value.uses_location_counter = if_expr.uses_location_counter || then_expr.uses_location_counter || else_expr.uses_location_counter;
     }
 
     void visit(const class SectionExpression& expr) override
@@ -321,11 +353,11 @@ public:
             // We're referring to the same symbol currently being assigned
             // so we should refer to the previous definition of the symbol
             // instead.
-            m_target->m_value = m_target->previous_exists();
+            m_target->m_value = { m_target->previous_exists() };
         } else {
             // Refer to the latest definition of all other symbols.
             auto it = g_script.symbol_lookup.find(expr.symbol());
-            m_target->m_value = it != g_script.symbol_lookup.end();
+            m_target->m_value = { it != g_script.symbol_lookup.end() };
         }
     }
 
@@ -349,7 +381,10 @@ public:
 
     void visit(const class LocationCounterExpression& expr) override
     {
-        throw DiagnosticError(expr.location(), "error: invalid context for location counter");
+        if (m_target->kind() != DefinitionKind::OutputSectionVMA &&
+            m_target->kind() != DefinitionKind::OutputSectionLMA)
+            throw DiagnosticError(expr.location(), "error: invalid context for location counter");
+        m_target->m_value = { 0, DefinitionValueType::LocationCounter };
     }
 
 private:
@@ -360,11 +395,13 @@ void Script::EvaluateDefinitions()
 {
     for (auto definition : definition_order) {
         if (definition->kind() != DefinitionKind::SectionScopeSymbol &&
-            definition->kind() != DefinitionKind::OutputSectionVMA &&
-            definition->kind() != DefinitionKind::OutputSectionLMA &&
             definition->kind() != DefinitionKind::Assertion) {
             EvaluationVisitor evaluate(definition);
             definition->expression().accept(evaluate);
+            if ((definition->kind() == DefinitionKind::OutputSectionVMA ||
+                 definition->kind() == DefinitionKind::OutputSectionLMA) &&
+                    definition->value().type == DefinitionValueType::ModifiedLocationCounter)
+                throw DiagnosticError(definition->location(), "error: unsupported use of location counter in output section address");
 //            std::cout << definition->dump(identifiers) << std::endl;
         }
     }
