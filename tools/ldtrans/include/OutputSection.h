@@ -156,14 +156,15 @@ public:
 class OutputSectionLocationMarker : public OutputSectionItem
 {
 public:
-    OutputSectionLocationMarker(SourceLocation location, IdentifierId anchor) : OutputSectionItem(location), m_anchor(anchor) {}
+    OutputSectionLocationMarker(SourceLocation location, unsigned index) : OutputSectionItem(location), m_index(index) {}
     std::string dump(const IdentifierManager& ids) const override
     {
-        return "    anchor: " + ids.toDisplayName(m_anchor) + "\n";
+        return "    anchor: " + std::to_string(m_index) + "\n";
     }
     void accept(ConstOutputSectionItemVisitor& visitor) override { visitor.visit(*this); }
+    unsigned index() const { return m_index; }
 private:
-    IdentifierId m_anchor;
+    unsigned m_index;
 };
 
 class OutputSectionAlign : public OutputSectionItem

@@ -246,11 +246,11 @@ public:
     void accept(ExpressionVisitor& visitor) override { visitor.visit(*this); }
     void accept(ConstExpressionVisitor& visitor) const override { visitor.visit(*this); }
     SourceLocation location() const override { return m_location; }
-    void set_anchor(IdentifierId anchor) { m_anchor = anchor; }
-    std::optional<IdentifierId> anchor() const { return m_anchor; }
+    void set_anchor(unsigned index) { m_index = index; }
+    std::optional<unsigned> index() const { return m_index; }
 private:
     SourceLocation m_location;
-    std::optional<IdentifierId> m_anchor; /* used for generating a name for this location */
+    std::optional<unsigned> m_index; /* uniquely identifies this location */
 };
 
 
@@ -276,16 +276,16 @@ public:
         expr.sub_expr().accept(*this);
         switch (expr.operation()) {
         case UnaryOperator::Plus:
-            m_result = std::string("+(") + m_result + ")";
+            m_result = std::string("(+") + m_result + ")";
             break;
         case UnaryOperator::Minus:
-            m_result = std::string("-(") + m_result + ")";
+            m_result = std::string("(-") + m_result + ")";
             break;
         case UnaryOperator::BitwiseNot:
-            m_result = std::string("~(") + m_result + ")";
+            m_result = std::string("(~") + m_result + ")";
             break;
         case UnaryOperator::LogicalNot:
-            m_result = std::string("!(") + m_result + ")";
+            m_result = std::string("(!") + m_result + ")";
             break;
         case UnaryOperator::Align:
             m_result = std::string("ALIGN(") + m_result + ")";

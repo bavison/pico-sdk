@@ -468,10 +468,10 @@ public:
 
     void visit(const OutputSectionNop& item) override { /* nothing to do */ }
 
-    void visit(const OutputSectionLocationMarker&) override
+    void visit(const OutputSectionLocationMarker& item) override
     {
         auto subblock = std::make_unique<Block>(
-                BlockName::next("anchor")
+                "ldtrans_anchor_" + std::to_string(item.index())
         );
         auto entry = std::make_unique<SubBlock>(std::move(subblock));
         m_main_block->push_back(std::move(entry));
@@ -645,6 +645,239 @@ static std::pair<std::unique_ptr<Block>, std::unique_ptr<Block>> build_blocks(
     return { std::move(main_block), std::move(init_block) };
 }
 
+static std::string format_uint64(uint64_t value, SourceLocation location)
+{
+    char buffer[2 + 16 + 1] = "0x"; // includes null terminator, wherever that is
+    auto [ptr, ec] = std::to_chars(buffer + 2, buffer + 2 + 16, value, 16);
+    if (ec != std::errc{})
+        throw DiagnosticError(location, "error: unable to represent integer");
+    return buffer;
+}
+
+class FormatVisitor : public ConstExpressionVisitor
+{
+public:
+    explicit FormatVisitor(bool provide_scope) : m_provide_scope(provide_scope) {}
+
+    void visit(const SymbolExpression& expr) override
+    {
+        if (m_provide_scope) {
+            if (auto it = g_script.symbol_lookup.find(expr.identifier()); it == g_script.symbol_lookup.end()) {
+                Diagnostic warning (expr.location(), "warning: undefined symbol within PROVIDE, skipping");
+                std::cerr << warning.format();
+                m_skip_me = true;
+            }
+        }
+        m_result = g_script.identifiers.toRaw(expr.identifier());
+        m_precedence = IarOperatorPrecedence::Operand;
+    }
+
+    void visit(const IntegerExpression& expr) override
+    {
+        m_result = format_uint64(expr.value(), expr.location());
+        m_precedence = IarOperatorPrecedence::Operand;
+    }
+
+    void visit(const UnaryExpression& expr) override
+    {
+        expr.sub_expr().accept(*this);
+        /* Note that IAR requires parentheses when nesting one unary operator within another */
+        if (m_precedence <= IarOperatorPrecedence::Unary)
+            m_result = "(" + m_result + ")";
+        switch (expr.operation()) {
+        case UnaryOperator::Plus:
+            m_result = "+" + m_result;
+            break;
+        case UnaryOperator::Minus:
+            m_result = "-" + m_result;
+            break;
+        case UnaryOperator::BitwiseNot:
+            m_result = "~" + m_result;
+            break;
+        case UnaryOperator::LogicalNot:
+            m_result = "!" + m_result;
+            break;
+        case UnaryOperator::Align:
+            throw DiagnosticError(expr.location(), "error: ALIGN only supported in assignments to location counter");
+        default:
+            throw DiagnosticError(expr.location(), "error: unable to represent subexpression");
+        }
+        m_precedence = IarOperatorPrecedence::Unary;
+    }
+
+    void visit(const BinaryExpression& expr) override
+    {
+        IarOperatorPrecedence precedence;
+        bool left_associative; /* whether we need to add parentheses to right subexprs of same precedence */
+        const char* op;
+        switch (expr.operation()) {
+        case BinaryOperator::Multiply:
+            precedence = IarOperatorPrecedence::Multiplicative;
+            left_associative = false;
+            op = " * ";
+            break;
+        case BinaryOperator::Add:
+            precedence = IarOperatorPrecedence::Additive;
+            left_associative = false;
+            op = " + ";
+            break;
+        case BinaryOperator::Subtract:
+            precedence = IarOperatorPrecedence::Additive;
+            left_associative = true;
+            op = " - ";
+            break;
+        case BinaryOperator::GreaterOrEqual:
+            precedence = IarOperatorPrecedence::Relational;
+            left_associative = true;
+            op = " >= ";
+            break;
+        case BinaryOperator::Greater:
+            precedence = IarOperatorPrecedence::Relational;
+            left_associative = true;
+            op = " > ";
+            break;
+        case BinaryOperator::LessOrEqual:
+            precedence = IarOperatorPrecedence::Relational;
+            left_associative = true;
+            op = " <= ";
+            break;
+        case BinaryOperator::Less:
+            precedence = IarOperatorPrecedence::Relational;
+            left_associative = true;
+            op = " < ";
+            break;
+        case BinaryOperator::Equal:
+            precedence = IarOperatorPrecedence::Equality;
+            left_associative = true;
+            op = " == ";
+            break;
+        case BinaryOperator::BitwiseAnd:
+            precedence = IarOperatorPrecedence::BitwiseAnd;
+            left_associative = false;
+            op = " & ";
+            break;
+        case BinaryOperator::Max:
+            /* do nothing - handled separately */
+            break;
+        default:
+            throw DiagnosticError(expr.location(), "error: unable to represent subexpression");
+        }
+
+        expr.left_expr().accept(*this);
+        auto left_expr = std::move(m_result);
+        auto left_precedence = m_precedence;
+        expr.right_expr().accept(*this);
+        auto right_expr = std::move(m_result);
+        auto right_precedence = m_precedence;
+
+        if (expr.operation() == BinaryOperator::Max) {
+            m_result = "max(" + left_expr + ", " + right_expr + ")";
+            m_precedence = IarOperatorPrecedence::Operand;
+        } else {
+            if (left_precedence < precedence)
+                left_expr = "(" + left_expr + ")";
+            if (right_precedence < precedence || (right_precedence == precedence && left_associative))
+                right_expr = "(" + right_expr + ")";
+            m_result = left_expr + op + right_expr;
+            m_precedence = precedence;
+        }
+    }
+
+    void visit(const TernaryExpression& expr) override
+    {
+        expr.if_expr().accept(*this);
+        auto if_expr = std::move(m_result);
+        auto if_precedence = m_precedence;
+        expr.then_expr().accept(*this);
+        auto then_expr = std::move(m_result);
+        expr.else_expr().accept(*this);
+        auto else_expr = std::move(m_result);
+
+        /* Since the ternary operator is already the lowest precedence, and is right associative,
+         * the only place we might need to add parentheses is the left (if) subexpression */
+        if (if_precedence == IarOperatorPrecedence::Ternary)
+            if_expr = "(" + if_expr + ")";
+
+        m_result = if_expr + " ? " + then_expr + " : " + else_expr;
+        m_precedence = IarOperatorPrecedence::Ternary;
+    }
+
+    void visit(const SectionExpression& expr) override
+    {
+        switch (expr.operation()) {
+        case SectionOperator::AlignOf:
+            if (m_provide_scope) {
+                Diagnostic warning(expr.location(), "warning: ALIGNOF encountered, but within PROVIDE, so skipping");
+                std::cerr << warning.format();
+                m_result = "<unsupported>";
+                m_skip_me = true;
+            } else {
+                throw DiagnosticError(expr.location(), "error: ALIGNOF encountered");
+            }
+            break;
+        case SectionOperator::LoadAddr:
+            /* This one is exactly the same in IAR syntax! */
+            m_result = std::string("LOADADDR(") + g_script.identifiers.toRaw(expr.section()) + ")";
+            break;
+        case SectionOperator::SizeOf:
+            m_result = std::string("SIZE(") + g_script.identifiers.toRaw(expr.section()) + ")";
+            break;
+        default:
+            throw DiagnosticError(expr.location(), "error: unable to represent subexpression");
+        }
+        m_precedence = IarOperatorPrecedence::Operand;
+    }
+
+    void visit(const DefinedExpression& expr) override
+    {
+        m_result = std::string("isdefinedsymbol(") + g_script.identifiers.toRaw(expr.symbol()) + ")";
+        m_precedence = IarOperatorPrecedence::Operand;
+    }
+
+    void visit(const MemoryExpression& expr) override
+    {
+        switch (expr.operation()) {
+        case MemoryOperator::Length:
+            m_result = std::string("size(") + g_script.identifiers.toRaw(expr.memory()) + ")";
+            break;
+        case MemoryOperator::Origin:
+            m_result = std::string("start(") + g_script.identifiers.toRaw(expr.memory()) + ")";
+            break;
+        default:
+            throw DiagnosticError(expr.location(), "error: unable to represent subexpression");
+        }
+        m_precedence = IarOperatorPrecedence::Operand;
+    }
+
+    void visit(const LocationCounterExpression& expr) override
+    {
+        if (!expr.index())
+            throw DiagnosticError(expr.location(), "error: unknown location counter");
+        m_result = "start(ldtrans_anchor_" + std::to_string(*expr.index()) + ")";
+        m_precedence = IarOperatorPrecedence::Operand;
+    }
+
+    std::string result() const { return m_result; }
+    bool skip_me() const { return m_skip_me; }
+
+private:
+    bool m_provide_scope;
+    enum class IarOperatorPrecedence
+    {
+        Ternary,
+        BitwiseAnd,
+        Equality,
+        Relational,
+        Additive,
+        Multiplicative,
+        Unary,
+        Operand,
+    }
+    m_precedence = IarOperatorPrecedence::Operand;
+    std::string m_result;
+    bool m_skip_me = false;
+};
+
 void IarWriter::write(const Script& script, std::filesystem::path& base)
 {
     std::ofstream output_file_stream;
@@ -758,5 +991,44 @@ void IarWriter::write(const Script& script, std::filesystem::path& base)
         for (const auto& block: this_region.second)
             output << "  block " << block << ",\n";
         output << "}\n\n";
+    }
+
+    /* Definitions */
+    for (const auto& def : g_script.definition_order) {
+        FormatVisitor format(def->visibility() != DefinitionVisibility::Standard);
+        switch (def->kind()) {
+        case DefinitionKind::TopLevelSymbol:
+            def->expression().accept(format);
+            if (!format.skip_me())
+                output << "define exported symbol " << g_script.identifiers.toRaw(*def->name()) << " = " << format.result() << ";" << std::endl;
+            break;
+        case DefinitionKind::SectionScopeSymbol:
+            def->expression().accept(format);
+            if (!format.skip_me())
+                output << "define image symbol " << g_script.identifiers.toRaw(*def->name()) << " = " << format.result() << ";" << std::endl;
+            break;
+        case DefinitionKind::OutputSectionVMA:
+        case DefinitionKind::OutputSectionLMA:
+            if (def->value().type == DefinitionValueType::Absolute) {
+                if (!def->value().uses_location_counter)
+                    def->expression().accept(format);
+                if (!format.skip_me()) {
+                    output << "place at address ";
+                    if (def->value().uses_location_counter)
+                        output << format_uint64(def->value().absolute, def->location());
+                    else
+                        output << format.result();
+                    output << " { block " << g_script.identifiers.toRaw(*def->name()) << " };" << std::endl;
+                }
+            }
+            break;
+        case DefinitionKind::Assertion:
+            def->expression().accept(format);
+            if (!format.skip_me())
+                output << "check that " << format.result() << ";" << std::endl;
+            break;
+        default:
+            break;
+        }
     }
 }

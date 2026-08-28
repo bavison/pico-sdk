@@ -51,7 +51,7 @@ struct Script
 
     void SortDefinitions();
     void EvaluateDefinitions();
-    IdentifierId MakeAssertAnchor();
+    unsigned GenerateAnchorIndex();
 };
 
 extern Script g_script;

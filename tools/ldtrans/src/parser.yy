@@ -408,22 +408,23 @@ section_symbol_assignment:
       section_symbol_assignment_alternatives
         {
             bool location_counter_used = false;
-            auto anchor = *$1->name();
-            for_each_location_counter($1->expression(), [anchor, &location_counter_used](LocationCounterExpression& expr) {
+            auto index = g_script.GenerateAnchorIndex();
+            for_each_location_counter($1->expression(), [index, &location_counter_used](LocationCounterExpression& expr) {
                 location_counter_used = true;
-                expr.set_anchor(anchor);
+                expr.set_anchor(index);
             });
             if (location_counter_used)
-                $$ = std::make_shared<OutputSectionLocationMarker>($1->location(), anchor);
+                $$ = std::make_shared<OutputSectionLocationMarker>($1->location(), index);
             else
                 $$ = std::make_shared<OutputSectionNop>();
-            auto it = g_script.symbol_lookup.find(anchor);
+            auto name = *$1->name();
+            auto it = g_script.symbol_lookup.find(name);
             if (it == g_script.symbol_lookup.end()) {
-                g_script.symbol_lookup[anchor] = g_script.symbols.size();
+                g_script.symbol_lookup[name] = g_script.symbols.size();
                 g_script.symbols.emplace_back(Symbol($1));
             } else
                g_script.symbols[it->second].redefine($1);
-//            std::cout << g_script.symbols[g_script.symbol_lookup.find(anchor)->second].dump(g_script.identifiers);
+//            std::cout << g_script.symbols[g_script.symbol_lookup.find(name)->second].dump(g_script.identifiers);
         }
     ;
 
@@ -431,13 +432,13 @@ assert_command:
       ASSERT LPAREN expression COMMA IDENTIFIER RPAREN
         {
             bool location_counter_used = false;
-            auto anchor = g_script.MakeAssertAnchor();
-            for_each_location_counter(*$3, [anchor, &location_counter_used](LocationCounterExpression& expr) {
+            auto index = g_script.GenerateAnchorIndex();
+            for_each_location_counter(*$3, [index, &location_counter_used](LocationCounterExpression& expr) {
                 location_counter_used = true;
-                expr.set_anchor(anchor);
+                expr.set_anchor(index);
             });
             if (location_counter_used)
-                $$ = std::make_shared<OutputSectionLocationMarker>($1, anchor);
+                $$ = std::make_shared<OutputSectionLocationMarker>($1, index);
             else
                 $$ = std::make_shared<OutputSectionNop>();
             g_script.assertions.emplace_back(Assertion{ Definition($1, std::nullopt, $3, DefinitionKind::Assertion), $5.id });

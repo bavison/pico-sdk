@@ -384,7 +384,7 @@ public:
         if (m_target->kind() != DefinitionKind::OutputSectionVMA &&
             m_target->kind() != DefinitionKind::OutputSectionLMA)
             throw DiagnosticError(expr.location(), "error: invalid context for location counter");
-        m_target->m_value = { 0, DefinitionValueType::LocationCounter };
+        m_target->m_value = { 0, DefinitionValueType::LocationCounter, true };
     }
 
 private:
@@ -402,13 +402,13 @@ void Script::EvaluateDefinitions()
                  definition->kind() == DefinitionKind::OutputSectionLMA) &&
                     definition->value().type == DefinitionValueType::ModifiedLocationCounter)
                 throw DiagnosticError(definition->location(), "error: unsupported use of location counter in output section address");
-//            std::cout << definition->dump(identifiers) << std::endl;
+            std::cout << definition->dump(identifiers) << std::endl;
         }
     }
 }
 
-IdentifierId Script::MakeAssertAnchor()
+unsigned Script::GenerateAnchorIndex()
 {
-    static uint32_t assert_index = 0;
-    return g_script.identifiers.toId("ASSERT" + std::to_string(++assert_index));
+    static unsigned index = 0;
+    return ++index;
 }
