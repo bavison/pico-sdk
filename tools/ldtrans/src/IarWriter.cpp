@@ -520,6 +520,19 @@ static std::string iar_identifier(IdentifierId id)
     return iar_identifier(g_script.identifiers.toRaw(id));
 }
 
+static std::string iar_quoted_string(IdentifierId id)
+{
+    auto raw = g_script.identifiers.toRaw(id);
+    std::string result = "\"";
+    for (size_t i = 0; i < raw.size(); ++i) {
+        if (raw[i] == '"')
+            result += '"';
+        result += raw[i];
+    }
+    result += '"';
+    return result;
+}
+
 class ProcessVisitor : public ConstOutputSectionItemVisitor
 {
 public:
@@ -1097,8 +1110,15 @@ void IarWriter::write(const Script& script, std::filesystem::path& base)
             break;
         case DefinitionKind::Assertion:
             def->expression().accept(format);
+            const Assertion* assert;
+            for (const auto &a : g_script.assertions) {
+                if (def == &a.definition) {
+                    assert = &a;
+                    break;
+                }
+            }
             if (!format.skip_me())
-                output << "check that " << format.result() << ";" << std::endl;
+                output << "check that " << format.result() << ", " << iar_quoted_string(assert->message) << ";" << std::endl;
             break;
         default:
             break;
