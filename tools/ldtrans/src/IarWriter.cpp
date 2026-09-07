@@ -715,6 +715,11 @@ static std::pair<std::unique_ptr<Block>, std::unique_ptr<Block>> build_blocks(
     for (auto& item : *os.items)
         item->accept(processor);
 
+    if (os.fill) {
+        Diagnostic warning { os.fill->location, "warning: ignoring output section fill attribute" };
+        std::cerr << warning.format();
+    }
+
     return { std::move(main_block), std::move(init_block) };
 }
 

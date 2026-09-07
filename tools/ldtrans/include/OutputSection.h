@@ -198,10 +198,9 @@ private:
     InputSectionFilterPtr m_filter;
 };
 
-/* Distinct type from IdentifierId (which is typedefed to size_t, matching uint64_t on many platforms)
- * to avoid bison from complaining about type aliasing */
 struct Fill
 {
+    SourceLocation location;
     uint64_t value;
 };
 

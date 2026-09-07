@@ -654,7 +654,7 @@ opt_output_section_fill:
         {
             auto integer = std::dynamic_pointer_cast<IntegerExpression>($2);
             if (integer)
-                $$ = Fill{integer->value()};
+                $$ = Fill{$1, integer->value()};
             else
                 throw DiagnosticError($2->location(), "error: unsupported expression for assignment to fill value");
         }
