@@ -343,11 +343,11 @@ public:
             }
             for (const auto& selection_selector : m_section_selectors) {
                 if (selection_selector.sections && selection_selector.objects)
-                    output << intro << "readwrite section " << *selection_selector.sections << " object " << *selection_selector.objects;
+                    output << intro << "readwrite section " << *selection_selector.sections << " object " << *selection_selector.objects << ",";
                 else if (selection_selector.sections)
-                    output << intro << "readwrite section " << *selection_selector.sections;
+                    output << intro << "readwrite section " << *selection_selector.sections << ",";
                 else if (selection_selector.objects)
-                    output << intro << "object " << *selection_selector.objects;
+                    output << intro << "object " << *selection_selector.objects << ",";
                 intro = "\n  ";
             }
         }
@@ -368,11 +368,11 @@ public:
             }
             for (const auto& selection_selector : m_section_selectors) {
                 if (selection_selector.sections && selection_selector.objects)
-                    output << intro << attribute << " section " << *selection_selector.sections << " object " << *selection_selector.objects;
+                    output << intro << attribute << " section " << *selection_selector.sections << " object " << *selection_selector.objects << ",";
                 else if (selection_selector.sections)
-                    output << intro << attribute << " section " << *selection_selector.sections;
+                    output << intro << attribute << " section " << *selection_selector.sections << ",";
                 else if (selection_selector.objects)
-                    output << intro << "object " << *selection_selector.objects;
+                    output << intro << "object " << *selection_selector.objects << ",";
                 intro = "\n  ";
             }
         }
@@ -940,7 +940,7 @@ public:
     {
         if (!expr.index())
             throw DiagnosticError(expr.location(), "error: unknown location counter");
-        m_result = "start(" + AnchorBlockName::lookup(*expr.index()) + ")";
+        m_result = "ADDR(" + AnchorBlockName::lookup(*expr.index()) + ")";
         m_precedence = IarOperatorPrecedence::Operand;
     }
 
@@ -1077,7 +1077,7 @@ void IarWriter::write(const Script& script, std::filesystem::path& base)
         output << "place in " << iar_identifier(this_region.first) << " {\n";
         for (const auto& block: this_region.second)
             output << "  block " << block << ",\n";
-        output << "}\n\n";
+        output << "};\n\n";
     }
 
     /* Definitions */
