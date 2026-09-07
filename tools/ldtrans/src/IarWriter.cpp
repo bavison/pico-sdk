@@ -6,12 +6,17 @@
 
 #include <fstream>
 #include <iostream>
+#include <unordered_set>
 
 #include "IarWriter.h"
 #include "OutputSection.h"
 
 static IarWriter writer;
 static const bool registered = [] { OutputWriter::register_writer("iar", writer); return true; } ();
+
+/* For propagating untranslatable PROVIDE definitions */
+
+static std::unordered_set<const Definition*> m_untranslatable_definitions;
 
 /* Set theory operations on groups of strings */
 
@@ -716,11 +721,20 @@ public:
 
     void visit(const SymbolExpression& expr) override
     {
-        if (m_provide_scope) {
-            if (auto it = g_script.symbol_lookup.find(expr.identifier()); it == g_script.symbol_lookup.end()) {
+        auto it = g_script.symbol_lookup.find(expr.identifier());
+        if (it == g_script.symbol_lookup.end()) {
+            if (m_provide_scope) {
                 Diagnostic warning (expr.location(), "warning: undefined symbol within PROVIDE, skipping");
                 std::cerr << warning.format();
                 m_skip_me = true;
+            }
+        } else if (m_untranslatable_definitions.find(&g_script.symbols[it->second].definition()) != m_untranslatable_definitions.end()) {
+            if (m_provide_scope) {
+                Diagnostic warning (expr.location(), "warning: reference to skipped symbol within PROVIDE, skipping");
+                std::cerr << warning.format();
+                m_skip_me = true;
+            } else {
+                throw DiagnosticError(expr.location(), "error: reference to skipped symbol");
             }
         }
         m_result = iar_identifier(expr.identifier());
@@ -862,7 +876,7 @@ public:
         switch (expr.operation()) {
         case SectionOperator::AlignOf:
             if (m_provide_scope) {
-                Diagnostic warning(expr.location(), "warning: ALIGNOF encountered, but within PROVIDE, so skipping");
+                Diagnostic warning(expr.location(), "warning: ALIGNOF encountered, but within PROVIDE, skipping");
                 std::cerr << warning.format();
                 m_result = "<unsupported>";
                 m_skip_me = true;
@@ -1050,6 +1064,10 @@ void IarWriter::write(const Script& script, std::filesystem::path& base)
 
     /* Definitions */
     for (const auto& def : g_script.definition_order) {
+        if (def->visibility() != DefinitionVisibility::Standard) {
+            Diagnostic warning { def->location(), std::string("warning: ") + (def->visibility() == DefinitionVisibility::Provide ? "PROVIDE" : "PROVIDE_HIDDEN") + " semantics cannot be expressed in destination format" };
+            std::cerr << warning.format();
+        }
         FormatVisitor format(def->visibility() != DefinitionVisibility::Standard);
         switch (def->kind()) {
         case DefinitionKind::TopLevelSymbol:
@@ -1085,5 +1103,7 @@ void IarWriter::write(const Script& script, std::filesystem::path& base)
         default:
             break;
         }
+        if (format.skip_me())
+            m_untranslatable_definitions.insert(def);
     }
 }
