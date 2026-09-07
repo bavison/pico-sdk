@@ -735,7 +735,7 @@ static std::string format_uint64(uint64_t value, SourceLocation location)
 class FormatVisitor : public ConstExpressionVisitor
 {
 public:
-    explicit FormatVisitor(bool provide_scope) : m_provide_scope(provide_scope) {}
+    explicit FormatVisitor(bool provide_scope, Definition* definition) : m_provide_scope(provide_scope), m_target(definition) {}
 
     void visit(const SymbolExpression& expr) override
     {
@@ -872,6 +872,34 @@ public:
 
     void visit(const TernaryExpression& expr) override
     {
+        /* IAR chokes on the construct
+         * isdefinedsymbol(S) ? <expression involving S> : <expression not involving S>
+         * which is unfortunate. However, the subexopression
+         * isdefinedsymbol(S) is determinable at script generation time,
+         * so we can substitute either the "then" or the "else" clause
+         */
+        auto if_defined = dynamic_cast<const DefinedExpression*>(&expr.if_expr());
+        if (if_defined) {
+            bool definition_found;
+            if (if_defined->symbol() == m_target->name() &&
+                    (m_target->kind() == DefinitionKind::TopLevelSymbol ||
+                     m_target->kind() == DefinitionKind::SectionScopeSymbol)) {
+                // We're referring to the same symbol currently being assigned
+                // so we should refer to the previous definition of the symbol
+                // instead.
+                definition_found = m_target->previous_exists();
+            } else {
+                // Refer to the latest definition of all other symbols.
+                auto it = g_script.symbol_lookup.find(if_defined->symbol());
+                definition_found = it != g_script.symbol_lookup.end();
+            }
+            if (definition_found)
+                expr.then_expr().accept(*this);
+            else
+                expr.else_expr().accept(*this);
+            return;
+        }
+
         expr.if_expr().accept(*this);
         auto if_expr = std::move(m_result);
         auto if_precedence = m_precedence;
@@ -949,6 +977,7 @@ public:
 
 private:
     bool m_provide_scope;
+    Definition* m_target;
     enum class IarOperatorPrecedence
     {
         Ternary,
@@ -1086,7 +1115,7 @@ void IarWriter::write(const Script& script, std::filesystem::path& base)
             Diagnostic warning { def->location(), std::string("warning: ") + (def->visibility() == DefinitionVisibility::Provide ? "PROVIDE" : "PROVIDE_HIDDEN") + " semantics cannot be expressed in destination format" };
             std::cerr << warning.format();
         }
-        FormatVisitor format(def->visibility() != DefinitionVisibility::Standard);
+        FormatVisitor format(def->visibility() != DefinitionVisibility::Standard, def);
         switch (def->kind()) {
         case DefinitionKind::TopLevelSymbol:
             def->expression().accept(format);
@@ -1114,6 +1143,7 @@ void IarWriter::write(const Script& script, std::filesystem::path& base)
             }
             break;
         case DefinitionKind::Assertion:
+#if 0 // IAR "check that" can't reference image symbols at present, making this of very limited use!
             def->expression().accept(format);
             const Assertion* assert;
             for (const auto &a : g_script.assertions) {
@@ -1124,6 +1154,7 @@ void IarWriter::write(const Script& script, std::filesystem::path& base)
             }
             if (!format.skip_me())
                 output << "check that " << format.result() << ", " << iar_quoted_string(assert->message) << ";" << std::endl;
+#endif
             break;
         default:
             break;
