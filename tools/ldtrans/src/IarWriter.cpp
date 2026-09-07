@@ -484,6 +484,37 @@ static std::string iar_filespec(const FileSpec& generic)
     }
 }
 
+static std::string iar_identifier(const std::string& raw)
+{
+    bool needs_quoting = raw.empty();
+    auto invalid_first_char = [](unsigned char c) {
+        return !isalpha(c) && c != '_' && c != '.';
+    };
+    if (!needs_quoting)
+        needs_quoting = invalid_first_char(raw[0]);
+    auto invalid_later_char = [](unsigned char c) {
+        return !isalnum(c) && c != '_' && c != '.';
+    };
+    for (size_t i = 1; !needs_quoting && i < raw.size(); ++i)
+        needs_quoting = invalid_later_char(raw[i]);
+    if (!needs_quoting)
+        return raw;
+
+    std::string result = "`";
+    for (size_t i = 0; i < raw.size(); ++i) {
+        if (raw[i] == '`')
+            result += '`';
+        result += raw[i];
+    }
+    result += '`';
+    return result;
+}
+
+static std::string iar_identifier(IdentifierId id)
+{
+    return iar_identifier(g_script.identifiers.toRaw(id));
+}
+
 class ProcessVisitor : public ConstOutputSectionItemVisitor
 {
 public:
@@ -645,7 +676,7 @@ static std::pair<std::unique_ptr<Block>, std::unique_ptr<Block>> build_blocks(
     bool uninitialised = os.noload;
     bool writable = initialised || uninitialised;
     std::unique_ptr<Block> main_block = std::make_unique<Block>(
-            g_script.identifiers.toRaw(os.name),
+            iar_identifier(os.name),
             os.vma,
             os.vma_region,
             "",
@@ -657,7 +688,7 @@ static std::pair<std::unique_ptr<Block>, std::unique_ptr<Block>> build_blocks(
     std::unique_ptr<Block> init_block;
     if (initialised)
         init_block = std::make_unique<Block>(
-                g_script.identifiers.toRaw(os.name) + "_init",
+                iar_identifier(g_script.identifiers.toRaw(os.name) + "_init"),
                 os.lma,
                 os.lma_region
         );
@@ -692,7 +723,7 @@ public:
                 m_skip_me = true;
             }
         }
-        m_result = g_script.identifiers.toRaw(expr.identifier());
+        m_result = iar_identifier(expr.identifier());
         m_precedence = IarOperatorPrecedence::Operand;
     }
 
@@ -841,10 +872,10 @@ public:
             break;
         case SectionOperator::LoadAddr:
             /* This one is exactly the same in IAR syntax! */
-            m_result = std::string("LOADADDR(") + g_script.identifiers.toRaw(expr.section()) + ")";
+            m_result = std::string("LOADADDR(") + iar_identifier(expr.section()) + ")";
             break;
         case SectionOperator::SizeOf:
-            m_result = std::string("SIZE(") + g_script.identifiers.toRaw(expr.section()) + ")";
+            m_result = std::string("SIZE(") + iar_identifier(expr.section()) + ")";
             break;
         default:
             throw DiagnosticError(expr.location(), "error: unable to represent subexpression");
@@ -854,7 +885,7 @@ public:
 
     void visit(const DefinedExpression& expr) override
     {
-        m_result = std::string("isdefinedsymbol(") + g_script.identifiers.toRaw(expr.symbol()) + ")";
+        m_result = std::string("isdefinedsymbol(") + iar_identifier(expr.symbol()) + ")";
         m_precedence = IarOperatorPrecedence::Operand;
     }
 
@@ -862,10 +893,10 @@ public:
     {
         switch (expr.operation()) {
         case MemoryOperator::Length:
-            m_result = std::string("size(") + g_script.identifiers.toRaw(expr.memory()) + ")";
+            m_result = std::string("size(") + iar_identifier(expr.memory()) + ")";
             break;
         case MemoryOperator::Origin:
-            m_result = std::string("start(") + g_script.identifiers.toRaw(expr.memory()) + ")";
+            m_result = std::string("start(") + iar_identifier(expr.memory()) + ")";
             break;
         default:
             throw DiagnosticError(expr.location(), "error: unable to represent subexpression");
@@ -940,7 +971,7 @@ void IarWriter::write(const Script& script, std::filesystem::path& base)
                 }
             }
         }
-        output << "define " << (ram ? "ram" : "rom") << " region " << g_script.identifiers.toRaw(region.name());
+        output << "define " << (ram ? "ram" : "rom") << " region " << iar_identifier(region.name());
         output << " = mem:[from " << std::hex << std::showbase << origin;
         output << " size " << std::hex << std::showbase << length;
         output << "];" << std::endl;
@@ -991,7 +1022,7 @@ void IarWriter::write(const Script& script, std::filesystem::path& base)
         if ((os->vma && os->vma->value().type == DefinitionValueType::LocationCounter) || (os->vma_region && !os->vma)) {
             if (!current_vma_region)
                 throw DiagnosticError( os->location, "error: cannot determine VMA region for output section");
-            block_mapping[*current_vma_region].emplace_back(g_script.identifiers.toRaw(os->name));
+            block_mapping[*current_vma_region].emplace_back(iar_identifier(os->name));
         }
 
         /* With LMA, there's no equivalent persistence mechanism so we recalculate it each time */
@@ -1007,11 +1038,11 @@ void IarWriter::write(const Script& script, std::filesystem::path& base)
         if ((os->lma && os->lma->value().type == DefinitionValueType::LocationCounter) || (os->lma_region && !os->lma)) {
             if (!current_vma_region)
                 throw DiagnosticError( os->location, "error: cannot determine LMA region for output section");
-            block_mapping[*current_lma_region].emplace_back(g_script.identifiers.toRaw(os->name) + "_init");
+            block_mapping[*current_lma_region].emplace_back(iar_identifier(os->name) + "_init");
         }
     }
     for (const auto& this_region : block_mapping) {
-        output << "place in " << g_script.identifiers.toRaw(this_region.first) << " {\n";
+        output << "place in " << iar_identifier(this_region.first) << " {\n";
         for (const auto& block: this_region.second)
             output << "  block " << block << ",\n";
         output << "}\n\n";
@@ -1024,12 +1055,12 @@ void IarWriter::write(const Script& script, std::filesystem::path& base)
         case DefinitionKind::TopLevelSymbol:
             def->expression().accept(format);
             if (!format.skip_me())
-                output << "define exported symbol " << g_script.identifiers.toRaw(*def->name()) << " = " << format.result() << ";" << std::endl;
+                output << "define exported symbol " << iar_identifier(*def->name()) << " = " << format.result() << ";" << std::endl;
             break;
         case DefinitionKind::SectionScopeSymbol:
             def->expression().accept(format);
             if (!format.skip_me())
-                output << "define image symbol " << g_script.identifiers.toRaw(*def->name()) << " = " << format.result() << ";" << std::endl;
+                output << "define image symbol " << iar_identifier(*def->name()) << " = " << format.result() << ";" << std::endl;
             break;
         case DefinitionKind::OutputSectionVMA:
         case DefinitionKind::OutputSectionLMA:
@@ -1042,7 +1073,7 @@ void IarWriter::write(const Script& script, std::filesystem::path& base)
                         output << format_uint64(def->value().absolute, def->location());
                     else
                         output << format.result();
-                    output << " { block " << g_script.identifiers.toRaw(*def->name()) << " };" << std::endl;
+                    output << " { block " << iar_identifier(*def->name()) << " };" << std::endl;
                 }
             }
             break;

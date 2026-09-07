@@ -25,6 +25,8 @@ std::queue<std::unique_ptr<TopLevelSource>> g_input_queue;
 
 int main(int argc, char* argv[])
 {
+    std::setlocale(LC_CTYPE, "C");
+
     try {
         auto usage = [](int status) {
             std::cerr << "usage: ldtrans [ldtrans-options] -- [ld-options]\n";
