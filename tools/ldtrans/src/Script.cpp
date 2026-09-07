@@ -402,7 +402,7 @@ void Script::EvaluateDefinitions()
                  definition->kind() == DefinitionKind::OutputSectionLMA) &&
                     definition->value().type == DefinitionValueType::ModifiedLocationCounter)
                 throw DiagnosticError(definition->location(), "error: unsupported use of location counter in output section address");
-            std::cout << definition->dump(identifiers) << std::endl;
+//            std::cout << definition->dump(identifiers) << std::endl;
         }
     }
 }

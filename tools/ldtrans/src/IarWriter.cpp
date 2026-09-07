@@ -222,6 +222,30 @@ private:
 
 std::unordered_map<std::string, unsigned> BlockName::m_next_indices;
 
+/* Anchor block indexes generated during parsing can have gaps due to the
+ * nature of a GLR parser (some reductions get discarded) so compact them
+ * back again at output time using a map
+ */
+
+class AnchorBlockName
+{
+public:
+    static std::string next(unsigned index)
+    {
+        return m_names[index] = BlockName::next("anchor");
+    }
+
+    static std::string lookup(unsigned index)
+    {
+        return m_names.at(index);
+    }
+
+private:
+    static std::unordered_map<unsigned, std::string> m_names;
+};
+
+std::unordered_map<unsigned, std::string> AnchorBlockName::m_names;
+
 /* Generated block and sub-block representation */
 
 struct InitialiseDirectiveOutputState
@@ -471,7 +495,7 @@ public:
     void visit(const OutputSectionLocationMarker& item) override
     {
         auto subblock = std::make_unique<Block>(
-                "ldtrans_anchor_" + std::to_string(item.index())
+                AnchorBlockName::next(item.index())
         );
         auto entry = std::make_unique<SubBlock>(std::move(subblock));
         m_main_block->push_back(std::move(entry));
@@ -853,7 +877,7 @@ public:
     {
         if (!expr.index())
             throw DiagnosticError(expr.location(), "error: unknown location counter");
-        m_result = "start(ldtrans_anchor_" + std::to_string(*expr.index()) + ")";
+        m_result = "start(" + AnchorBlockName::lookup(*expr.index()) + ")";
         m_precedence = IarOperatorPrecedence::Operand;
     }
 
