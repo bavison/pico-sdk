@@ -1,0 +1,19 @@
+SECTIONS
+{
+    /* Second stage bootloader is prepended to the image.
+       Padding and checksumming is achieved by the linker, which also generates the .checksum section.
+    */
+
+    .boot2 ORIGIN(TEXT_STORE) : {
+        __boot2_start__ = .;
+        KEEP (*(.boot2))
+        __boot2_end__ = .;
+    }
+
+    ASSERT(__boot2_end__ - __boot2_start__ <= 252,
+        "ERROR: Pico second stage bootloader must be exactly 256 bytes in size for RP2040 after padding and checksumming")
+
+    .checksum ORIGIN(TEXT_STORE) + 252 : {
+        KEEP (*(.checksum))
+    }
+}
