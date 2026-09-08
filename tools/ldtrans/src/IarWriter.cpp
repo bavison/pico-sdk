@@ -955,12 +955,14 @@ public:
 
     void visit(const MemoryExpression& expr) override
     {
+        /* Dereference aliases */
+        auto region_name = iar_identifier(g_script.memory_regions[g_script.memory_region_lookup[expr.memory()]].name());
         switch (expr.operation()) {
         case MemoryOperator::Length:
-            m_result = std::string("size(") + iar_identifier(expr.memory()) + ")";
+            m_result = std::string("size(") + region_name + ")";
             break;
         case MemoryOperator::Origin:
-            m_result = std::string("start(") + iar_identifier(expr.memory()) + ")";
+            m_result = std::string("start(") + region_name + ")";
             break;
         default:
             throw DiagnosticError(expr.location(), "error: unable to represent subexpression");
