@@ -21,7 +21,7 @@ void __weak hard_assertion_failure(void) {
     panic("Hard assert");
 }
 
-static void runtime_run_initializers_from(uintptr_t *from) {
+static void runtime_run_initializers_from(const uintptr_t *from) {
 
     // Start and end points of the constructor list,
     // defined by the linker script.
@@ -36,7 +36,7 @@ static void runtime_run_initializers_from(uintptr_t *from) {
     // Call each function in the list, based on the mask
     // We have to take the address of the symbols, as __preinit_array_start *is*
     // the first function value, not the address of it.
-    for (uintptr_t *p = from; p < p__preinit_array_end; p++) {
+    for (const uintptr_t *p = from; p < p__preinit_array_end; p++) {
         uintptr_t val = *p;
         ((void (*)(void))val)();
     }

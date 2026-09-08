@@ -132,7 +132,7 @@ weak_wrapper_func               macro           x
                                 endm
 
 __pre_init                      macro           func, priority_string
-                                section         `.preinit_array.\2`:DATA:ROOT(2)
+                                section         `.preinit_array.\2`:CONST:ROOT(2)
                                 alignrom        2
                                 dc32            func
                                 endm
