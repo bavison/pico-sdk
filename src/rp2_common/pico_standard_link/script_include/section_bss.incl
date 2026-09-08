@@ -23,7 +23,7 @@ SECTIONS
 
         *(SORT_BY_ALIGNMENT(SORT_BY_NAME(.bss*)))
         *(COMMON)
-        PROVIDE(__global_pointer$ = . + 2K);
+        PROVIDE("__global_pointer$" = . + 2K);
         *(.sbss*)
         . = ALIGN(4);
         __bss_end__ = .;
