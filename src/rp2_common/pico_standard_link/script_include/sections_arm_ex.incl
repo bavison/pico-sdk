@@ -9,10 +9,10 @@ SECTIONS
         *(.ARM.extab* .gnu.linkonce.armextab.*)
     } > TEXT_STORE
 
-    __exidx_start = .;
     .ARM.exidx :
     {
+        __exidx_start = .;
         *(.ARM.exidx* .gnu.linkonce.armexidx.*)
+        __exidx_end = .;
     } > TEXT_STORE
-    __exidx_end = .;
 }

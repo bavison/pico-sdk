@@ -25,7 +25,7 @@ SECTIONS
         *(.eh_frame*)
         . = ALIGN(4);
         __ram_text_end__ = .;
+        . = ALIGN(4);
     } > RAM AT> RAM_STORE
     __ram_text_source__ = LOADADDR(.text);
-    . = ALIGN(4);
 }
