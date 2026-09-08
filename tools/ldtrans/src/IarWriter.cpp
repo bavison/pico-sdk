@@ -342,10 +342,14 @@ public:
                 intro = "\n  ";
             }
             for (const auto& selection_selector : m_section_selectors) {
+                /* Do not qualify section names with a readwrite attribute here.
+                 * This is critical for allowing a subset of code sections
+                 * (which won't match readwrite) to be accelerated by copying them to RAM.
+                 */
                 if (selection_selector.sections && selection_selector.objects)
-                    output << intro << "readwrite section " << *selection_selector.sections << " object " << *selection_selector.objects << ",";
+                    output << intro << "section " << *selection_selector.sections << " object " << *selection_selector.objects << ",";
                 else if (selection_selector.sections)
-                    output << intro << "readwrite section " << *selection_selector.sections << ",";
+                    output << intro << "section " << *selection_selector.sections << ",";
                 else if (selection_selector.objects)
                     output << intro << "object " << *selection_selector.objects << ",";
                 intro = "\n  ";
