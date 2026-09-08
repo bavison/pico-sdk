@@ -1,6 +1,8 @@
 SECTIONS
 {
-    PROVIDE(__overlays_start__ = .);
+    PRE_OVERLAY : {
+        PROVIDE(__overlays_start__ = .);
+    } > RAM AT> RAM_STORE
     OVERLAY : {
         .overlay_first {
             KEEP (*(.first*))
@@ -11,5 +13,7 @@ SECTIONS
             . = ALIGN(4);
         }
     } > RAM AT> RAM_STORE
-    PROVIDE(__overlays_end__ = .);
+    POST_OVERLAY : {
+        PROVIDE(__overlays_end__ = .);
+    } > RAM AT> RAM_STORE
 }
