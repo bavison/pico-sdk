@@ -51,7 +51,7 @@ void runtime_run_initializers(void);
 void runtime_run_per_core_initializers(void);
 
 #ifndef PICO_RUNTIME_INIT_FUNC
-#define PICO_RUNTIME_INIT_FUNC(func, priority_string) uintptr_t __used __attribute__((section(".preinit_array." priority_string))) __pre_init_ ## func = (uintptr_t)(void (*)(void)) (func)
+#define PICO_RUNTIME_INIT_FUNC(func, priority_string) const uintptr_t __used __attribute__((section(".preinit_array." priority_string))) __pre_init_ ## func = (uintptr_t)(void (*)(void)) (func)
 #endif
 #else
 #ifndef PICO_RUNTIME_INIT_FUNC
