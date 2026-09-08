@@ -1107,10 +1107,12 @@ void IarWriter::write(const Script& script, std::filesystem::path& base)
         }
     }
     for (const auto& this_region : block_mapping) {
-        output << "place in " << iar_identifier(this_region.first) << " {\n";
+        auto block_name = BlockName::next("region");
+        output << "define block " << block_name << " with fixed order {\n";
         for (const auto& block: this_region.second)
             output << "  block " << block << ",\n";
         output << "};\n\n";
+        output << "place in " << iar_identifier(this_region.first) << " { block " << block_name << " };\n\n";
     }
 
     /* Definitions */
