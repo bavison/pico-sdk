@@ -1,0 +1,10 @@
+/* Place linker-generated section for IAR users at the end of flash if there
+   is any, otherwise after the text part of the image
+*/
+
+SECTIONS
+{
+    .iar.init_table : {
+        *(.iar.init_table)
+    } > TEXT_STORE
+}
