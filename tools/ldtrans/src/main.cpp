@@ -19,6 +19,7 @@
 #include "main.h"
 #include "OutputWriter.h"
 #include "parser.hpp"
+#include "version.h"
 
 /* Queue of top-level files to process */
 std::queue<std::unique_ptr<TopLevelSource>> g_input_queue;
@@ -30,6 +31,19 @@ int main(int argc, char* argv[])
     try {
         auto usage = [](int status) {
             std::cerr << "usage: ldtrans [ldtrans-options] -- [ld-options]\n";
+            std::cerr << "ldtrans-options:\n";
+            std::cerr << "  -h           --help                   print this usage information\n";
+            std::cerr << "  -f <format>  --format=<format>        set output format\n";
+            std::cerr << "  -o <file>     --output=<file>         set output file (- for stdout)\n";
+            std::cerr << "  -v            --version               print version info\n";
+            std::cerr << "supported ld-options:\n";
+            std::cerr << "  --defsym=<assignment>                 predefine symbol\n";
+            std::cerr << "  --gc-sections                         ignored\n";
+            std::cerr << "  -L<path>                              add to include search path\n";
+            std::cerr << "  -Map=<file>                           ignored\n";
+            std::cerr << "  --script=<file>                       add to input scripts\n";
+            std::cerr << "  --wrap=<symbol>                       ignored\n";
+            std::cerr << "   -z <keyword>                         ignored\n";
             exit(status);
         };
         auto option = [](std::string_view str,
@@ -59,6 +73,8 @@ int main(int argc, char* argv[])
                 output_base = *a;
             } else if (arg == "-v" || arg == "--version") {
                 // Print version information
+                std::cout << "ldtrans version: " LDTRANS_VERSION_STRING << std::endl;
+                exit(EXIT_SUCCESS);
             } else if (arg == "--") {
                 // Move on to ld options
                 break;

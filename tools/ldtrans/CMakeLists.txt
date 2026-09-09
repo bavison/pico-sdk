@@ -52,3 +52,9 @@ if (MINGW)
 endif()
 
 install(TARGETS ldtrans)
+
+if (NOT LDTRANS_VERSION_STRING)
+    message(FATAL_ERROR "LDTRANS_VERSION_STRING must be provided when building ldtrans")
+endif()
+
+configure_file( ${CMAKE_CURRENT_LIST_DIR}/version.h.in ${CMAKE_BINARY_DIR}/version.h)
