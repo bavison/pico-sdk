@@ -333,28 +333,31 @@ public:
         if (writable) {
             const char *intro;
             InitialiseDirectiveOutputState::OpenDirective new_open_directive = uninitialised ? InitialiseDirectiveOutputState::OpenDirective::DoNot : InitialiseDirectiveOutputState::OpenDirective::ByCopy;
-            if (new_open_directive != state.open_directive || except_objects != state.except_objects) {
-                state.close(output);
-                if (uninitialised)
-                    intro = "do not initialize {\n  ";
-                else
-                    intro = "initialize by copy {\n  ";
-                state.open_directive = new_open_directive;
-                state.except_objects = except_objects;
-            } else {
-                intro = "\n  ";
-            }
-            for (const auto& selection_selector : m_section_selectors) {
+            for (const auto& section_selector : m_section_selectors) {
+                if (section_selector.sections &&
+                    std::find(g_script.zero_init_sections.begin(), g_script.zero_init_sections.end(), *section_selector.sections) != g_script.zero_init_sections.end())
+                    continue;
+                if (new_open_directive != state.open_directive || except_objects != state.except_objects) {
+                    state.close(output);
+                    if (uninitialised)
+                        intro = "do not initialize {\n  ";
+                    else
+                        intro = "initialize by copy {\n  ";
+                    state.open_directive = new_open_directive;
+                    state.except_objects = except_objects;
+                } else {
+                    intro = "\n  ";
+                }
                 /* Do not qualify section names with a readwrite attribute here.
                  * This is critical for allowing a subset of code sections
                  * (which won't match readwrite) to be accelerated by copying them to RAM.
                  */
-                if (selection_selector.sections && selection_selector.objects)
-                    output << intro << "section " << *selection_selector.sections << " object " << *selection_selector.objects << ",";
-                else if (selection_selector.sections)
-                    output << intro << "section " << *selection_selector.sections << ",";
-                else if (selection_selector.objects)
-                    output << intro << "object " << *selection_selector.objects << ",";
+                if (section_selector.sections && section_selector.objects)
+                    output << intro << "section " << *section_selector.sections << " object " << *section_selector.objects << ",";
+                else if (section_selector.sections)
+                    output << intro << "section " << *section_selector.sections << ",";
+                else if (section_selector.objects)
+                    output << intro << "object " << *section_selector.objects << ",";
                 intro = "\n  ";
             }
         }
@@ -363,7 +366,6 @@ public:
     void output_keep_directives(std::ostream& output, KeepDirectiveOutputState& state, std::string except_objects, bool writable) const override
     {
         if (m_keep) {
-            const char* attribute = writable ? "readwrite" : "readonly";
             const char* intro;
             if (!state.open || except_objects != state.except_objects) {
                 state.close(output);
@@ -373,13 +375,17 @@ public:
             } else {
                 intro = "\n  ";
             }
-            for (const auto& selection_selector : m_section_selectors) {
-                if (selection_selector.sections && selection_selector.objects)
-                    output << intro << attribute << " section " << *selection_selector.sections << " object " << *selection_selector.objects << ",";
-                else if (selection_selector.sections)
-                    output << intro << attribute << " section " << *selection_selector.sections << ",";
-                else if (selection_selector.objects)
-                    output << intro << "object " << *selection_selector.objects << ",";
+            for (const auto& section_selector : m_section_selectors) {
+                const char* attribute = writable ? "readwrite" : "readonly";
+                if (section_selector.sections &&
+                        std::find(g_script.zero_init_sections.begin(), g_script.zero_init_sections.end(), *section_selector.sections) != g_script.zero_init_sections.end())
+                    attribute = "zeroinit";
+                if (section_selector.sections && section_selector.objects)
+                    output << intro << attribute << " section " << *section_selector.sections << " object " << *section_selector.objects << ",";
+                else if (section_selector.sections)
+                    output << intro << attribute << " section " << *section_selector.sections << ",";
+                else if (section_selector.objects)
+                    output << intro << "object " << *section_selector.objects << ",";
                 intro = "\n  ";
             }
         }
@@ -387,14 +393,17 @@ public:
 
     void output_define_directives(std::ostream& output, bool writable) const override
     {
-        const char* attribute = writable ? "readwrite" : "readonly";
-        for (const auto& selection_selector : m_section_selectors) {
-            if (selection_selector.sections && selection_selector.objects)
-                output << "  " << attribute << " section " << *selection_selector.sections << " object " << *selection_selector.objects << ",\n";
-            else if (selection_selector.sections)
-                output << "  " << attribute << " section " << *selection_selector.sections << ",\n";
-            else if (selection_selector.objects)
-                output << "  object " << *selection_selector.objects << ",\n";
+        for (const auto& section_selector : m_section_selectors) {
+            const char* attribute = writable ? "readwrite" : "readonly";
+            if (section_selector.sections &&
+                    std::find(g_script.zero_init_sections.begin(), g_script.zero_init_sections.end(), *section_selector.sections) != g_script.zero_init_sections.end())
+                attribute = "zeroinit";
+            if (section_selector.sections && section_selector.objects)
+                output << "  " << attribute << " section " << *section_selector.sections << " object " << *section_selector.objects << ",\n";
+            else if (section_selector.sections)
+                output << "  " << attribute << " section " << *section_selector.sections << ",\n";
+            else if (section_selector.objects)
+                output << "  object " << *section_selector.objects << ",\n";
         }
     }
 

@@ -30,6 +30,8 @@ struct Assertion
 
 struct Script
 {
+    /* Set of zero-init sections can't be derived directly from the script */
+    std::vector<std::string_view> zero_init_sections;
     /* Identifiers */
     IdentifierManager identifiers;
     /* Image entry point */

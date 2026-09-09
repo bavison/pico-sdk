@@ -36,6 +36,7 @@ int main(int argc, char* argv[])
             std::cerr << "  -f <format>  --format=<format>        set output format\n";
             std::cerr << "  -o <file>     --output=<file>         set output file (- for stdout)\n";
             std::cerr << "  -v            --version               print version info\n";
+            std::cerr << "  -z <sections> --zero-init=<sections>  override set of sections to zero-initialise\n";
             std::cerr << "supported ld-options:\n";
             std::cerr << "  --defsym=<assignment>                 predefine symbol\n";
             std::cerr << "  --gc-sections                         ignored\n";
@@ -57,6 +58,7 @@ int main(int argc, char* argv[])
 
         std::filesystem::path output_base;
         std::string_view format_name;
+        std::string_view zero_init_sections = ".bss* COMMON .gnu.linkonce.tb.* .sbss* .tbss .tbss.* .tcommon";
 
         int i;
         for (i = 1; i < argc; ++i) {
@@ -75,6 +77,10 @@ int main(int argc, char* argv[])
                 // Print version information
                 std::cout << "ldtrans version: " LDTRANS_VERSION_STRING << std::endl;
                 exit(EXIT_SUCCESS);
+            } else if (i+1 <argc && arg == "-z") {
+                zero_init_sections = argv[++i];
+            } else if (auto a = option(arg, "--zero-init=")) {
+                zero_init_sections = *a;
             } else if (arg == "--") {
                 // Move on to ld options
                 break;
@@ -150,6 +156,15 @@ invalid_defsym:
                 // Unrecognised option
                 usage(EXIT_FAILURE);
             }
+        }
+
+        // Split zero init sections at spaces
+        for (size_t pos = 0; (pos = zero_init_sections.find_first_not_of(' ', pos)) != std::string_view::npos; ) {
+            auto end = zero_init_sections.find(' ', pos);
+            if (end == std::string_view::npos)
+                end = zero_init_sections.length();
+            g_script.zero_init_sections.emplace_back(zero_init_sections.substr(pos, end - pos));
+            pos = end;
         }
 
         // Now process the input scripts and defsyms in order
