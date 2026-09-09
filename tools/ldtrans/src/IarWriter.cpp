@@ -220,6 +220,9 @@ public:
         auto& index = m_next_indices[type];
         return "ldtrans_" + type + "_" + std::to_string(++index);
     }
+    static unsigned index(const std::string& type) {
+        return m_next_indices[type];
+    }
 
 private:
     static std::unordered_map<std::string, unsigned> m_next_indices;
@@ -1116,6 +1119,12 @@ void IarWriter::write(const Script& script, std::filesystem::path& base)
         output << "};\n\n";
         output << "place in " << iar_identifier(this_region.first) << " { block " << block_name << " };\n\n";
     }
+
+    /* We need to explicitly keep all the alignment blocks! */
+    output << "keep {\n";
+    for (unsigned i = 1; i <= BlockName::index("align"); ++i)
+        output << "  block ldtrans_align_" << std::to_string(i) << ",\n";
+    output << "};\n\n";
 
     /* Definitions */
     for (const auto& def : g_script.definition_order) {
