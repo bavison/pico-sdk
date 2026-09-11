@@ -1,6 +1,12 @@
 SECTIONS
 {
     .rodata : {
+        /* The IAR linker refuses to convert these objects to initialised
+         * readwrite (presuambly because they're part of the initialisation
+         * machinery) so ensure it has a place to store the readonly sections
+         */
+        *:lz77_init_single.o(.rodata*)
+        *:zero_init3.o(.rodata*)
         /* segments not marked as .flashdata are instead pulled into .data (in RAM) to avoid accidental flash accesses */
         *(SORT_BY_ALIGNMENT(SORT_BY_NAME(.flashdata*)))
         . = ALIGN(4);
