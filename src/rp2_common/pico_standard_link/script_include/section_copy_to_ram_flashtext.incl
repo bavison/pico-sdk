@@ -26,6 +26,16 @@ SECTIONS
         KEEP (*(.embedded_block))
         __embedded_block_end = .;
         KEEP (*(.reset))
+        /* This runtime library object for IAR must live in uncompressed flash
+         * because of a circular dependency on symbol Region$$Table$$Base
+         */
+        *:data_init.o(.text*)
+        /* The IAR linker refuses to convert these objects to initialised
+         * readwrite (presuambly because they're part of the initialisation
+         * machinery) so ensure it has a place to store the readonly sections
+         */
+        *:lz77_init_single.o(.text*)
+        *:zero_init3.o(.text*)
         . = ALIGN(4);
     } > TEXT_STORE
 }
