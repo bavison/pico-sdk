@@ -771,7 +771,17 @@ public:
                 throw DiagnosticError(expr.location(), "error: reference to skipped symbol");
             }
         }
-        m_result = iar_identifier(expr.identifier());
+
+        auto name = g_script.identifiers.toRaw(expr.identifier());
+        if (expr.identifier() == m_target->name() &&
+                    (m_target->kind() == DefinitionKind::TopLevelSymbol ||
+                     m_target->kind() == DefinitionKind::SectionScopeSymbol)) {
+            // We're referring to the same symbol currently being assigned
+            // so we should refer to the previous definition of the symbol
+            // instead.
+            name = "__ldtrans_" + name + "_" + std::to_string(m_target->previous().version());
+        }
+        m_result = iar_identifier(name);
         m_precedence = IarOperatorPrecedence::Operand;
     }
 
@@ -961,7 +971,18 @@ public:
 
     void visit(const DefinedExpression& expr) override
     {
-        m_result = std::string("isdefinedsymbol(") + iar_identifier(expr.symbol()) + ")";
+        auto name = g_script.identifiers.toRaw(expr.symbol());
+        if (expr.symbol() == m_target->name() &&
+                    (m_target->kind() == DefinitionKind::TopLevelSymbol ||
+                     m_target->kind() == DefinitionKind::SectionScopeSymbol)) {
+            // We're referring to the same symbol currently being assigned
+            // so we should refer to the previous definition of the symbol
+            // instead, if there is one.
+            auto& previous = m_target->previous_exists() ? m_target->previous() : *m_target;
+            if (previous.superseded())
+                name = "__ldtrans_" + name + "_" + std::to_string(previous.version());
+        }
+        m_result = std::string("isdefinedsymbol(") + iar_identifier(name) + ")";
         m_precedence = IarOperatorPrecedence::Operand;
     }
 
@@ -1141,17 +1162,24 @@ void IarWriter::write(const Script& script, std::filesystem::path& base)
             Diagnostic warning { def->location(), std::string("warning: ") + (def->visibility() == DefinitionVisibility::Provide ? "PROVIDE" : "PROVIDE_HIDDEN") + " semantics cannot be expressed in destination format" };
             std::cerr << warning.format();
         }
+        std::string name;
+        if (def->name()) {
+            name = g_script.identifiers.toRaw(*def->name());
+            if (def->superseded())
+                name = "__ldtrans_" + name + "_" + std::to_string(def->version());
+            name = iar_identifier(name);
+        }
         FormatVisitor format(def->visibility() != DefinitionVisibility::Standard, def);
         switch (def->kind()) {
         case DefinitionKind::TopLevelSymbol:
             def->expression().accept(format);
             if (!format.skip_me())
-                output << "define exported symbol " << iar_identifier(*def->name()) << " = " << format.result() << ";" << std::endl;
+                output << "define exported symbol " << name << " = " << format.result() << ";" << std::endl;
             break;
         case DefinitionKind::SectionScopeSymbol:
             def->expression().accept(format);
             if (!format.skip_me())
-                output << "define image symbol " << iar_identifier(*def->name()) << " = " << format.result() << ";" << std::endl;
+                output << "define image symbol " << name << " = " << format.result() << ";" << std::endl;
             break;
         case DefinitionKind::OutputSectionVMA:
         case DefinitionKind::OutputSectionLMA:
@@ -1164,7 +1192,7 @@ void IarWriter::write(const Script& script, std::filesystem::path& base)
                         output << format_uint64(def->value().absolute, def->location());
                     else
                         output << format.result();
-                    output << " { block " << iar_identifier(*def->name()) << " };" << std::endl;
+                    output << " { block " << name << " };" << std::endl;
                 }
             }
             break;

@@ -55,6 +55,8 @@ public:
     void enchain(std::shared_ptr<Definition>& previous)
     {
         m_previous = std::move(previous);
+        m_version = m_previous->m_version + 1;
+        m_previous->m_superseded = true;
     }
     std::string describe(const IdentifierManager& ids) const
     {
@@ -99,6 +101,8 @@ public:
     friend class EvaluationVisitor;
     bool previous_exists() const { return bool(m_previous); }
     Definition& previous() const { return *m_previous; }
+    unsigned version() const { return m_version; }
+    bool superseded() const { return m_superseded; }
     SourceLocation location() const { return m_location; }
     std::optional<IdentifierId> name() const { return m_name; }
     Expression& expression() { return *m_expression; }
@@ -127,6 +131,8 @@ private:
         }
     }
     std::shared_ptr<Definition> m_previous;
+    unsigned m_version = 0;
+    bool m_superseded = false;
     SourceLocation m_location;
     std::optional<IdentifierId> m_name;
     ExpressionPtr m_expression;

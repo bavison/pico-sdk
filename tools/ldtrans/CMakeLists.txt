@@ -31,7 +31,6 @@ add_executable(ldtrans
         src/OutputWriter.cpp
         src/Script.cpp
         src/SourceManager.cpp
-        src/Symbol.cpp
         ${BISON_ld_parser_OUTPUTS}
         ${FLEX_ld_lexer_OUTPUTS}
 )
