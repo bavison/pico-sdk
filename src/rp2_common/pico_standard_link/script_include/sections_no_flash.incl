@@ -3,6 +3,7 @@
 INCLUDE "sections_no_flash_text.incl"
 INCLUDE "section_generated_post_text.incl"
 INCLUDE "section_extra_post_text.incl"
+INCLUDE "section_init_table.incl"
 INCLUDE "sections_no_flash_data.incl"
 INCLUDE "section_generated_post_data.incl"
 INCLUDE "section_extra_post_data.incl"
