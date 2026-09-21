@@ -35,6 +35,7 @@ int main(int argc, char* argv[])
             std::cerr << "  -h           --help                   print this usage information\n";
             std::cerr << "  -f <format>  --format=<format>        set output format\n";
             std::cerr << "  -o <file>     --output=<file>         set output file (- for stdout)\n";
+            std::cerr << "  -r            --ram-only              generate RAM-only script\n";
             std::cerr << "  -v            --version               print version info\n";
             std::cerr << "  -z <sections> --zero-init=<sections>  override set of sections to zero-initialise\n";
             std::cerr << "supported ld-options:\n";
@@ -73,6 +74,8 @@ int main(int argc, char* argv[])
                 output_base = argv[++i];
             } else if (auto a = option(arg, "--output=")) {
                 output_base = *a;
+            } else if (arg == "-r" || arg == "--ram-only") {
+                g_script.ram_only = true;
             } else if (arg == "-v" || arg == "--version") {
                 // Print version information
                 std::cout << "ldtrans version: " LDTRANS_VERSION_STRING << std::endl;

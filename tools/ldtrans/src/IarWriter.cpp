@@ -376,14 +376,11 @@ public:
                 intro = "\n  ";
             }
             for (const auto& section_selector : m_section_selectors) {
-                const char* attribute = writable ? "readwrite" : "readonly";
-                if (section_selector.sections &&
-                        std::find(g_script.zero_init_sections.begin(), g_script.zero_init_sections.end(), *section_selector.sections) != g_script.zero_init_sections.end())
-                    attribute = "zeroinit";
+                auto attribute = section_attribute(section_selector, writable);
                 if (section_selector.sections && section_selector.objects)
-                    output << intro << attribute << " section " << *section_selector.sections << " object " << *section_selector.objects << ",";
+                    output << intro << attribute << "section " << *section_selector.sections << " object " << *section_selector.objects << ",";
                 else if (section_selector.sections)
-                    output << intro << attribute << " section " << *section_selector.sections << ",";
+                    output << intro << attribute << "section " << *section_selector.sections << ",";
                 else if (section_selector.objects)
                     output << intro << "object " << *section_selector.objects << ",";
                 intro = "\n  ";
@@ -394,20 +391,31 @@ public:
     void output_define_directives(std::ostream& output, bool writable) const override
     {
         for (const auto& section_selector : m_section_selectors) {
-            const char* attribute = writable ? "readwrite" : "readonly";
-            if (section_selector.sections &&
-                    std::find(g_script.zero_init_sections.begin(), g_script.zero_init_sections.end(), *section_selector.sections) != g_script.zero_init_sections.end())
-                attribute = "zeroinit";
+            auto attribute = section_attribute(section_selector, writable);
             if (section_selector.sections && section_selector.objects)
-                output << "  " << attribute << " section " << *section_selector.sections << " object " << *section_selector.objects << ",\n";
+                output << "  " << attribute << "section " << *section_selector.sections << " object " << *section_selector.objects << ",\n";
             else if (section_selector.sections)
-                output << "  " << attribute << " section " << *section_selector.sections << ",\n";
+                output << "  " << attribute << "section " << *section_selector.sections << ",\n";
             else if (section_selector.objects)
                 output << "  object " << *section_selector.objects << ",\n";
         }
     }
 
 private:
+    const char* section_attribute(const SectionSelector& section_selector, bool writable) const
+    {
+        if (g_script.ram_only)
+            return "";
+
+        if (section_selector.sections &&
+            std::find(g_script.zero_init_sections.begin(),
+                      g_script.zero_init_sections.end(),
+                      *section_selector.sections) != g_script.zero_init_sections.end())
+            return "zeroinit ";
+
+        return writable ? "readwrite " : "readonly ";
+    }
+
     std::vector<SectionSelector> m_section_selectors;
     bool m_keep;
 };
@@ -443,7 +451,6 @@ public:
             }
         }
 
-        const char* attribute = m_writable ? "readwrite" : "readonly";
         output << "define block " << m_name;
         if (m_sorted)
             output << " with alphabetical order";
@@ -1049,6 +1056,10 @@ void IarWriter::write(const Script& script, std::filesystem::path& base)
 
     std::ostream& output = base == "-" ? std::cout : output_file_stream;
 
+    /* Extra command required for RAM-only builds */
+    if (g_script.ram_only)
+        output << "build for ram;\n\n";
+
     /* Memory space */
     output << "define memory mem with size = 4G;\n\n";
 
@@ -1082,7 +1093,7 @@ void IarWriter::write(const Script& script, std::filesystem::path& base)
     std::vector<std::unique_ptr<Block>> top_level_blocks;
     std::unordered_map<std::string, FilesRemaining> all_remaining;
     for (auto& os : g_script.output_sections) {
-        bool initialised = os->lma || os->lma_region;
+        bool initialised = !g_script.ram_only && (os->lma || os->lma_region);
         auto [main_block, init_block] = build_blocks(initialised, *os, all_remaining);
         top_level_blocks.push_back(std::move(main_block));
         if (initialised)
@@ -1135,7 +1146,7 @@ void IarWriter::write(const Script& script, std::filesystem::path& base)
             Diagnostic warning { os->location, "warning: output section LMA region ignored in favour of LMA address" };
             std::cerr << warning.format();
         }
-        if ((os->lma && os->lma->value().type == DefinitionValueType::LocationCounter) || (os->lma_region && !os->lma)) {
+        if (!g_script.ram_only && ((os->lma && os->lma->value().type == DefinitionValueType::LocationCounter) || (os->lma_region && !os->lma))) {
             if (!current_vma_region)
                 throw DiagnosticError( os->location, "error: cannot determine LMA region for output section");
             block_mapping[*current_lma_region].emplace_back(iar_identifier(os->name) + "_init");

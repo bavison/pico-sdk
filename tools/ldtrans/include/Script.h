@@ -50,6 +50,8 @@ struct Script
     std::vector<Definition*> definition_order;
     /* Output sections */
     std::vector<OutputSectionPtr> output_sections;
+    /* Script variant */
+    bool ram_only = false;
 
     void SortDefinitions();
     void EvaluateDefinitions();
