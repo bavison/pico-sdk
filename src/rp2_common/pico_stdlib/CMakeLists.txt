@@ -6,7 +6,7 @@ if (NOT TARGET pico_stdlib)
 
     if ("${CMAKE_GENERATOR}" STREQUAL "IAR Embedded Workbench for Arm")
         target_link_libraries(pico_stdlib INTERFACE
-                boot_stage2
+                "$<IF:$<STREQUAL:$<TARGET_PROPERTY:PICO_TARGET_BINARY_TYPE>,no_flash>,,boot_stage2>"
         )
     endif()
 
