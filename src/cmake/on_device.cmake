@@ -71,10 +71,93 @@ endfunction()
 #
 # Perform picotool processing and add disassembly, hex, bin, map, and uf2 outputs for the target
 function(pico_add_extra_outputs TARGET)
-    # For IAR, add the project directory to the include path, just in case there
-    # are any .pio.h there that we won't find otherwise
     if ("${CMAKE_GENERATOR}" STREQUAL "IAR Embedded Workbench for Arm")
+        # For IAR, add the project directory to the include path, just in case
+        # there are any .pio.h there that we won't find otherwise
         target_include_directories(${TARGET} PUBLIC $<TARGET_FILE_DIR:${TARGET}>)
+
+        # For IAR, also hook in here to translate the linker script to ICF format
+        # using the ldtrans tool, which must already be built and installed on
+        # PATH. The result is placed where CMAKE_IAR_ILINK_ICF_FILE expects it.
+        find_program(_ldtrans_executable ldtrans)
+        if (NOT _ldtrans_executable)
+            message(FATAL_ERROR
+                "ldtrans not found on PATH. Build tools/ldtrans from pico-sdk "
+                "using a host native toolchain and install it before "
+                "configuring with this generator.")
+        endif()
+
+        # Build ldtrans options
+        set(_ldtrans_args --format=iar)
+
+        if (NOT PICO_DEFAULT_BINARY_TYPE)
+            if (PICO_NO_FLASH)
+                set(PICO_DEFAULT_BINARY_TYPE no_flash)
+            elseif (PICO_USE_BLOCKED_RAM)
+                set(PICO_DEFAULT_BINARY_TYPE blocked_ram)
+            elseif (PICO_COPY_TO_RAM)
+                set(PICO_DEFAULT_BINARY_TYPE copy_to_ram)
+            else()
+                set(PICO_DEFAULT_BINARY_TYPE default)
+            endif()
+        endif()
+        get_target_property(_ldtrans_binary_type ${TARGET} PICO_TARGET_BINARY_TYPE)
+        if (NOT _ldtrans_binary_type)
+            set(_ldtrans_binary_type ${PICO_DEFAULT_BINARY_TYPE})
+        endif()
+        if (_ldtrans_binary_type STREQUAL "no_flash")
+            list(APPEND _ldtrans_args --ram-only)
+        endif()
+
+        get_target_property(_ldtrans_binary_dir ${TARGET} BINARY_DIR)
+        list(APPEND _ldtrans_args -o "${_ldtrans_binary_dir}/link" --)
+
+        # The options following -- need to be kept in line with
+        # pico_standard_link, but we can't use generator expressions here!
+        # We can however skip the options that ldtrans doesn't use.
+
+        # add override paths from PICO_TARGET_LINKER_SCRIPT_OVERRIDE_PATHS
+        get_target_property(_ldtrans_override_paths ${TARGET} PICO_TARGET_LINKER_SCRIPT_OVERRIDE_PATHS)
+        if (NOT _ldtrans_override_paths)
+            set(_ldtrans_override_paths "")
+        endif()
+        foreach(_ldtrans_path IN LISTS _ldtrans_override_paths)
+            list(APPEND _ldtrans_args "-L${_ldtrans_path}")
+        endforeach()
+
+        # add include paths from PICO_LINKER_SCRIPT_INCLUDE_DIRS
+        foreach(_ldtrans_path IN LISTS PICO_LINKER_SCRIPT_INCLUDE_DIRS)
+            list(APPEND _ldtrans_args "-L${_ldtrans_path}")
+        endforeach()
+
+        # add default locations script, so they can be referenced by pico_set_linker_script_var variables
+        list(APPEND _ldtrans_args "--script=${PICO_LINKER_DEFAULT_LOCATIONS_PATH}")
+
+        # add variables set by pico_set_linker_script_var function
+        get_target_property(_ldtrans_vars ${TARGET} PICO_TARGET_LINKER_SCRIPT_VARS)
+        if (NOT _ldtrans_vars)
+            set(_ldtrans_vars "")
+        endif()
+        foreach(_ldtrans_var IN LISTS _ldtrans_vars)
+            list(APPEND _ldtrans_args "--defsym=${_ldtrans_var}")
+        endforeach()
+
+        # LINKER script will be PICO_TARGET_LINKER_SCRIPT if set on target, or ${CMAKE_CURRENT_LIST_DIR}/memmap_foo.ld
+        # if PICO_TARGET_BINARY_TYPE is set to foo on the target, otherwise ${CMAKE_CURRENT_LIST_DIR}/memmap_${PICO_DEFAULT_BINARY_TYPE).ld
+        get_target_property(_ldtrans_ldscript ${TARGET} PICO_TARGET_LINKER_SCRIPT)
+        if (NOT _ldtrans_ldscript)
+            set(_ldtrans_ldscript "${PICO_LINKER_SCRIPT_PATH}/memmap_${_ldtrans_binary_type}.ld")
+        endif()
+        list(APPEND _ldtrans_args "--script=${_ldtrans_ldscript}")
+
+        execute_process(
+            COMMAND "${_ldtrans_executable}" ${_ldtrans_args}
+            RESULT_VARIABLE _ldtrans_result
+            ERROR_VARIABLE _ldtrans_error
+        )
+        if (NOT _ldtrans_result EQUAL 0)
+            message(FATAL_ERROR "ldtrans failed for target ${TARGET}:\n${_ldtrans_error}")
+        endif()
     endif()
 
     # Disassembly will be nonsense for encrypted binaries,
