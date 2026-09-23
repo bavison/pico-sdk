@@ -23,7 +23,12 @@ public:
     virtual void write(const Script& script, std::filesystem::path& base) = 0;
 
 private:
-    static std::map<std::string_view, OutputWriter&> g_formats;
+    static std::map<std::string_view, OutputWriter&>& formats()
+    {
+        /* Use dynamic initialisation to avoid static initialiser ordering issues */
+        static std::map<std::string_view, OutputWriter&> formats;
+        return formats;
+    }
 };
 
 #endif /* sentry INCLUDE_OUTPUTWRITER_H_ */
