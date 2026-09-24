@@ -107,7 +107,7 @@
 
 #define __bi_define_string_bi_ptr_int32(_tag, _id, _var, _default) __bi_define_string(__STRING(_var))
 
-#define __bi_ptr_string_with_name(_tag, _id, __value, _len) \
+#define __bi_ptr_string_with_name(_tag, _id, _value, _len) \
     static const struct _binary_info_ptr_string_with_name __bi_lineno_var_name = { \
         .core = { \
             .type = __bi_enclosure_check(BINARY_INFO_TYPE_PTR_STRING_WITH_NAME), \
