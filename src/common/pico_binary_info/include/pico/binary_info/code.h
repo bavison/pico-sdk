@@ -30,7 +30,8 @@
 
 #define __bi_decl(name, bi, section_prefix, attr) static const attr __attribute__((section(section_prefix __STRING(name)))) struct _binary_info_core *const name = bi
 #define __bi_lineno_var_name __CONCAT(__bi_, __LINE__)
-#define __bi_lineno_var_name_string __CONCAT(__bi_lineno_var_name, _string)
+#define __bi_lineno_var_name_string __bi_lineno_var_name_dependency(string)
+#define __bi_lineno_var_name_dependency(seed) __CONCAT(__bi_lineno_var_name, __CONCAT(_, seed))
 #define __bi_ptr_lineno_var_name __CONCAT(__bi_ptr, __LINE__)
 #define __bi_enclosure_check_lineno_var_name __CONCAT(_error_bi_is_missing_enclosing_decl_,__LINE__)
 #define __bi_mark_enclosure static const __unused int __bi_enclosure_check_lineno_var_name=0;
@@ -156,24 +157,24 @@
         .pin_encoding = _encoding \
     }
 
-#define __bi_pins_with_name(_mask) \
+#define __bi_pins_with_name(_mask, _label_expr) \
     static const struct _binary_info_pins_with_name __bi_lineno_var_name = { \
         .core = { \
             .type = __bi_enclosure_check(BINARY_INFO_TYPE_PINS_WITH_NAME), \
             .tag = BINARY_INFO_TAG_RASPBERRY_PI, \
         },\
         .pin_mask = _mask, \
-        .label = __bi_lineno_var_name_string \
+        .label = _label_expr \
     }
 
-#define __bi_pins_64_with_name(_mask) \
+#define __bi_pins_64_with_name(_mask, _label_expr) \
     static const struct _binary_info_pins64_with_name __bi_lineno_var_name = { \
         .core = { \
             .type = __bi_enclosure_check(BINARY_INFO_TYPE_PINS64_WITH_NAME), \
             .tag = BINARY_INFO_TAG_RASPBERRY_PI, \
         },\
         .pin_mask = _mask, \
-        .label = __bi_lineno_var_name_string \
+        .label = _label_expr \
     }
 
 #define __bi_named_group(_parent_tag, _parent_id, _group_tag, _group_id, _flags) \
@@ -224,9 +225,9 @@ static const struct _binary_info_named_group __bi_lineno_var_name = { \
 #define bi_5pins_with_func(p0, p1, p2, p3, p4, func) __bi_encoded_pins_with_func(BI_PINS_ENCODING_MULTI | ((func << 3)) | ((p0) << 7) | ((p1) << 12) | ((p2) << 17) | ((p3) << 22) | ((p4) << 27))
 #define bi_pin_range_with_func(plo, phi, func)       __bi_encoded_pins_with_func(BI_PINS_ENCODING_RANGE | ((func << 3)) | ((plo) << 7) | ((phi) << 12))
 
-#define bi_pin_mask_with_name(pmask, label)          __bi_pins_with_name((pmask))
+#define bi_pin_mask_with_name(pmask, label)          __bi_pins_with_name((pmask), __bi_lineno_var_name_string)
 // names are separated by | ... i.e. "name1|name2|name3"
-#define bi_pin_mask_with_names(pmask, label)          __bi_pins_with_name((pmask))
+#define bi_pin_mask_with_names(pmask, label_expr)    __bi_pins_with_name((pmask), (label_expr))
 #else
 #define bi_1pin_with_func(p0, func)                         __bi_encoded_pins_64_with_func(BI_PINS_ENCODING_MULTI | ((func << 3)) | ((p0) << 8) | ((p0) << 16))
 #define bi_2pins_with_func(p0, p1, func)                    __bi_encoded_pins_64_with_func(BI_PINS_ENCODING_MULTI | ((func << 3)) | ((p0) << 8) | ((p1) << 16) | ((p1) << 24))
@@ -235,9 +236,9 @@ static const struct _binary_info_named_group __bi_lineno_var_name = { \
 #define bi_5pins_with_func(p0, p1, p2, p3, p4, func)        __bi_encoded_pins_64_with_func(BI_PINS_ENCODING_MULTI | ((func << 3)) | ((p0) << 8) | ((p1) << 16) | ((p2) << 24) | ((uint64_t)(p3) << 32) | ((uint64_t)(p4) << 40) | ((uint64_t)(p4) << 48))
 #define bi_pin_range_with_func(plo, phi, func)              __bi_encoded_pins_64_with_func(BI_PINS_ENCODING_RANGE | ((func << 3)) | ((plo) << 8) | ((phi) << 16))
 
-#define bi_pin_mask_with_name(pmask, label)          __bi_pins_64_with_name((uint64_t)(pmask))
+#define bi_pin_mask_with_name(pmask, label)          __bi_pins_64_with_name((uint64_t)(pmask), __bi_lineno_var_name_string)
 // names are separated by | ... i.e. "name1|name2|name3"
-#define bi_pin_mask_with_names(pmask, label)          __bi_pins_64_with_name((uint64_t)(pmask))
+#define bi_pin_mask_with_names(pmask, label_expr)    __bi_pins_64_with_name((uint64_t)(pmask), (label_expr))
 #endif
 #define __bi_predefines_bi_1pin_with_func(p0, func)
 #define __bi_predefines_bi_2pins_with_func(p0, p1, func)
@@ -246,7 +247,7 @@ static const struct _binary_info_named_group __bi_lineno_var_name = { \
 #define __bi_predefines_bi_5pins_with_func(p0, p1, p2, p3, p4, func)
 #define __bi_predefines_bi_pin_range_with_func(plo, phi, func)
 #define __bi_predefines_bi_pin_mask_with_name(pmask, label) __bi_define_string(label)
-#define __bi_predefines_bi_pin_mask_with_names(pmask, label) __bi_define_string(label)
+#define __bi_predefines_bi_pin_mask_with_names(pmask, label_expr)
 
 // 6 and 7 pins require pins_64
 #define bi_6pins_with_func(p0, p1, p2, p3, p4, p5, func)    __bi_encoded_pins_64_with_func(BI_PINS_ENCODING_MULTI | ((func << 3)) | ((p0) << 8) | ((p1) << 16) | ((p2) << 24) | ((uint64_t)(p3) << 32) | ((uint64_t)(p4) << 40) | ((uint64_t)(p5) << 48) | ((uint64_t)(p5) << 56))
@@ -256,65 +257,107 @@ static const struct _binary_info_named_group __bi_lineno_var_name = { \
 
 #define bi_1pin_with_name(p0, name)                   bi_pin_mask_with_name(1ull << (p0), <unused>)
 #define __bi_predefines_bi_1pin_with_name(p0, name) __bi_define_string(name)
-#define bi_2pins_with_names(p0, name0, p1, name1)     bi_pin_mask_with_names((1ull << (p0)) | (1ull << (p1)), <unused>)
-#define __bi_predefines_bi_2pins_with_names(p0, name0, p1, name1) __bi_define_string(p0 < p1 ? name0 "|" name1 : name1 "|" name0)
-#define bi_3pins_with_names(p0, name0, p1, name1, p2, name2)  bi_pin_mask_with_names((1ull << (p0)) | (1ull << (p1)) | (1ull << (p2)), <unsued>)
-#define __bi_predefines_bi_3pins_with_names(p0, name0, p1, name1, p2, name2) __bi_define_string(\
+
+#define bi_2pins_with_names(p0, name0, p1, name1)     bi_pin_mask_with_names((1ull << (p0)) | (1ull << (p1)),\
+    p0 < p1 ?\
+        __bi_lineno_var_name_dependency(01):\
+        __bi_lineno_var_name_dependency(10))
+#define __bi_predefines_bi_2pins_with_names(p0, name0, p1, name1) \
+    static const __bi_default_attr char __bi_lineno_var_name_dependency(01)[] = name0 "|" name1; \
+    static const __bi_default_attr char __bi_lineno_var_name_dependency(10)[] = name1 "|" name0; \
+
+#define bi_3pins_with_names(p0, name0, p1, name1, p2, name2)  bi_pin_mask_with_names((1ull << (p0)) | (1ull << (p1)) | (1ull << (p2)),\
     p0 < p1 ?\
         (p1 < p2 ?\
-            name0 "|" name1 "|" name2:\
-            (p0 < p2 ? name0 "|" name2 "|" name1 : name2 "|" name0 "|" name1)):\
+            __bi_lineno_var_name_dependency(012):\
+            (p0 < p2 ?\
+                __bi_lineno_var_name_dependency(021):\
+                __bi_lineno_var_name_dependency(201))):\
         (p1 < p2 ?\
-            (p0 < p2 ? name1 "|" name0 "|" name2 : name1 "|" name2 "|" name0) :\
-            name2 "|" name1 "|" name0))
-#define bi_4pins_with_names(p0, name0, p1, name1, p2, name2, p3, name3)  bi_pin_mask_with_names((1ull << (p0)) | (1ull << (p1)) | (1ull << (p2)) | (1ull << (p3)), <unused>)
-#define __bi_predefines_bi_4pins_with_names(p0, name0, p1, name1, p2, name2, p3, name3) __bi_define_string(\
+            (p0 < p2 ?\
+                __bi_lineno_var_name_dependency(102):\
+                __bi_lineno_var_name_dependency(120)):\
+            __bi_lineno_var_name_dependency(210)))
+#define __bi_predefines_bi_3pins_with_names(p0, name0, p1, name1, p2, name2) \
+    static const __bi_default_attr char __bi_lineno_var_name_dependency(012)[] = name0 "|" name1 "|" name2; \
+    static const __bi_default_attr char __bi_lineno_var_name_dependency(021)[] = name0 "|" name2 "|" name1; \
+    static const __bi_default_attr char __bi_lineno_var_name_dependency(201)[] = name2 "|" name0 "|" name1; \
+    static const __bi_default_attr char __bi_lineno_var_name_dependency(102)[] = name1 "|" name0 "|" name2; \
+    static const __bi_default_attr char __bi_lineno_var_name_dependency(120)[] = name1 "|" name2 "|" name0; \
+    static const __bi_default_attr char __bi_lineno_var_name_dependency(210)[] = name2 "|" name1 "|" name0; \
+
+#define bi_4pins_with_names(p0, name0, p1, name1, p2, name2, p3, name3)  bi_pin_mask_with_names((1ull << (p0)) | (1ull << (p1)) | (1ull << (p2)) | (1ull << (p3)),\
     p0 < p1 ?\
         (p1 < p2 ?\
             (p2 < p3 ?\
-                name0 "|" name1 "|" name2 "|" name3:\
+                __bi_lineno_var_name_dependency(0123):\
                 (p0 < p3 ?\
                     (p1 < p3 ?\
-                        name0 "|" name1 "|" name3 "|" name2:\
-                        name0 "|" name3 "|" name1 "|" name2):\
-                    name3 "|" name0 "|" name1 "|" name2)):\
+                        __bi_lineno_var_name_dependency(0132):\
+                        __bi_lineno_var_name_dependency(0312)):\
+                    __bi_lineno_var_name_dependency(3012))):\
             (p2 < p3 ?\
                 (p0 < p2 ?\
                     (p1 < p3 ?\
-                        name0 "|" name2 "|" name1 "|" name3:\
-                        name0 "|" name2 "|" name3 "|" name1):\
+                        __bi_lineno_var_name_dependency(0213):\
+                        __bi_lineno_var_name_dependency(0231)):\
                     (p0 < p3 ?\
                         (p1 < p3 ?\
-                            name2 "|" name0 "|" name1 "|" name3:\
-                            name2 "|" name0 "|" name3 "|" name1):\
-                        name2 "|" name3 "|" name0 "|" name1)):\
+                            __bi_lineno_var_name_dependency(2013):\
+                            __bi_lineno_var_name_dependency(2031)):\
+                        __bi_lineno_var_name_dependency(2301))):\
                 (p0 < p2 ?\
                     (p0 < p3 ?\
-                        name0 "|" name3 "|" name2 "|" name1:\
-                        name3 "|" name0 "|" name2 "|" name1):\
-                    name3 "|" name2 "|" name0 "|" name1))):\
+                        __bi_lineno_var_name_dependency(0321):\
+                        __bi_lineno_var_name_dependency(3021)):\
+                    __bi_lineno_var_name_dependency(3201)))):\
         (p1 < p2 ?\
             (p2 < p3 ?\
                 (p0 < p2 ?\
-                    name1 "|" name0 "|" name2 "|" name3:\
+                    __bi_lineno_var_name_dependency(1023):\
                     (p0 < p3 ?\
-                        name1 "|" name2 "|" name0 "|" name3:\
-                        name1 "|" name2 "|" name3 "|" name0)):\
+                        __bi_lineno_var_name_dependency(1203):\
+                        __bi_lineno_var_name_dependency(1230))):\
                 (p0 < p2 ?\
                     (p0 < p3 ?\
-                        name1 "|" name0 "|" name3 "|" name2:\
+                        __bi_lineno_var_name_dependency(1032):\
                         (p1 < p3 ?\
-                            name1 "|" name3 "|" name0 "|" name2:\
-                            name3 "|" name1 "|" name0 "|" name2)):\
+                            __bi_lineno_var_name_dependency(1302):\
+                            __bi_lineno_var_name_dependency(3102))):\
                     (p1 < p3 ?\
-                        name1 "|" name3 "|" name2 "|" name0:\
-                        name3 "|" name1 "|" name2 "|" name0))):\
+                        __bi_lineno_var_name_dependency(1320):\
+                        __bi_lineno_var_name_dependency(3120)))):\
             (p2 < p3 ?\
                 (p0 < p3 ?\
-                    name2 "|" name1 "|" name0 "|" name3:\
+                    __bi_lineno_var_name_dependency(2103):\
                     (p1 < p3 ?\
-                        name2 "|" name1 "|" name3 "|" name0:\
-                        name2 "|" name3 "|" name1 "|" name0)):\
-                name3 "|" name2 "|" name1 "|" name0)))
+                        __bi_lineno_var_name_dependency(2130):\
+                        __bi_lineno_var_name_dependency(2310))):\
+                __bi_lineno_var_name_dependency(3210))))
+#define __bi_predefines_bi_4pins_with_names(p0, name0, p1, name1, p2, name2, p3, name3) \
+    static const __bi_default_attr char __bi_lineno_var_name_dependency(0123)[] = name0 "|" name1 "|" name2 "|" name3; \
+    static const __bi_default_attr char __bi_lineno_var_name_dependency(0132)[] = name0 "|" name1 "|" name3 "|" name2; \
+    static const __bi_default_attr char __bi_lineno_var_name_dependency(0312)[] = name0 "|" name3 "|" name1 "|" name2; \
+    static const __bi_default_attr char __bi_lineno_var_name_dependency(3012)[] = name3 "|" name0 "|" name1 "|" name2; \
+    static const __bi_default_attr char __bi_lineno_var_name_dependency(0213)[] = name0 "|" name2 "|" name1 "|" name3; \
+    static const __bi_default_attr char __bi_lineno_var_name_dependency(0231)[] = name0 "|" name2 "|" name3 "|" name1; \
+    static const __bi_default_attr char __bi_lineno_var_name_dependency(2013)[] = name2 "|" name0 "|" name1 "|" name3; \
+    static const __bi_default_attr char __bi_lineno_var_name_dependency(2031)[] = name2 "|" name0 "|" name3 "|" name1; \
+    static const __bi_default_attr char __bi_lineno_var_name_dependency(2301)[] = name2 "|" name3 "|" name0 "|" name1; \
+    static const __bi_default_attr char __bi_lineno_var_name_dependency(0321)[] = name0 "|" name3 "|" name2 "|" name1; \
+    static const __bi_default_attr char __bi_lineno_var_name_dependency(3021)[] = name3 "|" name0 "|" name2 "|" name1; \
+    static const __bi_default_attr char __bi_lineno_var_name_dependency(3201)[] = name3 "|" name2 "|" name0 "|" name1; \
+    static const __bi_default_attr char __bi_lineno_var_name_dependency(1023)[] = name1 "|" name0 "|" name2 "|" name3; \
+    static const __bi_default_attr char __bi_lineno_var_name_dependency(1203)[] = name1 "|" name2 "|" name0 "|" name3; \
+    static const __bi_default_attr char __bi_lineno_var_name_dependency(1230)[] = name1 "|" name2 "|" name3 "|" name0; \
+    static const __bi_default_attr char __bi_lineno_var_name_dependency(1032)[] = name1 "|" name0 "|" name3 "|" name2; \
+    static const __bi_default_attr char __bi_lineno_var_name_dependency(1302)[] = name1 "|" name3 "|" name0 "|" name2; \
+    static const __bi_default_attr char __bi_lineno_var_name_dependency(3102)[] = name3 "|" name1 "|" name0 "|" name2; \
+    static const __bi_default_attr char __bi_lineno_var_name_dependency(1320)[] = name1 "|" name3 "|" name2 "|" name0; \
+    static const __bi_default_attr char __bi_lineno_var_name_dependency(3120)[] = name3 "|" name1 "|" name2 "|" name0; \
+    static const __bi_default_attr char __bi_lineno_var_name_dependency(2103)[] = name2 "|" name1 "|" name0 "|" name3; \
+    static const __bi_default_attr char __bi_lineno_var_name_dependency(2130)[] = name2 "|" name1 "|" name3 "|" name0; \
+    static const __bi_default_attr char __bi_lineno_var_name_dependency(2310)[] = name2 "|" name3 "|" name1 "|" name0; \
+    static const __bi_default_attr char __bi_lineno_var_name_dependency(3210)[] = name3 "|" name2 "|" name1 "|" name0; \
 
 #endif
