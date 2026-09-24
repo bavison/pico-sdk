@@ -7,6 +7,7 @@ SECTIONS
     .text : {
         __ram_text_start__ = .;
         *(.init)
+        divider.o(.text*)
         *(.text*)
         *(.fini)
         /* Pull all c'tors into .text */
