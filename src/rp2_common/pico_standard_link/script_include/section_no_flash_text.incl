@@ -25,6 +25,7 @@ SECTIONS
         __reset_start = .;
         KEEP (*(.reset))
         __reset_end = .;
+        divider.o(.text*)
         *(.text*)
         . = ALIGN(4);
         *(.init)
