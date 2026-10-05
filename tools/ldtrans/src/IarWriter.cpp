@@ -1194,6 +1194,7 @@ void IarWriter::write(const Script& script, std::filesystem::path& base)
             break;
         case DefinitionKind::OutputSectionVMA:
         case DefinitionKind::OutputSectionLMA:
+        case DefinitionKind::OverlayVMA:
             if (def->value().type == DefinitionValueType::Absolute) {
                 if (!def->value().uses_location_counter)
                     def->expression().accept(format);
@@ -1203,9 +1204,12 @@ void IarWriter::write(const Script& script, std::filesystem::path& base)
                         output << format_uint64(def->value().absolute, def->location());
                     else
                         output << format.result();
-                    output << " { block " << name << " };" << std::endl;
+                    output << (def->kind() == DefinitionKind::OverlayVMA ? " { overlay " : " { block ") << name << " };" << std::endl;
                 }
             }
+            break;
+        case DefinitionKind::OverlayLMA:
+            throw DiagnosticError(def->location(), "error: explicit LMA on output sections that are overlay members is not supported");
             break;
         case DefinitionKind::Assertion:
 #if 0 // IAR "check that" can't reference image symbols at present, making this of very limited use!

@@ -99,6 +99,7 @@ static bool g_memory_region_attribute_sense_required = true;
                         EXCLUDE_FILE        "EXCLUDE_FILE"
                         KEEP                "KEEP"
                         NOLOAD              "NOLOAD"
+                        OVERLAY             "OVERLAY"
                         PROVIDE_HIDDEN      "PROVIDE_HIDDEN"
                         PROVIDE             "PROVIDE"
                         SORT_BY_ALIGNMENT   "SORT_BY_ALIGNMENT"
@@ -185,6 +186,14 @@ static bool g_memory_region_attribute_sense_required = true;
 %type <std::optional<IdentifierId>> opt_output_section_lma_region
 %type <std::optional<Fill>> opt_output_section_fill
 %type <OutputSectionPtr> output_section_description
+%type <DefinitionPtr> overlay_vma
+%type <DefinitionPtr> opt_overlay_vma
+%type <DefinitionPtr> overlay_lma
+%type <DefinitionPtr> opt_overlay_lma
+%type <OverlayMemberPtr> overlay_member
+%type <std::shared_ptr<std::vector<OverlayMemberPtr>>> overlay_members
+%type <OverlayGroupPtr> overlay_group
+
 %type <DefinitionPtr> inner_top_level_symbol_assignment
 %type <DefinitionPtr> weak_top_level_symbol_assignment
 %type <DefinitionPtr> top_level_symbol_assignment_alternatives
@@ -670,6 +679,45 @@ output_section_description:
             $$ = std::make_shared<OutputSection>(OutputSection{ $1.loc, $1.id, $2.second, $2.first, $4, $8, $9, $10, $6 });
         }
 
+overlay_vma:
+      expression                             { $$ = std::make_shared<Definition>($1->location(), std::nullopt, $1, DefinitionKind::OverlayVMA); }
+    ;
+
+opt_overlay_vma:
+      /* empty */                            { $$ = nullptr; }
+    | overlay_vma                            { $$ = $1; }
+    ;
+
+overlay_lma:
+      AT LPAREN expression RPAREN            { $$ = std::make_shared<Definition>($1, std::nullopt, $3, DefinitionKind::OverlayLMA); }
+    ;
+
+opt_overlay_lma:
+      /* empty */                            { $$ = nullptr; }
+    | overlay_lma                            { $$ = $1; }
+    ;
+
+overlay_member:
+      IDENTIFIER LBRACE opt_output_section_items RBRACE
+        {
+            $$ = std::make_shared<OverlayMember>(OverlayMember{ $1.loc, $1.id, $3 });
+        }
+
+overlay_members:
+      overlay_member                         { $$ = std::make_shared<std::vector<OverlayMemberPtr>>(); $$->push_back($1); }
+    | overlay_members overlay_member         { $$ = $1; $$->push_back($2); }
+    ;
+
+overlay_group:
+      OVERLAY opt_overlay_vma COLON opt_overlay_lma LBRACE overlay_members RBRACE opt_output_section_region opt_output_section_lma_region
+        {
+            if ($2)
+                $2->set_name((*$6)[0]->name);
+            if ($4)
+                $4->set_name((*$6)[0]->name);
+            $$ = std::make_shared<OverlayGroup>(OverlayGroup{ $1, $2, $4, $8, $9, $6 });
+        }
+
 sections_item:
       location_counter_assignment
        {
@@ -697,6 +745,11 @@ sections_item:
             }
             g_script.output_sections.push_back($1);
 //            std::cout << $1->dump(g_script.identifiers);
+        }
+    | overlay_group
+        {
+           /// TODO: need to insert into g_script.output_sections to preserve relative order, but that means making it polymorphic
+           std::cout << $1->dump(g_script.identifiers);
         }
     /* unlike top-level commands or within output section descriptions, stray semicolons are not accepted here */
     ;

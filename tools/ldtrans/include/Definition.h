@@ -24,6 +24,8 @@ enum class DefinitionKind : std::uint8_t
     MemoryRegionLength,
     OutputSectionVMA,
     OutputSectionLMA,
+    OverlayVMA,
+    OverlayLMA,
     Assertion,
 };
 
@@ -69,6 +71,10 @@ public:
             return std::string("output section ") + ids.toDisplayName(*m_name) + " VMA";
         case DefinitionKind::OutputSectionLMA:
             return std::string("output section ") + ids.toDisplayName(*m_name) + " LMA";
+        case DefinitionKind::OverlayVMA:
+            return std::string("overlay ") + ids.toDisplayName(*m_name) + " VMA";
+        case DefinitionKind::OverlayLMA:
+            return std::string("overlay ") + ids.toDisplayName(*m_name) + " LMA";
         case DefinitionKind::Assertion:
             return "assertion";
         default:

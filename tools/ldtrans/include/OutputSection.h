@@ -252,4 +252,77 @@ struct OutputSection
 
 using OutputSectionPtr = std::shared_ptr<OutputSection>;
 
+/* Overlays are structurally closely related to output sections */
+
+struct OverlayMember
+{
+    SourceLocation location;
+    IdentifierId name;
+    std::shared_ptr<std::vector<OutputSectionItemPtr>> items;
+    std::string dump(const IdentifierManager& ids) const
+    {
+        std::string result = "    OVERLAY MEMBER\n";
+        result += "      location: " + g_source_manager.toFileLineColumn(location) + "\n";
+        result += "      name: " + ids.toDisplayName(name) + "\n";
+        const char *header = "      items:\n    ";
+        for (const auto& item : *items) {
+            auto info = item->dump(ids);
+            if (!info.empty()) {
+                result += header;
+                header = "    ";
+                auto start = info.begin();
+                for (auto it = start; it != info.end(); ++it) {
+                    if (*it == '\n') {
+                        result.append(start, it + 1);
+                        start = it + 1;
+                        if (start != info.end())
+                            result.append("    ");
+                    }
+                }
+                result.append(start, info.end());
+            }
+        }
+        if (header[4])
+            result += "      items: <none>\n";
+        return result;
+    }
+};
+
+using OverlayMemberPtr = std::shared_ptr<OverlayMember>;
+
+struct OverlayGroup
+{
+    SourceLocation location;
+    DefinitionPtr vma;
+    DefinitionPtr lma;
+    std::optional<IdentifierId> vma_region;
+    std::optional<IdentifierId> lma_region;
+    std::shared_ptr<std::vector<OverlayMemberPtr>> members;
+    std::string dump(const IdentifierManager& ids) const
+    {
+        std::string result = "OVERLAY GROUP\n";
+        result += "  location: " + g_source_manager.toFileLineColumn(location) + "\n";
+        auto dump_expression = [&ids](DefinitionPtr d) {
+            DumpVisitor expression_dump(ids);
+            d->expression().accept(expression_dump);
+            return expression_dump.result();
+        };
+        result += "  vma address: " + (vma ? dump_expression(vma) : "<undefined>") + "\n";
+        result += "  lma address: " + (lma ? dump_expression(lma) : "<undefined>") + "\n";
+        result += "  vma region: " + (vma_region ? ids.toDisplayName(*vma_region) : "<undefined>") + "\n";
+        result += "  lma region: " + (lma_region ? ids.toDisplayName(*lma_region) : "<undefined>") + "\n";
+        const char *header = "  members:\n";
+        for (const auto& member : *members) {
+            auto info = member->dump(ids);
+            result += header + info;
+            header = "";
+        }
+        if (*header)
+            result += "  members: <none>\n";
+        return result;
+    }
+};
+
+using OverlayGroupPtr = std::shared_ptr<OverlayGroup>;
+
 #endif /* sentry INCLUDE_OUTPUTSECTION_H_ */

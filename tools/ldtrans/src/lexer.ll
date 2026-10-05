@@ -42,6 +42,7 @@ SourceLocation lexer_symbol_location;
 /* State variables to determine when whitespace is syntactically significant */
 static bool in_sections_command = false;
 static bool in_output_section_assignment = false;
+static bool in_overlay = false;
 static unsigned brace_depth = 0;
 /* Flag to indicate that a synthetic whitespace token is required next */
 static bool pending_whitespace = false;
@@ -98,7 +99,7 @@ static YY_BUFFER_STATE my_scan_buffer(FileId id);
 
 [ \t\r]+ {
     ADVANCE();
-    if (in_sections_command && brace_depth >= 2 && !in_output_section_assignment) {
+    if (in_sections_command && brace_depth >= (2 + in_overlay) && !in_output_section_assignment) {
         TRACE("WHITESPACE")
         return yy::parser::make_WHITESPACE(lexer_symbol_location);
     }
@@ -137,7 +138,7 @@ REGION_ALIAS {
 
 ASSERT {
     TRACE("ASSERT")
-    if (in_sections_command && brace_depth >= 2)
+    if (in_sections_command && brace_depth >= (2 + in_overlay))
         in_output_section_assignment = true;
     ADVANCE();
     return yy::parser::make_ASSERT(lexer_symbol_location);
@@ -167,9 +168,16 @@ NOLOAD {
     return yy::parser::make_NOLOAD(lexer_symbol_location);
 }
 
+OVERLAY {
+    TRACE("OVERLAY")
+    in_overlay = true;
+    ADVANCE();
+    return yy::parser::make_OVERLAY(lexer_symbol_location);
+}
+
 PROVIDE_HIDDEN {
     TRACE("PROVIDE_HIDDEN")
-    if (in_sections_command && brace_depth >= 2)
+    if (in_sections_command && brace_depth >= (2 + in_overlay))
         in_output_section_assignment = true;
     ADVANCE();
     return yy::parser::make_PROVIDE_HIDDEN(lexer_symbol_location);
@@ -177,7 +185,7 @@ PROVIDE_HIDDEN {
 
 PROVIDE {
     TRACE("PROVIDE")
-    if (in_sections_command && brace_depth >= 2)
+    if (in_sections_command && brace_depth >= (2 + in_overlay))
         in_output_section_assignment = true;
     ADVANCE();
     return yy::parser::make_PROVIDE(lexer_symbol_location);
@@ -251,7 +259,7 @@ SIZEOF {
 
 "=" {
     TRACE("ASSIGN")
-    if (in_sections_command && brace_depth >= 2)
+    if (in_sections_command && brace_depth >= (2 + in_overlay))
         in_output_section_assignment = true;
     ADVANCE();
     return yy::parser::make_ASSIGN(lexer_symbol_location);
@@ -346,6 +354,8 @@ SIZEOF {
     TRACE("RBRACE")
     if (--brace_depth == 0)
         in_sections_command = false;
+    if (brace_depth == 1)
+        in_overlay = false;
     ADVANCE();
     return yy::parser::make_RBRACE(lexer_symbol_location);
 }
@@ -485,7 +495,7 @@ SIZEOF {
     ADVANCE();
     g_source_manager.addLine(current_location);
 
-    if (in_sections_command && brace_depth >= 2 && !in_output_section_assignment)
+    if (in_sections_command && brace_depth >= (2 + in_overlay) && !in_output_section_assignment)
         return yy::parser::make_WHITESPACE(lexer_symbol_location);
 }
 
@@ -570,7 +580,7 @@ yy::parser::symbol_type yylex()
     if (pending_whitespace)
     {
         pending_whitespace = false;
-        if (in_sections_command && brace_depth >= 2 && !in_output_section_assignment)
+        if (in_sections_command && brace_depth >= (2 + in_overlay) && !in_output_section_assignment)
             return yy::parser::make_WHITESPACE(current_location);
     }
 
