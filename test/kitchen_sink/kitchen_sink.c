@@ -97,10 +97,10 @@ int main(void) {
     extern uint32_t __overlays_start__;
     uint32_t stored_words;
 
-    static int overlay_first __attribute__((section(".overlay_first"))) = 12345678;
+    static int overlay_first __attribute__((section(".first"))) = 12345678;
     printf("overlay_first before load = %d\n", overlay_first);
-    static int overlay_second_one __attribute__((section(".overlay_second"))) = 34567890;
-    static int overlay_second_two __attribute__((section(".overlay_second"))) = 56789012;
+    static int overlay_second_one __attribute__((section(".second"))) = 34567890;
+    static int overlay_second_two __attribute__((section(".second"))) = 56789012;
     printf("overlay_second before load = %d, %d\n", overlay_second_one, overlay_second_two);
 
     extern uint32_t __load_start_overlay_second;
