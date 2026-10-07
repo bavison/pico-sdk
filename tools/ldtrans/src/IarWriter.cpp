@@ -492,8 +492,8 @@ private:
 class Block
 {
 public:
-    Block(std::string name, DefinitionPtr address = nullptr, std::optional<IdentifierId> region = {}, std::string except_objects = "", std::optional<uint64_t> align = {}, bool sorted = false, bool writable = false, bool uninitialised = false, std::optional<IdentifierId> overlay = {}) :
-        m_name(std::move(name)), m_address(address), m_region(region), m_except_objects(except_objects), m_align(align), m_sorted(sorted), m_writable(writable), m_uninitialised(uninitialised), m_overlay(overlay) {}
+    Block(std::string name, std::string except_objects = "", std::optional<uint64_t> align = {}, bool sorted = false, bool writable = false, bool uninitialised = false, std::optional<IdentifierId> overlay = {}) :
+        m_name(std::move(name)), m_except_objects(except_objects), m_align(align), m_sorted(sorted), m_writable(writable), m_uninitialised(uninitialised), m_overlay(overlay) {}
 
     void push_back(std::unique_ptr<BlockEntry> entry)
     {
@@ -546,8 +546,6 @@ public:
 private:
     std::vector<std::unique_ptr<BlockEntry>> m_entries;
     std::string m_name;
-    DefinitionPtr m_address;
-    std::optional<IdentifierId> m_region;
     std::string m_except_objects;
     std::optional<uint64_t> m_align;
     bool m_sorted;
@@ -592,8 +590,6 @@ public:
     {
         auto subblock = std::make_unique<Block>(
                 BlockName::next("align"),
-                nullptr,
-                std::optional<IdentifierId>{},
                 "",
                 item.granule()
         );
@@ -659,8 +655,6 @@ public:
                 /* Init block doesn't use a subblock in SORT case */
                 std::unique_ptr<Block> main_subblock = std::make_unique<Block>(
                         BlockName::next("sort"),
-                        nullptr,
-                        std::optional<IdentifierId>{},
                         "",
                         std::optional<uint64_t>{},
                         true,
@@ -678,8 +672,6 @@ public:
             } else if (!selection.except_clause.empty()) {
                 std::unique_ptr<Block> main_subblock = std::make_unique<Block>(
                         BlockName::next("except"),
-                        nullptr,
-                        std::optional<IdentifierId>{},
                         selection.except_clause,
                         std::optional<uint64_t>{},
                         false,
@@ -690,8 +682,6 @@ public:
                 if (m_initialised) {
                     init_subblock = std::make_unique<Block>(
                             BlockName::next("except"),
-                            nullptr,
-                            std::optional<IdentifierId>{},
                             selection.except_clause
                     );
                 }
@@ -733,8 +723,6 @@ static std::pair<std::unique_ptr<Block>, std::unique_ptr<Block>> build_blocks(
     bool writable = initialised || uninitialised;
     std::unique_ptr<Block> main_block = std::make_unique<Block>(
             iar_identifier(os.name),
-            os.vma,
-            os.vma_region,
             "",
             std::optional<uint64_t>(),
             false,
@@ -744,9 +732,7 @@ static std::pair<std::unique_ptr<Block>, std::unique_ptr<Block>> build_blocks(
     std::unique_ptr<Block> init_block;
     if (initialised)
         init_block = std::make_unique<Block>(
-                iar_init_identifier(os.name),
-                os.lma,
-                os.lma_region
+                iar_init_identifier(os.name)
         );
 
     ProcessVisitor processor(main_block.get(), init_block.get(), all_remaining, initialised, uninitialised, writable);
@@ -767,8 +753,6 @@ static std::pair<std::unique_ptr<Block>, std::unique_ptr<Block>> build_blocks(
 {
     std::unique_ptr<Block> main_block = std::make_unique<Block>(
             iar_identifier(member.name),
-            nullptr,
-            std::optional<IdentifierId>(),
             "",
             std::optional<uint64_t>(),
             false,
