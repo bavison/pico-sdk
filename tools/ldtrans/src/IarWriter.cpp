@@ -344,6 +344,11 @@ static std::string iar_identifier(IdentifierId id)
     return iar_identifier(g_script.identifiers.toRaw(id));
 }
 
+static std::string iar_init_identifier(IdentifierId id)
+{
+    return iar_identifier(g_script.identifiers.toRaw(id) + "_init");
+}
+
 static std::string iar_quoted_string(IdentifierId id)
 {
     auto raw = g_script.identifiers.toRaw(id);
@@ -739,7 +744,7 @@ static std::pair<std::unique_ptr<Block>, std::unique_ptr<Block>> build_blocks(
     std::unique_ptr<Block> init_block;
     if (initialised)
         init_block = std::make_unique<Block>(
-                iar_identifier(g_script.identifiers.toRaw(os.name) + "_init"),
+                iar_init_identifier(os.name),
                 os.lma,
                 os.lma_region
         );
@@ -772,7 +777,7 @@ static std::pair<std::unique_ptr<Block>, std::unique_ptr<Block>> build_blocks(
             group_name
     );
     std::unique_ptr<Block> init_block = std::make_unique<Block>(
-            iar_identifier(g_script.identifiers.toRaw(member.name) + "_init")
+            iar_init_identifier(member.name)
     );
 
     ProcessVisitor processor(main_block.get(), init_block.get(), all_remaining, true, false, true);
@@ -1000,8 +1005,7 @@ public:
             }
             break;
         case SectionOperator::LoadAddr:
-            /* This one is exactly the same in IAR syntax! */
-            m_result = std::string("LOADADDR(") + iar_identifier(expr.section()) + ")";
+            m_result = std::string("ADDR(") + iar_init_identifier(expr.section()) + ")";
             break;
         case SectionOperator::SizeOf:
             m_result = std::string("SIZE(") + iar_identifier(expr.section()) + ")";
@@ -1257,7 +1261,7 @@ void IarWriter::write(const Script& script, std::filesystem::path& base)
             if (!g_script.ram_only && ((lma && lma->value().type == DefinitionValueType::LocationCounter) || (lma_region && !lma))) {
                 if (!current_vma_region)
                     throw DiagnosticError( location, "error: cannot determine LMA region for output section");
-                block_mapping[*current_lma_region].emplace_back(std::string("block ") + iar_identifier(g_script.identifiers.toRaw(name) + "_init"));
+                block_mapping[*current_lma_region].emplace_back(std::string("block ") + iar_init_identifier(name));
             }
         };
         std::visit(overloaded{
@@ -1364,7 +1368,7 @@ void IarWriter::write(const Script& script, std::filesystem::path& base)
                     sanitised.erase(std::remove_if(sanitised.begin(), sanitised.end(), [](unsigned char c) {
                         return !std::isalnum(c) && c != '_';
                     }), sanitised.end());
-                    auto name = iar_identifier(g_script.identifiers.toRaw(member->name) + "_init");
+                    auto name = iar_init_identifier(member->name);
                     output << "define image symbol __load_start_" << sanitised << " = ADDR(" << name << ");\n";
                     output << "define image symbol __load_stop_" << sanitised << " = END(" << name << ");\n";
                 }
