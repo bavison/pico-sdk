@@ -1090,7 +1090,47 @@ void IarWriter::write(const Script& script, std::filesystem::path& base)
             throw std::runtime_error("cannot open output file: " + icf_file.string());
     }
 
-    std::ostream& output = base == "-" ? std::cout : output_file_stream;
+    std::ostream* poutput;
+    class ReplacingStreambuf : public std::streambuf
+    {
+    public:
+        ReplacingStreambuf(std::streambuf& destination) : m_destination(destination) {}
+    protected:
+        int_type overflow(int_type ch) override
+        {
+            /* We never call setp() so the put area isn't used and overflow()
+             * is called for every character written individually */
+            if (traits_type::eq_int_type(ch, traits_type::eof()))
+                return traits_type::not_eof(ch);
+            m_line += traits_type::to_char_type(ch);
+            if (traits_type::to_char_type(ch) == '\n')
+                flush_line();
+            return ch; /* already know this isn't an EOF */
+        }
+    private:
+        void flush_line()
+        {
+            if (m_line.empty())
+                return;
+            auto pos = m_line.find(g_script.replacement->first);
+            if (pos != std::string::npos)
+                m_line.replace(pos, g_script.replacement->first.length(), g_script.replacement->second);
+            m_destination.sputn(m_line.data(), m_line.size());
+            m_line.clear();
+        }
+        std::streambuf& m_destination;
+        std::string m_line;
+    };
+    std::unique_ptr<ReplacingStreambuf> replace_streambuf;
+    std::unique_ptr<std::ostream> replace_stream;
+    if (g_script.replacement) {
+        replace_streambuf = std::make_unique<ReplacingStreambuf>(base == "-" ? *std::cout.rdbuf() : *output_file_stream.rdbuf());
+        replace_stream = std::make_unique<std::ostream>(replace_streambuf.get());
+        poutput = replace_stream.get();
+    } else {
+        poutput = base == "-" ? &std::cout : &output_file_stream;
+    }
+    std::ostream& output = *poutput;
 
     /* Extra command required for RAM-only builds */
     if (g_script.ram_only)

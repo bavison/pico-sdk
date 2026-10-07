@@ -216,4 +216,12 @@ void runtime_init(void) {
     for (void (**p)(void) = &__init_array_start; p < &__init_array_end; ++p) {
         (*p)();
     }
+#if PICO_C_COMPILER_IS_IAR
+    /* ... and relocated init array */
+    extern uintptr_t __relocated_init_array_start;
+    extern uintptr_t __relocated_init_array_end;
+    for (uintptr_t *p = &__relocated_init_array_start; p < &__relocated_init_array_end; ++p) {
+        ((void(*)(void))((uintptr_t) p + *p))();
+    }
+#endif
 }

@@ -21,6 +21,7 @@
 /* Types for identifiers which are indexes into vectors */
 using MemoryRegionId = std::size_t;
 using SymbolId = std::size_t;
+using Replacement = std::pair<std::string, std::string>;
 
 struct Assertion
 {
@@ -52,6 +53,8 @@ struct Script
     std::vector<SectionsItem> sections_items;
     /* Script variant */
     bool ram_only = false;
+    /* Post-processing search-replace */
+    std::optional<Replacement> replacement;
 
     void SortDefinitions();
     void EvaluateDefinitions();
