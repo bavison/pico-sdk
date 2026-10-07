@@ -263,6 +263,7 @@ struct InitialiseDirectiveOutputState
         None,
         ByCopy,
         DoNot,
+        Manually,
     } open_directive = OpenDirective::None;
     std::string except_objects;
 
@@ -295,6 +296,67 @@ struct KeepDirectiveOutputState
     }
 };
 
+static std::string iar_filespec(const FileSpec& generic)
+{
+    switch (generic.archive_type) {
+    case ArchiveSpecType::None:
+        return generic.file + "()";
+    case ArchiveSpecType::Specified:
+        if (generic.file.empty())
+            return std::string("*(") + generic.archive + ")";
+        else
+            return generic.file + "(" + generic.archive + ")";
+    case ArchiveSpecType::Any:
+        return generic.file;
+    default:
+        throw std::runtime_error("internal error: invalid archive type");
+    }
+}
+
+static std::string iar_identifier(const std::string& raw)
+{
+    bool needs_quoting = raw.empty();
+    auto invalid_first_char = [](unsigned char c) {
+        return !isalpha(c) && c != '_' && c != '.';
+    };
+    if (!needs_quoting)
+        needs_quoting = invalid_first_char(raw[0]);
+    auto invalid_later_char = [](unsigned char c) {
+        return !isalnum(c) && c != '_' && c != '.';
+    };
+    for (size_t i = 1; !needs_quoting && i < raw.size(); ++i)
+        needs_quoting = invalid_later_char(raw[i]);
+    if (!needs_quoting)
+        return raw;
+
+    std::string result = "`";
+    for (size_t i = 0; i < raw.size(); ++i) {
+        if (raw[i] == '`')
+            result += '`';
+        result += raw[i];
+    }
+    result += '`';
+    return result;
+}
+
+static std::string iar_identifier(IdentifierId id)
+{
+    return iar_identifier(g_script.identifiers.toRaw(id));
+}
+
+static std::string iar_quoted_string(IdentifierId id)
+{
+    auto raw = g_script.identifiers.toRaw(id);
+    std::string result = "\"";
+    for (size_t i = 0; i < raw.size(); ++i) {
+        if (raw[i] == '"')
+            result += '"';
+        result += raw[i];
+    }
+    result += '"';
+    return result;
+}
+
 class Block;
 
 class BlockEntry
@@ -302,7 +364,7 @@ class BlockEntry
 public:
     virtual ~BlockEntry() = default;
 
-    virtual void output_initialise_directives(std::ostream& output, InitialiseDirectiveOutputState& state, std::string except_objects, bool writable, bool uninitialised) const = 0;
+    virtual void output_initialise_directives(std::ostream& output, InitialiseDirectiveOutputState& state, std::string except_objects, bool writable, bool uninitialised, bool overlay) const = 0;
     virtual void output_keep_directives(std::ostream& output, KeepDirectiveOutputState& state, std::string except_objects, bool writable) const = 0;
     virtual void output_define_directives(std::ostream& output, bool writable) const = 0;
 };
@@ -313,7 +375,7 @@ public:
     SubBlock(std::unique_ptr<Block> block) : m_block(std::move(block)) {}
 
     /* Define these later to resolve circular dependency in declarations */
-    void output_initialise_directives(std::ostream& output, InitialiseDirectiveOutputState& state, std::string except_objects, bool writable, bool uninitialised) const override;
+    void output_initialise_directives(std::ostream& output, InitialiseDirectiveOutputState& state, std::string except_objects, bool writable, bool uninitialised, bool overlay) const override;
     void output_keep_directives(std::ostream& output, KeepDirectiveOutputState& state, std::string except_objects, bool writable) const override;
     void output_define_directives(std::ostream& output, bool writable) const override;
 
@@ -328,18 +390,20 @@ class SectionSelectors : public BlockEntry
 public:
     SectionSelectors(std::vector<SectionSelector> section_selectors, bool keep) : m_section_selectors(std::move(section_selectors)), m_keep(keep) {}
 
-    void output_initialise_directives(std::ostream& output, InitialiseDirectiveOutputState& state, std::string except_objects, bool writable, bool uninitialised) const override
+    void output_initialise_directives(std::ostream& output, InitialiseDirectiveOutputState& state, std::string except_objects, bool writable, bool uninitialised, bool overlay) const override
     {
         if (writable) {
             const char *intro;
-            InitialiseDirectiveOutputState::OpenDirective new_open_directive = uninitialised ? InitialiseDirectiveOutputState::OpenDirective::DoNot : InitialiseDirectiveOutputState::OpenDirective::ByCopy;
+            InitialiseDirectiveOutputState::OpenDirective new_open_directive = overlay ? InitialiseDirectiveOutputState::OpenDirective::Manually : uninitialised ? InitialiseDirectiveOutputState::OpenDirective::DoNot : InitialiseDirectiveOutputState::OpenDirective::ByCopy;
             for (const auto& section_selector : m_section_selectors) {
                 if (section_selector.sections &&
                     std::find(g_script.zero_init_sections.begin(), g_script.zero_init_sections.end(), *section_selector.sections) != g_script.zero_init_sections.end())
                     continue;
                 if (new_open_directive != state.open_directive || except_objects != state.except_objects) {
                     state.close(output);
-                    if (uninitialised)
+                    if (overlay)
+                        intro = "initialize manually {\n  ";
+                    else if (uninitialised)
                         intro = "do not initialize {\n  ";
                     else
                         intro = "initialize by copy {\n  ";
@@ -423,8 +487,8 @@ private:
 class Block
 {
 public:
-    Block(std::string name, DefinitionPtr address = nullptr, std::optional<IdentifierId> region = {}, std::string except_objects = "", std::optional<uint64_t> align = {}, bool sorted = false, bool writable = false, bool uninitialised = false) :
-        m_name(std::move(name)), m_address(address), m_region(region), m_except_objects(except_objects), m_align(align), m_sorted(sorted), m_writable(writable), m_uninitialised(uninitialised) {}
+    Block(std::string name, DefinitionPtr address = nullptr, std::optional<IdentifierId> region = {}, std::string except_objects = "", std::optional<uint64_t> align = {}, bool sorted = false, bool writable = false, bool uninitialised = false, std::optional<IdentifierId> overlay = {}) :
+        m_name(std::move(name)), m_address(address), m_region(region), m_except_objects(except_objects), m_align(align), m_sorted(sorted), m_writable(writable), m_uninitialised(uninitialised), m_overlay(overlay) {}
 
     void push_back(std::unique_ptr<BlockEntry> entry)
     {
@@ -434,7 +498,7 @@ public:
     void output_initialise_directives(std::ostream& output, InitialiseDirectiveOutputState& state) const
     {
         for (const auto& entry : m_entries)
-            entry->output_initialise_directives(output, state, m_except_objects, m_writable, m_uninitialised);
+            entry->output_initialise_directives(output, state, m_except_objects, m_writable, m_uninitialised, m_overlay.has_value());
     }
 
     void output_keep_directives(std::ostream& output, KeepDirectiveOutputState& state) const
@@ -464,6 +528,12 @@ public:
         if (!m_except_objects.empty())
             output << "} except {\n  " << m_except_objects << std::endl;
         output << "};\n\n";
+
+        if (m_overlay) {
+            output << "define overlay " << iar_identifier(*m_overlay) << " {\n";
+            output << "  block " << m_name << ",\n";
+            output << "};\n\n";
+        }
     }
 
     const std::string& name(void) const { return m_name; }
@@ -478,9 +548,10 @@ private:
     bool m_sorted;
     bool m_writable;
     bool m_uninitialised;
+    std::optional<IdentifierId> m_overlay;
 };
 
-void SubBlock::output_initialise_directives(std::ostream& output, InitialiseDirectiveOutputState& state, std::string except_objects, bool writable, bool uninitialised) const
+void SubBlock::output_initialise_directives(std::ostream& output, InitialiseDirectiveOutputState& state, std::string except_objects, bool writable, bool uninitialised, bool overlay) const
 {
     m_block->output_initialise_directives(output, state);
 }
@@ -493,67 +564,6 @@ void SubBlock::output_keep_directives(std::ostream& output, KeepDirectiveOutputS
 void SubBlock::output_define_directives(std::ostream& output, bool writable) const
 {
     output << "  block " << m_block->name() << ",\n";
-}
-
-static std::string iar_filespec(const FileSpec& generic)
-{
-    switch (generic.archive_type) {
-    case ArchiveSpecType::None:
-        return generic.file + "()";
-    case ArchiveSpecType::Specified:
-        if (generic.file.empty())
-            return std::string("*(") + generic.archive + ")";
-        else
-            return generic.file + "(" + generic.archive + ")";
-    case ArchiveSpecType::Any:
-        return generic.file;
-    default:
-        throw std::runtime_error("internal error: invalid archive type");
-    }
-}
-
-static std::string iar_identifier(const std::string& raw)
-{
-    bool needs_quoting = raw.empty();
-    auto invalid_first_char = [](unsigned char c) {
-        return !isalpha(c) && c != '_' && c != '.';
-    };
-    if (!needs_quoting)
-        needs_quoting = invalid_first_char(raw[0]);
-    auto invalid_later_char = [](unsigned char c) {
-        return !isalnum(c) && c != '_' && c != '.';
-    };
-    for (size_t i = 1; !needs_quoting && i < raw.size(); ++i)
-        needs_quoting = invalid_later_char(raw[i]);
-    if (!needs_quoting)
-        return raw;
-
-    std::string result = "`";
-    for (size_t i = 0; i < raw.size(); ++i) {
-        if (raw[i] == '`')
-            result += '`';
-        result += raw[i];
-    }
-    result += '`';
-    return result;
-}
-
-static std::string iar_identifier(IdentifierId id)
-{
-    return iar_identifier(g_script.identifiers.toRaw(id));
-}
-
-static std::string iar_quoted_string(IdentifierId id)
-{
-    auto raw = g_script.identifiers.toRaw(id);
-    std::string result = "\"";
-    for (size_t i = 0; i < raw.size(); ++i) {
-        if (raw[i] == '"')
-            result += '"';
-        result += raw[i];
-    }
-    result += '"';
-    return result;
 }
 
 class ProcessVisitor : public ConstOutputSectionItemVisitor
@@ -742,6 +752,32 @@ static std::pair<std::unique_ptr<Block>, std::unique_ptr<Block>> build_blocks(
         Diagnostic warning { os.fill->location, "warning: ignoring output section fill attribute" };
         std::cerr << warning.format();
     }
+
+    return { std::move(main_block), std::move(init_block) };
+}
+
+static std::pair<std::unique_ptr<Block>, std::unique_ptr<Block>> build_blocks(
+        const OverlayMember& member, IdentifierId group_name,
+        std::unordered_map<std::string, FilesRemaining>& all_remaining)
+{
+    std::unique_ptr<Block> main_block = std::make_unique<Block>(
+            iar_identifier(member.name),
+            nullptr,
+            std::optional<IdentifierId>(),
+            "",
+            std::optional<uint64_t>(),
+            false,
+            true,
+            false,
+            group_name
+    );
+    std::unique_ptr<Block> init_block = std::make_unique<Block>(
+            iar_identifier(g_script.identifiers.toRaw(member.name) + "_init")
+    );
+
+    ProcessVisitor processor(main_block.get(), init_block.get(), all_remaining, true, false, true);
+    for (auto& item : *member.items)
+        item->accept(processor);
 
     return { std::move(main_block), std::move(init_block) };
 }
@@ -1065,22 +1101,39 @@ void IarWriter::write(const Script& script, std::filesystem::path& base)
 
     /* Memory regions */
     for (auto& region : g_script.memory_regions) {
-        bool ram = false;
+        bool ram = g_script.ram_only;
         auto origin = region.origin().value().absolute;
         auto length = region.length().value().absolute;
-        for (auto& os : g_script.output_sections) {
-            if (os->noload || os->lma || os->lma_region) {
-                if (os->vma) {
-                    auto vma_value = os->vma ? os->vma->value().absolute : 0;
-                    if (vma_value >= origin && vma_value < origin + length) {
-                        ram = true;
-                        break;
-                    }
-                } else if (os->vma_region && *os->vma_region == region.name()) {
-                    ram = true;
-                    break;
+        if (!ram) {
+            try {
+                for (const auto& sections_item : g_script.sections_items) {
+                    auto check_vma = [&](DefinitionPtr vma, std::optional<IdentifierId> vma_region) {
+                        if (vma) {
+                            auto vma_value = vma->value().absolute;
+                            if (vma_value >= origin && vma_value < origin + length) {
+                                ram = true;
+                                throw 1;
+                            }
+                        } else if (vma_region) {
+                            if (g_script.memory_region_lookup[*vma_region] == &region - &g_script.memory_regions[0]) {
+                                ram = true;
+                                throw 1;
+                            }
+                        }
+                    };
+                    std::visit(overloaded{
+                        [&](const OutputSectionPtr& section) {
+                            if (section->noload || section->lma || section->lma_region)
+                                check_vma(section->vma, section->vma_region);
+                        },
+                        [&](const OverlayGroupPtr& overlay) {
+                            if (overlay->lma || overlay->lma_region)
+                                check_vma(overlay->vma, overlay->vma_region);
+                        }
+                    }, sections_item);
                 }
             }
+            catch (int x) { /* already determined that this region is RAM */ }
         }
         output << "define " << (ram ? "ram" : "rom") << " region " << iar_identifier(region.name());
         output << " = mem:[from " << std::hex << std::showbase << origin;
@@ -1092,12 +1145,25 @@ void IarWriter::write(const Script& script, std::filesystem::path& base)
     /* Restructure output sections to fit IAR syntax better */
     std::vector<std::unique_ptr<Block>> top_level_blocks;
     std::unordered_map<std::string, FilesRemaining> all_remaining;
-    for (auto& os : g_script.output_sections) {
-        bool initialised = !g_script.ram_only && (os->lma || os->lma_region);
-        auto [main_block, init_block] = build_blocks(initialised, *os, all_remaining);
-        top_level_blocks.push_back(std::move(main_block));
-        if (initialised)
-            top_level_blocks.push_back(std::move(init_block));
+    for (const auto& sections_item : g_script.sections_items) {
+        std::visit(overloaded{
+            [&](const OutputSectionPtr& section) {
+                bool initialised = !g_script.ram_only && (section->lma || section->lma_region);
+                auto [main_block, init_block] = build_blocks(initialised, *section, all_remaining);
+                top_level_blocks.push_back(std::move(main_block));
+                if (initialised)
+                    top_level_blocks.push_back(std::move(init_block));
+            },
+            [&](const OverlayGroupPtr& overlay) {
+                if (!overlay->lma && !overlay->lma_region)
+                    throw DiagnosticError(overlay->location, "error: overlays require initialisers");
+                for (const auto& member : *overlay->members) {
+                    auto [main_block, init_block] = build_blocks(*member, (*overlay->members)[0]->name, all_remaining);
+                    top_level_blocks.push_back(std::move(main_block));
+                    top_level_blocks.push_back(std::move(init_block));
+                }
+            }
+        }, sections_item);
     }
 
     /* RAM initialisation */
@@ -1119,44 +1185,58 @@ void IarWriter::write(const Script& script, std::filesystem::path& base)
     /* Mapping of top-level blocks to memory regions */
     std::optional<IdentifierId> current_vma_region;
     std::map<IdentifierId, std::vector<std::string>> block_mapping;
-    for (const auto& os : g_script.output_sections) {
-        if (os->vma_region && !os->vma)
-            // new region name - but do lookup to resolve any possible alias
-            current_vma_region = g_script.memory_regions[g_script.memory_region_lookup[*os->vma_region]].name();
-        else if (os->vma && os->vma->value().type == DefinitionValueType::Absolute)
-            current_vma_region.reset();
-        // else either it's an error condition or we have a VMA expression which evaluates to the location counter, so keep the same region
-        if (os->vma && os->vma_region) {
-            Diagnostic warning { os->location, "warning: output section VMA region ignored in favour of VMA address" };
-            std::cerr << warning.format();
-        }
-        if ((os->vma && os->vma->value().type == DefinitionValueType::LocationCounter) || (os->vma_region && !os->vma)) {
-            if (!current_vma_region)
-                throw DiagnosticError( os->location, "error: cannot determine VMA region for output section");
-            block_mapping[*current_vma_region].emplace_back(iar_identifier(os->name));
-        }
-
-        /* With LMA, there's no equivalent persistence mechanism so we recalculate it each time */
-        std::optional<IdentifierId> current_lma_region;
-        if (os->lma_region && !os->lma)
-            current_lma_region = g_script.memory_regions[g_script.memory_region_lookup[*os->lma_region]].name();
-        else if (os->lma && os->lma->value().type == DefinitionValueType::LocationCounter)
-            current_lma_region = current_vma_region;
-        if (os->lma && os->lma_region) {
-            Diagnostic warning { os->location, "warning: output section LMA region ignored in favour of LMA address" };
-            std::cerr << warning.format();
-        }
-        if (!g_script.ram_only && ((os->lma && os->lma->value().type == DefinitionValueType::LocationCounter) || (os->lma_region && !os->lma))) {
-            if (!current_vma_region)
-                throw DiagnosticError( os->location, "error: cannot determine LMA region for output section");
-            block_mapping[*current_lma_region].emplace_back(iar_identifier(os->name) + "_init");
-        }
+    for (const auto& sections_item : g_script.sections_items) {
+        auto map_vma = [&](SourceLocation location, IdentifierId name, DefinitionPtr vma, std::optional<IdentifierId> vma_region, std::string type_prefix) {
+            if (vma_region && !vma)
+                // new region name - but do lookup to resolve any possible alias
+                current_vma_region = g_script.memory_regions[g_script.memory_region_lookup[*vma_region]].name();
+            else if (vma && vma->value().type == DefinitionValueType::Absolute)
+                current_vma_region.reset();
+            // else either it's an error condition or we have a VMA expression which evaluates to the location counter, so keep the same region
+            if (vma && vma_region) {
+                Diagnostic warning { location, "warning: output section VMA region ignored in favour of VMA address" };
+                std::cerr << warning.format();
+            }
+            if ((vma && vma->value().type == DefinitionValueType::LocationCounter) || (vma_region && !vma)) {
+                if (!current_vma_region)
+                    throw DiagnosticError( location, "error: cannot determine VMA region for output section");
+                block_mapping[*current_vma_region].emplace_back(type_prefix + iar_identifier(name));
+            }
+        };
+        auto map_lma = [&](SourceLocation location, IdentifierId name, DefinitionPtr lma, std::optional<IdentifierId> lma_region) {
+            /* With LMA, there's no equivalent persistence mechanism so we recalculate it each time */
+            std::optional<IdentifierId> current_lma_region;
+            if (lma_region && !lma)
+                current_lma_region = g_script.memory_regions[g_script.memory_region_lookup[*lma_region]].name();
+            else if (lma && lma->value().type == DefinitionValueType::LocationCounter)
+                current_lma_region = current_vma_region;
+            if (lma && lma_region) {
+                Diagnostic warning { location, "warning: output section LMA region ignored in favour of LMA address" };
+                std::cerr << warning.format();
+            }
+            if (!g_script.ram_only && ((lma && lma->value().type == DefinitionValueType::LocationCounter) || (lma_region && !lma))) {
+                if (!current_vma_region)
+                    throw DiagnosticError( location, "error: cannot determine LMA region for output section");
+                block_mapping[*current_lma_region].emplace_back(std::string("block ") + iar_identifier(g_script.identifiers.toRaw(name) + "_init"));
+            }
+        };
+        std::visit(overloaded{
+            [&](const OutputSectionPtr& section) {
+                map_vma(section->location, section->name, section->vma, section->vma_region, "block ");
+                map_lma(section->location, section->name, section->lma, section->lma_region);
+            },
+            [&](const OverlayGroupPtr& overlay) {
+                map_vma(overlay->location, (*overlay->members)[0]->name, overlay->vma, overlay->vma_region, "overlay ");
+                for (const auto& member : *overlay->members)
+                    map_lma(overlay->location, member->name, overlay->lma, overlay->lma_region);
+            }
+        }, sections_item);
     }
     for (const auto& this_region : block_mapping) {
         auto block_name = BlockName::next("region");
         output << "define block " << block_name << " with fixed order {\n";
-        for (const auto& block: this_region.second)
-            output << "  block " << block << ",\n";
+        for (const auto& selector: this_region.second)
+            output << "  " << selector << ",\n";
         output << "};\n\n";
         output << "place in " << iar_identifier(this_region.first) << " { block " << block_name << " };\n\n";
     }
@@ -1230,5 +1310,25 @@ void IarWriter::write(const Script& script, std::filesystem::path& base)
         }
         if (format.skip_me())
             m_untranslatable_definitions.insert(def);
+    }
+
+    /* Implicit definitions delimiting overlay initialisers */
+    for (const auto& sections_item : g_script.sections_items) {
+        std::visit(overloaded{
+            [&](const OutputSectionPtr& section) {
+                /* nothing to do */
+            },
+            [&](const OverlayGroupPtr& overlay) {
+                for (const auto& member : *overlay->members) {
+                    auto sanitised = g_script.identifiers.toRaw(member->name);
+                    sanitised.erase(std::remove_if(sanitised.begin(), sanitised.end(), [](unsigned char c) {
+                        return !std::isalnum(c) && c != '_';
+                    }), sanitised.end());
+                    auto name = iar_identifier(g_script.identifiers.toRaw(member->name) + "_init");
+                    output << "define image symbol __load_start_" << sanitised << " = ADDR(" << name << ");\n";
+                    output << "define image symbol __load_stop_" << sanitised << " = END(" << name << ");\n";
+                }
+            }
+        }, sections_item);
     }
 }

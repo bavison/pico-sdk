@@ -9,6 +9,7 @@
 
 #include <charconv>
 #include <string>
+#include <variant>
 
 enum class ArchiveSpecType : std::uint8_t
 {
@@ -324,5 +325,15 @@ struct OverlayGroup
 };
 
 using OverlayGroupPtr = std::shared_ptr<OverlayGroup>;
+
+using SectionsItem = std::variant<OutputSectionPtr, OverlayGroupPtr>;
+
+/* Helper template so we can overload lambdas for both types of SectionsItem */
+template<typename Handler1, typename Handler2> struct overloaded : Handler1, Handler2 {
+    using Handler1::operator();
+    using Handler2::operator();
+};
+/* Deduction guide so we don't need to specify specialisation of overloaded (which would be a pair of function pointer types) */
+template<typename Handler1, typename Handler2> overloaded(Handler1, Handler2) -> overloaded<Handler1, Handler2>;
 
 #endif /* sentry INCLUDE_OUTPUTSECTION_H_ */

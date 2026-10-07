@@ -48,8 +48,8 @@ struct Script
     std::vector<Assertion> assertions;
     /* Definitions in dependency order */
     std::vector<Definition*> definition_order;
-    /* Output sections */
-    std::vector<OutputSectionPtr> output_sections;
+    /* SECTIONS command items (usually output sections) */
+    std::vector<SectionsItem> sections_items;
     /* Script variant */
     bool ram_only = false;
 

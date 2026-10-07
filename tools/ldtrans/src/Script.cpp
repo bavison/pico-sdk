@@ -188,11 +188,21 @@ void Script::SortDefinitions()
     for (SymbolId s = (SymbolId) 0; s < symbols.size(); ++s) {
         sort(&symbols[s].definition());
     }
-    for (OutputSectionPtr& o : output_sections) {
-        if (o->vma)
-            sort(o->vma.get());
-        if (o->lma)
-            sort(o->lma.get());
+    for (const auto& sections_item : sections_items) {
+        auto sort_address_definitions = [&](DefinitionPtr vma, DefinitionPtr lma) {
+            if (vma)
+                sort(vma.get());
+            if (lma)
+                sort(lma.get());
+        };
+        std::visit(overloaded{
+            [&](const OutputSectionPtr& section) {
+                sort_address_definitions(section->vma, section->lma);
+            },
+            [&](const OverlayGroupPtr& overlay) {
+                sort_address_definitions(overlay->vma, overlay->lma);
+            }
+        }, sections_item);
     }
     for (Assertion& a : assertions) {
         sort(&a.definition);

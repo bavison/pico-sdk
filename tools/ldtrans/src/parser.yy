@@ -736,20 +736,55 @@ sections_item:
       }
     | output_section_description
         {
-            for (const auto& other : g_script.output_sections) {
-                if (other->name == $1->name) {
-                    Diagnostic warning($1->location, "warning: output section is defined more than once", {{ other->location, "first definition is here" }});
+            auto check_name_clash = [](IdentifierId name, SourceLocation loc, IdentifierId other_name, SourceLocation other_loc) {
+                if (name == other_name) {
+                    Diagnostic warning(loc, "warning: output section is defined more than once", {{ other_loc, "first definition is here" }});
                     std::cerr << warning.format();
-                    break;
+                    throw 1;
                 }
+            };
+            try {
+                for (const auto& sections_item : g_script.sections_items)
+                    std::visit(overloaded{
+                        [&](const OutputSectionPtr& section) {
+                            check_name_clash($1->name, $1->location, section->name, section->location);
+                        },
+                        [&](const OverlayGroupPtr& overlay) {
+                            for (const auto& other_member : *overlay->members)
+                                check_name_clash($1->name, $1->location, other_member->name, other_member->location);
+                        }
+                    }, sections_item);
             }
-            g_script.output_sections.push_back($1);
+            catch (int x) { /* clash already reported */ };
+            g_script.sections_items.push_back($1);
 //            std::cout << $1->dump(g_script.identifiers);
         }
     | overlay_group
         {
-           /// TODO: need to insert into g_script.output_sections to preserve relative order, but that means making it polymorphic
-           std::cout << $1->dump(g_script.identifiers);
+            auto check_name_clash = [](IdentifierId name, SourceLocation loc, IdentifierId other_name, SourceLocation other_loc) {
+                if (name == other_name) {
+                    Diagnostic warning(loc, "warning: output section is defined more than once", {{ other_loc, "first definition is here" }});
+                    std::cerr << warning.format();
+                    throw 1;
+                }
+            };
+            for (const auto& member : *$1->members) {
+                try {
+                    for (const auto& sections_item : g_script.sections_items)
+                        std::visit(overloaded{
+                            [&](const OutputSectionPtr& section) {
+                                check_name_clash(member->name, member->location, section->name, section->location);
+                            },
+                            [&](const OverlayGroupPtr& overlay) {
+                                for (const auto& other_member : *overlay->members)
+                                    check_name_clash(member->name, member->location, other_member->name, other_member->location);
+                            }
+                        }, sections_item);
+                }
+                catch (int x) { /* clash already reported for this member */ };
+            }
+            g_script.sections_items.push_back($1);
+//            std::cout << $1->dump(g_script.identifiers);
         }
     /* unlike top-level commands or within output section descriptions, stray semicolons are not accepted here */
     ;
