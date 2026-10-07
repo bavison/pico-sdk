@@ -88,7 +88,7 @@ function(pico_add_extra_outputs TARGET)
         endif()
 
         # Build ldtrans options
-        set(_ldtrans_args --format=iar --replace="section .relocated_init_array"="init_array section .init_array")
+        set(_ldtrans_args --format=iar "--replace=section .relocated_init_array=init_array section .init_array")
 
         if (NOT PICO_DEFAULT_BINARY_TYPE)
             if (PICO_NO_FLASH)
@@ -110,7 +110,9 @@ function(pico_add_extra_outputs TARGET)
         endif()
 
         get_target_property(_ldtrans_binary_dir ${TARGET} BINARY_DIR)
-        list(APPEND _ldtrans_args -o "${_ldtrans_binary_dir}/link" --)
+        set(_ldtrans_generated_script "${_ldtrans_binary_dir}/${TARGET}")
+        set_target_properties(${TARGET} PROPERTIES LDTRANS_GENERATED_SCRIPT "${_ldtrans_generated_script}")
+        list(APPEND _ldtrans_args -o "${_ldtrans_generated_script}" --)
 
         # The options following -- need to be kept in line with
         # pico_standard_link, but we can't use generator expressions here!
