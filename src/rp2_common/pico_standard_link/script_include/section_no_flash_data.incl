@@ -43,6 +43,12 @@ SECTIONS
         PROVIDE_HIDDEN (__init_array_end = .);
 
         . = ALIGN(4);
+        /* native init data on IAR needs relocating */
+        PROVIDE_HIDDEN (__relocated_init_array_start = .);
+        *(.relocated_init_array)
+        PROVIDE_HIDDEN (__relocated_init_array_end = .);
+
+        . = ALIGN(4);
         /* finit data */
         PROVIDE_HIDDEN (__fini_array_start = .);
         *(SORT(.fini_array.*))
