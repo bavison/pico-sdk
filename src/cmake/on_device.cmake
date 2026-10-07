@@ -88,7 +88,7 @@ function(pico_add_extra_outputs TARGET)
         endif()
 
         # Build ldtrans options
-        set(_ldtrans_args --format=iar)
+        set(_ldtrans_args --format=iar "--replace=section .relocated_init_array=init_array section .init_array")
 
         if (NOT PICO_DEFAULT_BINARY_TYPE)
             if (PICO_NO_FLASH)
