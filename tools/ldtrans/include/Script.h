@@ -1,0 +1,66 @@
+/*
+ * Copyright (c) 2026 Raspberry Pi Ltd.
+ *
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
+
+#ifndef INCLUDE_SCRIPT_H_
+#define INCLUDE_SCRIPT_H_
+
+#include <cstddef>
+
+#include <optional>
+#include <vector>
+
+#include "Identifier.h"
+#include "MemoryRegion.h"
+#include "OutputSection.h"
+#include "SourceLocation.h"
+#include "Symbol.h"
+
+/* Types for identifiers which are indexes into vectors */
+using MemoryRegionId = std::size_t;
+using SymbolId = std::size_t;
+using Replacement = std::pair<std::string, std::string>;
+
+struct Assertion
+{
+    Definition definition;
+    IdentifierId message;
+};
+
+struct Script
+{
+    /* Set of zero-init sections can't be derived directly from the script */
+    std::vector<std::string_view> zero_init_sections;
+    /* Identifiers */
+    IdentifierManager identifiers;
+    /* Image entry point */
+    std::optional<std::pair<SourceLocation,IdentifierId>> entry;
+    /* Memory regions (order is significant in case an output section has to match using attributes) */
+    std::vector<MemoryRegion> memory_regions;
+    /* Map from memory region and region alias names to memory region index */
+    std::unordered_map<IdentifierId, MemoryRegionId> memory_region_lookup;
+    /* Symbols, stored in discovery order (though redefinitions overwrite the previous definition and so inherit its index) */
+    std::vector<Symbol> symbols;
+    /* Map from symbol to symbol index */
+    std::unordered_map<IdentifierId, SymbolId> symbol_lookup;
+    /* Assertions */
+    std::vector<Assertion> assertions;
+    /* Definitions in dependency order */
+    std::vector<Definition*> definition_order;
+    /* SECTIONS command items (usually output sections) */
+    std::vector<SectionsItem> sections_items;
+    /* Script variant */
+    bool ram_only = false;
+    /* Post-processing search-replace */
+    std::optional<Replacement> replacement;
+
+    void SortDefinitions();
+    void EvaluateDefinitions();
+    unsigned GenerateAnchorIndex();
+};
+
+extern Script g_script;
+
+#endif /* sentry INCLUDE_SCRIPT_H_ */
