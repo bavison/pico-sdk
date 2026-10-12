@@ -41,6 +41,11 @@ set(CMAKE_C_OUTPUT_EXTENSION .o)
 
 option(PICO_DEOPTIMIZED_DEBUG "Build debug builds without optimisations" 0)
 
+# Assict Windows users to find our bundled Python interpreter
+if(WIN32 AND NOT DEFINED Python3_EXECUTABLE)
+    set(Python3_EXECUTABLE "${PICO_SDK_PATH}/../python/python.exe")
+endif()
+
 # Specify variables required to configure the EWARM IDE
 set(CMAKE_IAR_RUNTIME_LIB_SELECT        "2")
 set(CMAKE_IAR_CHIP_SELECT               "RaspberryPi RP2040")
