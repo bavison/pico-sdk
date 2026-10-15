@@ -273,7 +273,7 @@ function(pico_generate_pio_header TARGET)
         endif()
 
         add_custom_command(OUTPUT ${HEADER}
-                DEPENDS ${PIO}
+                MAIN_DEPENDENCY ${PIO}
                 COMMAND pioasm -o ${OUTPUT_FORMAT} -v ${VERSION_STRING} ${PIO} ${HEADER}
                 VERBATIM)
 
@@ -288,12 +288,11 @@ function(pico_generate_pio_header TARGET)
         endif()
     endforeach()
 
-    if (NOT "${CMAKE_GENERATOR}" STREQUAL "IAR Embedded Workbench for Arm")
-        if ("INTERFACE_LIBRARY" STREQUAL "${target_type}")
-            target_include_directories(${TARGET} INTERFACE ${HEADER_DIR})
-        else()
-            target_include_directories(${TARGET} PUBLIC ${HEADER_DIR})
-        endif()
+    get_target_property(target_type ${TARGET} TYPE)
+    if ("INTERFACE_LIBRARY" STREQUAL "${target_type}")
+        target_include_directories(${TARGET} INTERFACE ${HEADER_DIR})
+    else()
+        target_include_directories(${TARGET} PUBLIC ${HEADER_DIR})
     endif()
 endfunction()
 
