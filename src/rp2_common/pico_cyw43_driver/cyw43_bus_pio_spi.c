@@ -402,7 +402,7 @@ uint32_t read_reg_u32_swap(cyw43_int_t *self, uint32_t fn, uint32_t reg) {
 static inline uint32_t _cyw43_read_reg(cyw43_int_t *self, uint32_t fn, uint32_t reg, uint size) {
     // Padding plus max read size of 32 bits + another 4?
     static_assert(CYW43_BACKPLANE_READ_PAD_LEN_BYTES % 4 == 0, "");
-    int index = (CYW43_BACKPLANE_READ_PAD_LEN_BYTES / 4) + 1 + 1;
+#define index ((CYW43_BACKPLANE_READ_PAD_LEN_BYTES / 4) + 1 + 1)
     uint32_t buf32[index];
     uint8_t *buf = (uint8_t *)buf32;
     const uint32_t padding = (fn == BACKPLANE_FUNCTION) ? CYW43_BACKPLANE_READ_PAD_LEN_BYTES : 0; // Add response delay
