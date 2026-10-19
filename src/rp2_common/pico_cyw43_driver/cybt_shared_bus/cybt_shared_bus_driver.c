@@ -492,9 +492,11 @@ void cybt_debug_dump(void) {
     cybt_reg_read(HOST_CTRL_REG_ADDR, &reg_val);
     cybt_debug("HOST_CTRL_REG_ADDR: 0x%08lx = 0x%08lx (last 0x%08lx)\n", HOST_CTRL_REG_ADDR, reg_val,
                 last_host_ctrl_reg);
+    (void) last_host_ctrl_reg;
 
     cybt_reg_read(BT_CTRL_REG_ADDR, &reg_val);
     cybt_debug("BT_CTRL_REG_ADDR: 0x%08lx = 0x%08lx (last 0x%08lx)\n", BT_CTRL_REG_ADDR, reg_val, last_bt_ctrl_reg);
+    (void) last_bt_ctrl_reg;
 #endif
 }
 
