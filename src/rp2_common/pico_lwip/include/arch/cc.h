@@ -83,8 +83,10 @@ void pico_lwip_custom_unlock_tcpip_core(void);
 #endif
 
 #ifndef LWIP_PLATFORM_ASSERT
-#include "pico.h"
-#define LWIP_PLATFORM_ASSERT(x) panic(x)
+// Not declared noreturn: lwIP assumes LWIP_ASSERT() may return, and code following an
+// assert would otherwise be flagged as unreachable by some compilers (e.g. IAR Pe111).
+void pico_lwip_assert_handler(const char *x);
+#define LWIP_PLATFORM_ASSERT(x) pico_lwip_assert_handler(x)
 #endif
 
 #ifndef LWIP_RAND
