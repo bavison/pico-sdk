@@ -15,7 +15,7 @@
 #include "pico/bootrom.h"
 void __weak runtime_init_bootrom_reset(void) {
     // todo can we tell if we came in thru the bootrom where this is not necessary (this is necessary for debugger)
-    rom_bootrom_state_reset_fn state_reset = rom_func_lookup(ROM_FUNC_BOOTROM_STATE_RESET);
+    rom_bootrom_state_reset_fn state_reset = (rom_bootrom_state_reset_fn) rom_func_lookup(ROM_FUNC_BOOTROM_STATE_RESET);
     state_reset(BOOTROM_STATE_RESET_GLOBAL_STATE);
 }
 #endif
@@ -31,7 +31,7 @@ PICO_RUNTIME_INIT_FUNC_RUNTIME(runtime_init_bootrom_reset, PICO_RUNTIME_INIT_BOO
 #include "pico/bootrom.h"
 void __weak runtime_init_per_core_bootrom_reset(void) {
     // todo can we tell if we came in thru the bootrom where this is not necessary (this is necessary for debugger)
-    rom_bootrom_state_reset_fn state_reset = rom_func_lookup(ROM_FUNC_BOOTROM_STATE_RESET);
+    rom_bootrom_state_reset_fn state_reset = (rom_bootrom_state_reset_fn) rom_func_lookup(ROM_FUNC_BOOTROM_STATE_RESET);
     state_reset(BOOTROM_STATE_RESET_CURRENT_CORE);
 }
 #endif
