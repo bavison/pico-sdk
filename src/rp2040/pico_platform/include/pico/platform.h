@@ -183,9 +183,14 @@ return a;
  * \param b the second operand
  * \return a * b
  */
+#if PICO_C_COMPILER_IS_IAR
+// IAR already does this optimisation without prompting, but doesn't support __builtin_choose_expr
+#define __fast_mul(a,b) ((a)*(b))
+#else
 #define __fast_mul(a, b) __builtin_choose_expr(__builtin_constant_p(b) && !__builtin_constant_p(a), \
     (__builtin_popcount(b) >= 2 ? __mul_instruction(a,b) : (a)*(b)), \
     (a)*(b))
+#endif
 
 #ifdef __cplusplus
 }
