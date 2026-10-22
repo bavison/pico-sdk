@@ -12,6 +12,22 @@ pico_default_asm_setup
 
  .extern __aeabi_ddiv
 
+#if PICO_ASSEMBLER_IS_IAR
+
+.macro double_section name, override_align
+.set align, 2
+.if _args > 1
+.set align, override_align
+.endif
+#if PICO_DOUBLE_IN_RAM
+ section BACKTICK_QUOTED(RAM_SECTION_NAME(name)):CODE:NOROOT(align)
+#else
+ section BACKTICK_QUOTED(SECTION_NAME(name)):CODE:NOROOT(align)
+#endif
+.endm
+
+#else
+
 .macro double_section name
 #if PICO_DOUBLE_IN_RAM
 .section RAM_SECTION_NAME(\name), "ax"
@@ -19,6 +35,8 @@ pico_default_asm_setup
 .section SECTION_NAME(\name), "ax"
 #endif
 .endm
+
+#endif
 
 .macro double_wrapper_section func
 double_section WRAPPER_FUNC_NAME(\func)
@@ -734,7 +752,7 @@ dreduce:
  orrs r0,r0,r6
  bx r14
 
-double_section exptab
+double_section exptab, 3
 
 .align 2
     data_in_code_area

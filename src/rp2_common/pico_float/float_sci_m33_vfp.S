@@ -10,6 +10,26 @@
 
 pico_default_asm_setup
 
+#if PICO_ASSEMBLER_IS_IAR
+
+.macro float_section name, override_align
+.set align, 2
+.if _args > 1
+.set align, override_align
+.endif
+#if PICO_FLOAT_IN_RAM
+ section BACKTICK_QUOTED(RAM_SECTION_NAME(name)):CODE:NOROOT(align)
+#else
+ section BACKTICK_QUOTED(SECTION_NAME(name)):CODE:NOROOT(align)
+#endif
+.endm
+
+.macro float_wrapper_section func, override_align
+ float_section WRAPPER_FUNC_NAME(func), override_align
+.endm
+
+#else
+
 .macro float_section name
 #if PICO_FLOAT_IN_RAM
 .section RAM_SECTION_NAME(\name), "ax"
@@ -21,6 +41,8 @@ pico_default_asm_setup
 .macro float_wrapper_section func
 float_section WRAPPER_FUNC_NAME(\func)
 .endm
+
+#endif
 
 @ load a 32-bit constant n into register rx
 .macro movlong rx,n
@@ -67,7 +89,7 @@ frr_core:
  mla r6,r5,r3,r6             @ r0+=a2*u0
  bx r14
 
-float_wrapper_section expf
+float_wrapper_section expf, 3
 
 wrapper_func expf
 #if defined(__ARM_PCS_VFP)
@@ -213,7 +235,7 @@ exptab3:                     @ pow(2,[0..31]/32)
 .word 0x3ff5257d
 .word 0x3ffa83b3
 
-float_wrapper_section logf
+float_wrapper_section logf, 3
 
 wrapper_func logf
 #if defined(__ARM_PCS_VFP)
@@ -322,7 +344,7 @@ logtab3:
 .word 0x00ae,0x3ec5b1cd      @ 00003f36..00004092
 .word 0x00ab,0x3ece995f      @ 00003f75..000040cb
 
-float_wrapper_section fsin_fcos
+float_wrapper_section fsin_fcos, 3
 
 30:
  lsls r1,r0,#9
