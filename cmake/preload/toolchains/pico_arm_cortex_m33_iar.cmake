@@ -48,13 +48,17 @@ endif()
 
 # Specify variables required to configure the EWARM IDE
 set(CMAKE_IAR_RUNTIME_LIB_SELECT        "2")
-set(CMAKE_IAR_CHIP_SELECT               "RaspberryPi RP2354")
+set(CMAKE_IAR_CHIP_SELECT               "RaspberryPi RP2350")
 set(CMAKE_IAR_CORE                      "61")
 set(CMAKE_IAR_FPU                       "6")
 set(CMAKE_IAR_FPU_NR_REGS               "1")
 set(CMAKE_IAR_DSP_EXTENSION             "1")
 set(CMAKE_IAR_TRUSTZONE                 "1")
-set(CMAKE_IAR_TRUSTZONE_MODES           "1")
+if (PICO_NO_CMSE)
+set(CMAKE_IAR_TRUSTZONE_MODES           "1")  # Non-secure
+else()
+set(CMAKE_IAR_TRUSTZONE_MODES           "0")  # Secure
+endif()
 set(CMAKE_IAR_C_DIAG_SUPPRESS           "Pa039,Pe170")
 set(CMAKE_IAR_ASM_DIAG_SUPPRESS         "12")
 set(CMAKE_IAR_ILINK_ICF_FILE            "$<TARGET_PROPERTY:LDTRANS_GENERATED_SCRIPT>.icf")
