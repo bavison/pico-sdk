@@ -1,0 +1,79 @@
+# Common setup for IAR toolchain on every target platform
+
+set(CMAKE_SYSTEM_NAME PICO)
+
+if(WIN32)
+    set(IAR_EXE_SUFFIX ".exe")
+else()
+    set(IAR_EXE_SUFFIX "")
+endif()
+
+# Find IAR tools for ARM
+if (NOT DEFINED ENV{CMAKE_TOOLCHAIN_PATH})
+    file(GLOB_RECURSE PICO_COMPILER_CC_1 "C:/iar/ewarm*/arm/bin/iccarm.exe")
+    list(LENGTH PICO_COMPILER_CC_1 COUNT_1)
+    file(GLOB_RECURSE PICO_COMPILER_CC_2 "C:/Program Files/IAR Systems/Embedded Workbench */arm/bin/iccarm.exe")
+    list(LENGTH PICO_COMPILER_CC_2 COUNT_2)
+    file(GLOB_RECURSE PICO_COMPILER_CC_3 "/opt/iarsystems/bxarm-*/arm/bin/iccarm")
+    list(LENGTH PICO_COMPILER_CC_3 COUNT_3)
+    math(EXPR COUNT "${COUNT_1} + ${COUNT_2} + ${COUNT_3}")
+    set(PICO_COMPILER_CC ${PICO_COMPILER_CC_1} ${PICO_COMPILER_CC_2} ${PICO_COMPILER_CC_3})
+    if (COUNT EQUAL 0)
+        message(FATAL_ERROR "Cannot find IAR tools")
+    elseif (COUNT EQUAL 1)
+        cmake_path(GET PICO_COMPILER_CC PARENT_PATH CMAKE_TOOLCHAIN_PATH)
+    else ()
+        message(FATAL_ERROR "IAR tools found in multiple locations, use CMAKE_TOOLCHAIN_PATH to select")
+    endif ()
+else ()
+    set(CMAKE_TOOLCHAIN_PATH $ENV{CMAKE_TOOLCHAIN_PATH})
+    cmake_path(APPEND CMAKE_TOOLCHAIN_PATH "iccarm${IAR_EXE_SUFFIX}"  OUTPUT_VARIABLE PICO_COMPILER_CC)
+endif ()
+
+cmake_path(APPEND CMAKE_TOOLCHAIN_PATH "iccarm${IAR_EXE_SUFFIX}"  OUTPUT_VARIABLE PICO_COMPILER_CXX)
+cmake_path(APPEND CMAKE_TOOLCHAIN_PATH "iasmarm${IAR_EXE_SUFFIX}" OUTPUT_VARIABLE PICO_COMPILER_ASM)
+
+# Specify the cross compiler.
+set(CMAKE_C_COMPILER   ${PICO_COMPILER_CC}  CACHE FILEPATH "C compiler")
+set(CMAKE_CXX_COMPILER ${PICO_COMPILER_CXX} CACHE FILEPATH "C++ compiler")
+set(CMAKE_ASM_COMPILER ${PICO_COMPILER_ASM} CACHE FILEPATH "Assembler")
+set(CMAKE_C_OUTPUT_EXTENSION .o)
+
+option(PICO_DEOPTIMIZED_DEBUG "Build debug builds without optimisations" 0)
+
+# Assict Windows users to find our bundled Python interpreter
+if(WIN32 AND NOT DEFINED Python3_EXECUTABLE)
+    set(Python3_EXECUTABLE "${PICO_SDK_PATH}/../python/python.exe")
+endif()
+
+# Specify variables required to configure the EWARM IDE
+set(CMAKE_IAR_RUNTIME_LIB_SELECT        "2")
+set(CMAKE_IAR_C_DIAG_SUPPRESS           "Pa039,Pe170")
+set(CMAKE_IAR_ASM_DIAG_SUPPRESS         "12")
+set(CMAKE_IAR_ILINK_ICF_FILE            "$<TARGET_PROPERTY:LDTRANS_GENERATED_SCRIPT>.icf")
+set(CMAKE_IAR_ILINK_PROGRAM_ENTRY_LABEL "_entry_point")
+
+# Helper functions
+
+# iar_add_image_input(TARGET FILE SYMBOL SECTION ALIGNMENT)
+# \brief\ Add a binary file to be embedded in the target image
+#
+# \param\ TARGET The target to add the image input to
+# \param\ FILE The binary file to embed
+# \param\ SYMBOL The symbol identifying the embedded data
+# \param\ SECTION The section in which to place the data
+# \param\ ALIGNMENT The alignment of the data
+function(iar_add_image_input TARGET FILE SYMBOL SECTION ALIGNMENT)
+    get_property(count TARGET "${TARGET}" PROPERTY IAR_IMAGE_INPUT_COUNT)
+    if(NOT count)
+        set(count 0)
+    endif()
+
+    set_property(TARGET "${TARGET}" PROPERTY "IAR_IMAGE_INPUT_${count}_FILE" "${FILE}")
+    set_property(TARGET "${TARGET}" PROPERTY "IAR_IMAGE_INPUT_${count}_SYMBOL" "${SYMBOL}")
+    set_property(TARGET "${TARGET}" PROPERTY "IAR_IMAGE_INPUT_${count}_SECTION" "${SECTION}")
+    set_property(TARGET "${TARGET}" PROPERTY "IAR_IMAGE_INPUT_${count}_ALIGNMENT" "${ALIGNMENT}")
+
+    math(EXPR count "${count} + 1")
+    set_property(TARGET "${TARGET}" PROPERTY IAR_IMAGE_INPUT_COUNT "${count}")
+endfunction()
