@@ -53,6 +53,7 @@ PICO_RUNTIME_INIT_FUNC_PER_CORE(runtime_init_per_core_h3_irq_registers, PICO_RUN
 // ------------------------------------
 #if !PICO_RUNTIME_NO_INIT_EARLY_RESETS
 #include "hardware/resets.h"
+#include "hardware/timer.h"
 void __weak runtime_init_early_resets(void) {
     static_assert(NUM_RESETS <= 32, "");
     // Reset all peripherals to put system into a known state,
@@ -85,6 +86,12 @@ void __weak runtime_init_early_resets(void) {
             (1u << RESET_USBCTRL)
     ));
 
+#if PICO_C_COMPILER_IS_IAR
+    // The IAR debugger halts core 1 by default when debugging. However, the
+    // reset state of DBG1 causes this to pause TIMER0, preventing delay code
+    // running on core 0 from completing.
+    hw_clear_bits(&timer_hw->dbgpause, TIMER_DBGPAUSE_DBG1_BITS);
+#endif
 }
 #endif
 
