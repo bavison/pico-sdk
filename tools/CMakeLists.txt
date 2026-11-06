@@ -599,13 +599,30 @@ endfunction()
 function(pico_add_uf2_output TARGET)
     pico_init_picotool()
     get_target_property(${TARGET}_archive_directory ${TARGET} ARCHIVE_OUTPUT_DIRECTORY)
+    # For multi-config generators (like IAR) we should mirror the defined
+    # semantics of ARCHIVE_OUTPUT_DIRECTORY, viz:
+    #   append a per-configuration subdirectory to the specified directory
+    #   unless a generator expression is used
+    # We make an exception for CMake versions before 3.20 because those
+    # didn't support generator expressions in BYPRODUCTS.
+    get_property(is_multi_config GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
     if (${TARGET}_archive_directory)
         get_filename_component(output_path "${${TARGET}_archive_directory}"
                 REALPATH BASE_DIR "${CMAKE_CURRENT_BINARY_DIR}")
-        file(MAKE_DIRECTORY "${output_path}")
+        if (CMAKE_VERSION VERSION_GREATER_EQUAL "3.20" AND
+                is_multi_config AND
+                NOT "${${TARGET}_archive_directory}" MATCHES "\\$<")
+            set(output_path "${output_path}/$<$<BOOL:$<CONFIG>>:$<CONFIG>>")
+        endif()
         set(output_path "${output_path}/")
+        set(make_directory_command COMMAND "${CMAKE_COMMAND}" ARGS -E make_directory "${output_path}")
     else()
-        set(output_path "")
+        if (CMAKE_VERSION VERSION_GREATER_EQUAL "3.20" AND is_multi_config)
+            set(output_path "$<$<BOOL:$<CONFIG>>:$<CONFIG>>/")
+        else()
+            set(output_path "")
+        endif()
+        set(make_directory_command "")
     endif()
     pico_get_output_name(${TARGET} output_name)
 
@@ -637,6 +654,7 @@ function(pico_add_uf2_output TARGET)
             endif()
         endif()
         add_custom_command(TARGET ${TARGET} POST_BUILD
+            ${make_directory_command}
             COMMAND picotool
             ARGS uf2 convert
                 --quiet
