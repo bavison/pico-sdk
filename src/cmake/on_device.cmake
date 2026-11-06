@@ -29,22 +29,27 @@ endfunction()
 # pico_add_hex_output(TARGET)
 # \brief\ Generate a hex file for the target
 function(pico_add_hex_output TARGET)
+if (NOT "${CMAKE_GENERATOR}" STREQUAL "IAR Embedded Workbench for Arm")
     pico_get_runtime_output_directory(${TARGET} output_path)
     pico_get_output_name(${TARGET} output_name)
     add_custom_command(TARGET ${TARGET} POST_BUILD COMMAND ${CMAKE_OBJCOPY} -Oihex $<TARGET_FILE:${TARGET}> ${output_path}$<IF:$<BOOL:$<TARGET_PROPERTY:${TARGET},OUTPUT_NAME>>,$<TARGET_PROPERTY:${TARGET},OUTPUT_NAME>,$<TARGET_PROPERTY:${TARGET},NAME>>.hex VERBATIM BYPRODUCTS "${output_path}${output_name}.hex")
+endif()
 endfunction()
 
 # pico_add_bin_output(TARGET)
 # \brief\ Generate a bin file for the target
 function(pico_add_bin_output TARGET)
+if (NOT "${CMAKE_GENERATOR}" STREQUAL "IAR Embedded Workbench for Arm")
     pico_get_runtime_output_directory(${TARGET} output_path)
     pico_get_output_name(${TARGET} output_name)
     add_custom_command(TARGET ${TARGET} POST_BUILD COMMAND ${CMAKE_OBJCOPY} -Obinary $<TARGET_FILE:${TARGET}> ${output_path}$<IF:$<BOOL:$<TARGET_PROPERTY:${TARGET},OUTPUT_NAME>>,$<TARGET_PROPERTY:${TARGET},OUTPUT_NAME>,$<TARGET_PROPERTY:${TARGET},NAME>>.bin VERBATIM BYPRODUCTS "${output_path}${output_name}.bin")
+endif()
 endfunction()
 
 # pico_add_dis_output(TARGET)
 # \brief\ Generate a disassembly file for the target
 function(pico_add_dis_output TARGET)
+if (NOT "${CMAKE_GENERATOR}" STREQUAL "IAR Embedded Workbench for Arm")
     pico_get_runtime_output_directory(${TARGET} output_path)
     pico_get_output_name(${TARGET} output_name)
 
@@ -64,6 +69,7 @@ function(pico_add_dis_output TARGET)
             VERBATIM
             BYPRODUCTS "${output_path}${output_name}.dis"
             )
+endif()
 endfunction()
 
 # pico_add_extra_outputs(TARGET)
